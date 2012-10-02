@@ -582,7 +582,7 @@ func (dataset Dataset) AddBand(dataType DataType, options []string) error {
 // Unimplemented: GDALEndAsyncReader
 
 // Read / write a region of image data from multiple bands	  
-func (dataset Dataset) RasterIO_uint8(
+func (dataset Dataset) RasterIO(
 	rwFlag RWFlag,
 	xOff, yOff, xSize, ySize int,
 	buffer interface{},
