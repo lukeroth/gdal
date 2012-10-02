@@ -12,7 +12,9 @@ package gdal
 import "C"
 import (
 	"unsafe"
+	"fmt"
 )
+var _ = fmt.Println
 
 func init() {
 	C.GDALAllRegister()
@@ -310,7 +312,7 @@ func (driver Driver) Create(
 		opts[i] = C.CString(options[i])
 		defer C.free(unsafe.Pointer(opts[i]))
 	}
-	opts[length - 1] = (*C.char)(unsafe.Pointer(nil))
+	opts[length] = (*C.char)(unsafe.Pointer(nil))
 
 	h := C.GDALCreate(
 		driver.cval,
@@ -340,7 +342,7 @@ func (driver Driver) CreateCopy(
 		opts[i] = C.CString(options[i])
 		defer C.free(unsafe.Pointer(opts[i]))
 	}
-	opts[length - 1] = (*C.char)(unsafe.Pointer(nil))
+	opts[length] = (*C.char)(unsafe.Pointer(nil))
 
 	arg := &goGDALProgressFuncProxyArgs{
 		progress, data,
@@ -361,12 +363,13 @@ func IdentifyDriver(filename string, filenameList []string) Driver {
 	cFilename := C.CString(filename)
 	defer C.free(unsafe.Pointer(cFilename))
 
-	cFilenameList := make([]*C.char, len(filenameList)+1)
-	for i := 0; i < len(filenameList); i++ {
+	length := len(filenameList)
+	cFilenameList := make([]*C.char, length + 1)
+	for i := 0; i < length; i++ {
 		cFilenameList[i] = C.CString(filenameList[i])
 		defer C.free(unsafe.Pointer(cFilenameList[i]))
 	}
-	cFilenameList[len(filenameList)-1] = (*C.char)(unsafe.Pointer(nil))
+	cFilenameList[length] = (*C.char)(unsafe.Pointer(nil))
 
 	driver := C.GDALIdentifyDriver(cFilename, (**C.char)(unsafe.Pointer(&cFilenameList[0])))
 	return Driver{driver}
@@ -393,12 +396,15 @@ func OpenShared(filename string, access Access) Dataset {
 // Unimplemented: DumpOpenDatasets
 
 // Return the driver by short name
-func GetDriverByName(driverName string) Driver {
+func GetDriverByName(driverName string) (Driver, error) {
 	cName := C.CString(driverName)
 	defer C.free(unsafe.Pointer(cName))
 
 	driver := C.GDALGetDriverByName(cName)
-	return Driver{driver}
+	if driver == nil {
+		return Driver{driver}, fmt.Errorf("Error: driver '%s' not found", driverName)
+	}
+	return Driver{driver}, nil
 }
 
 // Fetch the number of registered drivers.
@@ -563,12 +569,13 @@ func (dataset Dataset) RasterBand(band int) RasterBand {
 
 // Add a band to a dataset
 func (dataset Dataset) AddBand(dataType DataType, options []string) error {
-	cOptions := make([]*C.char, len(options)+1)
-	for i := 0; i < len(options); i++ {
+	length := len(options)
+	cOptions := make([]*C.char, length + 1)
+	for i := 0; i < length; i++ {
 		cOptions[i] = C.CString(options[i])
 		defer C.free(unsafe.Pointer(cOptions[i]))
 	}
-	cOptions[len(options)-1] = (*C.char)(unsafe.Pointer(nil))
+	cOptions[length] = (*C.char)(unsafe.Pointer(nil))
 
 	err := C.GDALAddBand(
 		dataset.cval, 
@@ -582,7 +589,7 @@ func (dataset Dataset) AddBand(dataType DataType, options []string) error {
 // Unimplemented: GDALEndAsyncReader
 
 // Read / write a region of image data from multiple bands	  
-func (dataset Dataset) RasterIO(
+func (dataset Dataset) IO(
 	rwFlag RWFlag,
 	xOff, yOff, xSize, ySize int,
 	buffer interface{},
@@ -593,27 +600,27 @@ func (dataset Dataset) RasterIO(
 ) error {
 	var dataType DataType
 	var dataPtr unsafe.Pointer
-
 	switch data := buffer.(type) {
-	case *int8:
+	case []int8:
 		dataType = Byte
-		dataPtr = unsafe.Pointer(data)
-	case *uint8:
+		dataPtr = unsafe.Pointer(&data[0])
+	case []uint8:
 		dataType = Byte
-		dataPtr = unsafe.Pointer(data)
-	case *int16:
+		dataPtr = unsafe.Pointer(&data[0])
+	case []int16:
 		dataType = Int16
-		dataPtr = unsafe.Pointer(data)
-	case *uint16:
+		dataPtr = unsafe.Pointer(&data[0])
+	case []uint16:
 		dataType = UInt16
-		dataPtr = unsafe.Pointer(data)
-	case *int32:
+		dataPtr = unsafe.Pointer(&data[0])
+	case []int32:
 		dataType = Int32
-		dataPtr = unsafe.Pointer(data)
-	case *uint32:
+		dataPtr = unsafe.Pointer(&data[0])
+	case []uint32:
 		dataType = UInt32
-		dataPtr = unsafe.Pointer(data)
+		dataPtr = unsafe.Pointer(&data[0])
 	default:
+		return fmt.Errorf("Error: buffer is not a valid data type (must be a valid numeric slice)")
 	}
 
 	err := C.GDALDatasetRasterIO(
@@ -638,12 +645,13 @@ func (dataset Dataset) AdviseRead(
 	bandMap []int,
 	options []string,
 ) error {
-	cOptions := make([]*C.char, len(options)+1)
-	for i := 0; i < len(options); i++ {
+	length := len(options)
+	cOptions := make([]*C.char, length + 1)
+	for i := 0; i < length; i++ {
 		cOptions[i] = C.CString(options[i])
 		defer C.free(unsafe.Pointer(cOptions[i]))
 	}
-	cOptions[len(options)-1] = (*C.char)(unsafe.Pointer(nil))
+	cOptions[length] = (*C.char)(unsafe.Pointer(nil))
 
 	err := C.GDALDatasetAdviseRead(
 		dataset.cval,
@@ -772,12 +780,13 @@ func (sourceDataset Dataset) CopyWholeRaster(
 ) error {
 	arg := &goGDALProgressFuncProxyArgs{progress, data}
 
-	cOptions := make([]*C.char, len(options)+1)
-	for i := 0; i < len(options); i++ {
+	length := len(options)
+	cOptions := make([]*C.char, length + 1)
+	for i := 0; i < length; i++ {
 		cOptions[i] = C.CString(options[i])
 		defer C.free(unsafe.Pointer(cOptions[i]))
 	}
-	cOptions[len(options)-1] = (*C.char)(unsafe.Pointer(nil))
+	cOptions[length] = (*C.char)(unsafe.Pointer(nil))
 
 	err := C.GDALDatasetCopyWholeRaster(
 		sourceDataset.cval,
@@ -812,12 +821,13 @@ func (rasterBand RasterBand) AdviseRead(
 	dataType DataType,
 	options []string,
 ) error {
-	cOptions := make([]*C.char, len(options)+1)
-	for i := 0; i < len(options); i++ {
+	length := len(options)
+	cOptions := make([]*C.char, length + 1)
+	for i := 0; i < length; i++ {
 		cOptions[i] = C.CString(options[i])
 		defer C.free(unsafe.Pointer(cOptions[i]))
 	}
-	cOptions[len(options)-1] = (*C.char)(unsafe.Pointer(nil))
+	cOptions[length] = (*C.char)(unsafe.Pointer(nil))
 
 	err := C.GDALRasterAdviseRead(
 		rasterBand.cval,
@@ -829,7 +839,7 @@ func (rasterBand RasterBand) AdviseRead(
 }
 
 // Read / Write a region of image data for this band
-func (rasterBand RasterBand) RasterIO(
+func (rasterBand RasterBand) IO(
 	rwFlag RWFlag,
 	xOff, yOff, xSize, ySize int,
 	buffer interface{},
@@ -839,25 +849,26 @@ func (rasterBand RasterBand) RasterIO(
 	var dataType DataType
 	var dataPtr unsafe.Pointer
 	switch data := buffer.(type) {
-	case *int8:
+	case []int8:
 		dataType = Byte
-		dataPtr = unsafe.Pointer(data)
-	case *uint8:
+		dataPtr = unsafe.Pointer(&data[0])
+	case []uint8:
 		dataType = Byte
-		dataPtr = unsafe.Pointer(data)
-	case *int16:
+		dataPtr = unsafe.Pointer(&data[0])
+	case []int16:
 		dataType = Int16
-		dataPtr = unsafe.Pointer(data)
-	case *uint16:
+		dataPtr = unsafe.Pointer(&data[0])
+	case []uint16:
 		dataType = UInt16
-		dataPtr = unsafe.Pointer(data)
-	case *int32:
+		dataPtr = unsafe.Pointer(&data[0])
+	case []int32:
 		dataType = Int32
-		dataPtr = unsafe.Pointer(data)
-	case *uint32:
+		dataPtr = unsafe.Pointer(&data[0])
+	case []uint32:
 		dataType = UInt32
-		dataPtr = unsafe.Pointer(data)
+		dataPtr = unsafe.Pointer(&data[0])
 	default:
+		return fmt.Errorf("Error: buffer is not a valid data type (must be a valid numeric slice)")
 	}
 
 	err := C.GDALRasterIO(
@@ -993,7 +1004,7 @@ func (rasterBand RasterBand) SetRasterCategoryNames(names []string) error {
 		cStrings[i] = C.CString(names[i])
 		defer C.free(unsafe.Pointer(cStrings[i]))
 	}
-	cStrings[length - 1] = (*C.char)(unsafe.Pointer(nil))
+	cStrings[length] = (*C.char)(unsafe.Pointer(nil))
 
 	err := C.GDALSetRasterCategoryNames(rasterBand.cval, (**C.char)(unsafe.Pointer(&cStrings[0])))
 	
@@ -1175,12 +1186,13 @@ func (sourceRaster RasterBand) RasterBandCopyWholeRaster(
 ) error {
 	arg := &goGDALProgressFuncProxyArgs{progress, data}
 
-	cOptions := make([]*C.char, len(options)+1)
-	for i := 0; i < len(options); i++ {
+	length := len(options)
+	cOptions := make([]*C.char, length + 1)
+	for i := 0; i < length; i++ {
 		cOptions[i] = C.CString(options[i])
 		defer C.free(unsafe.Pointer(cOptions[i]))
 	}
-	cOptions[len(options)-1] = (*C.char)(unsafe.Pointer(nil))
+	cOptions[length] = (*C.char)(unsafe.Pointer(nil))
 
 	err := C.GDALRasterBandCopyWholeRaster(
 		sourceRaster.cval,
