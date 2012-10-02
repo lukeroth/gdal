@@ -16,8 +16,8 @@ func main() {
 	fmt.Printf("Filename: %s\n", filename)
 	
 	fmt.Printf("Allocating buffer\n")
-	var buffer [256 * 256]uint16
-	//	buffer := make([]uint16, 256 * 256)
+	var buffer [256 * 256]uint8
+	//	buffer := make([]uint8, 256 * 256)
 	
 	fmt.Printf("Computing values\n")
 	for x := 0; x < 256; x++ {
@@ -27,7 +27,7 @@ func main() {
 			if val >= 256 {
 				val -= 256
 			}
-			buffer[loc] = uint16(val)
+			buffer[loc] = uint8(val)
 		}
 	}
 
@@ -40,9 +40,24 @@ func main() {
 		return
 	}
 	fmt.Printf("Creating dataset\n")
-	dataset := driver.Create(filename, 256, 256, 1, gdal.UInt16, nil)
+	dataset := driver.Create(filename, 256, 256, 1, gdal.Byte, nil)
 	defer dataset.Close()
 	
+	fmt.Printf("Creating projection\n")
+	spatialRef := gdal.CreateSpatialReference("")
+
+	fmt.Printf("Setting EPSG code\n")
+	spatialRef.FromEPSG(3857)
+
+	fmt.Printf("Converting to WKT\n")
+	srString, err := spatialRef.ToWkt()
+
+	fmt.Printf("Assigning projection: %s\n", srString)
+	dataset.SetProjection(srString)
+
+	fmt.Printf("Setting geotransform\n")
+	dataset.SetGeoTransform([]float64{444720, 30, 0, 3751320, 0, -30})
+
 	fmt.Printf("Getting raster band\n")
 	raster := dataset.RasterBand(1)
 

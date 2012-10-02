@@ -7,7 +7,6 @@ package gdal
 #cgo linux  pkg-config: gdal
 #cgo darwin pkg-config: gdal
 #cgo windows LDFLAGS: -lgdal.dll
-
 */
 import "C"
 import (
@@ -36,6 +35,22 @@ const (
 
 // Error handling.  The following is bare-bones, and needs to be replaced with something more useful.
 func (err _Ctype_CPLErr) Error() string {
+	switch err {
+	case 0:
+		return "No Error"
+	case 1:
+		return "Debug Error"
+	case 2:
+		return "Warning Error"
+	case 3:
+		return "Failure Error"
+	case 4:
+		return "Fatal Error"
+	}
+	return "Illegal error"
+}
+
+func (err _Ctype_OGRErr) Error() string {
 	switch err {
 	case 0:
 		return "No Error"
@@ -1338,3 +1353,42 @@ func FlushCacheBlock() bool {
 // Unimplemented: DecToDMS
 // Unimplemented: PackedDMSToDec
 // Unimplemented: DecToPackedDMS
+
+/* -------------------------------------------------------------------- */
+/*      Spatial reference functions.                                    */
+/* -------------------------------------------------------------------- */
+
+type SpatialReference struct {
+	cval C.OGRSpatialReferenceH
+}
+
+// Create a new SpatialReference
+func CreateSpatialReference(wkt string) SpatialReference {
+	cString := C.CString(wkt)
+	defer C.free(unsafe.Pointer(cString))
+	sr := C.OSRNewSpatialReference(cString)
+	return SpatialReference{sr}
+}
+
+// Export coordinate system to WKT
+func (sr SpatialReference) ToWkt() (string, error) {
+	var p *C.char
+	err := C.OSRExportToWkt(sr.cval, &p)
+	wkt := C.GoString(p)
+	return wkt, error(err)
+}
+
+// Initialize SRS based on EPSG code
+func (sr SpatialReference) FromEPSG(code int) error {
+	err := C.OSRImportFromEPSG(sr.cval, C.int(code))
+	return error(err)
+}
+
+/* -------------------------------------------------------------------- */
+/*      Coordinate transformation functions.                            */
+/* -------------------------------------------------------------------- */
+
+type CoordinateTransformation struct {
+	cval C.OGRCoordinateTransformationH
+}
+

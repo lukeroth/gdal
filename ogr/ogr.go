@@ -1,6 +1,7 @@
 package ogr
 
 /*
+#include "gdal.h"
 #include "ogr_core.h"
 #include "ogr_api.h"
 
