@@ -2,7 +2,6 @@ package gdal
 
 /*
 #include "go_gdal.h"
-#include "ogr_api.h"
 #include "gdal_version.h"
 
 #cgo linux  pkg-config: gdal
@@ -12,17 +11,11 @@ package gdal
 */
 import "C"
 import (
-	_ "fmt"
-	_ "runtime"
 	"unsafe"
 )
 
-var gdalReady bool = false
-
 func init() {
 	C.GDALAllRegister()
-	C.OGRRegisterAll()
-	gdalReady = true
 }
 
 /* -------------------------------------------------------------------- */

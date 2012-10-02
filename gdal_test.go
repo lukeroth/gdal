@@ -6,12 +6,6 @@ package gdal
 
 import "testing"
 
-func TestInit(t *testing.T) {
-	if gdalReady == false  {
-	      t.Errorf("Library not initialized")
-	}
-}
-
 func TestTiffDriver(t *testing.T) {
 	driver := gdal.GetDriverByName("GTiff")
 	if driver == nil {

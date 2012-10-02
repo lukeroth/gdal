@@ -2,8 +2,7 @@
 About
 -------------
 
-The gdal.go package provides a wrapper for GDAL, the Geospatial Data Abstraction Library.
-More information about GDAL can be found at http://www.gdal.org
+The gdal.go package provides a wrapper for GDAL, the Geospatial Data Abstraction Library. More information about GDAL can be found at http://www.gdal.org
 
 -------------
 Installation
@@ -25,8 +24,7 @@ Examples
 Status (10/2/2012)
 -------------
 
-The majority of GDAL functionality exposed by the C API is available. Functions involving
-GCPs, raster attribute tables, color tables, and asynchronous readers are not yet implemented.
+The majority of GDAL functionality exposed by the C API is available. Functions involving GCPs, raster attribute tables, color tables, and asynchronous readers are not yet implemented.
 OGR is not yet available.
 
 Most functionality is not yet covered by tests or benchmarks.
