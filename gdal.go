@@ -23,24 +23,13 @@ func init() {
 /* -------------------------------------------------------------------- */
 
 const (
-	GDAL_VERSION_MAJOR	= int(C.GDAL_VERSION_MAJOR)
-	GDAL_VERSION_MINOR	= int(C.GDAL_VERSION_MINOR)
-	GDAL_VERSION_REV	= int(C.GDAL_VERSION_REV)
-	GDAL_VERSION_BUILD	= int(C.GDAL_VERSION_BUILD)
-
-	GDAL_VERSION_NUM	= int(C.GDAL_VERSION_NUM)
-	GDAL_RELEASE_DATE	= int(C.GDAL_RELEASE_DATE)
-
-	GDAL_RELEASE_NAME	= string(C.GDAL_RELEASE_NAME)
-)
-
-// Error value constants reported by GDAL
-const (
-	CE_None    = 0
-	CE_Debug   = 1
-	CE_Warning = 2
-	CE_Failure = 3
-	CE_Fatal   = 4
+	VERSION_MAJOR	= int(C.GDAL_VERSION_MAJOR)
+	VERSION_MINOR	= int(C.GDAL_VERSION_MINOR)
+	VERSION_REV	= int(C.GDAL_VERSION_REV)
+	VERSION_BUILD	= int(C.GDAL_VERSION_BUILD)
+	VERSION_NUM	= int(C.GDAL_VERSION_NUM)
+	RELEASE_DATE	= int(C.GDAL_RELEASE_DATE)
+	RELEASE_NAME	= string(C.GDAL_RELEASE_NAME)
 )
 
 // Error handling.  The following is bare-bones, and needs to be replaced with something more useful.
@@ -64,19 +53,18 @@ func (err _Ctype_CPLErr) Error() string {
 type DataType int
 
 const (
-	GDT_Unknown		= DataType(C.GDT_Unknown)
-	GDT_Byte		= DataType(C.GDT_Byte)
-	GDT_UInt16		= DataType(C.GDT_UInt16)
-	GDT_Int16		= DataType(C.GDT_Int16)
-	GDT_UInt32		= DataType(C.GDT_UInt32)
-	GDT_Int32		= DataType(C.GDT_Int32)
-	GDT_Float32		= DataType(C.GDT_Float32)
-	GDT_Float64		= DataType(C.GDT_Float64)
-	GDT_CInt16		= DataType(C.GDT_CInt16)
-	GDT_CInt32		= DataType(C.GDT_CInt32)
-	GDT_CFloat32	= DataType(C.GDT_CFloat32)
-	GDT_CFloat64	= DataType(C.GDT_CFloat64)
-	GDT_TypeCount	= DataType(C.GDT_TypeCount)
+	Unknown		= DataType(C.GDT_Unknown)
+	Byte		= DataType(C.GDT_Byte)
+	UInt16		= DataType(C.GDT_UInt16)
+	Int16		= DataType(C.GDT_Int16)
+	UInt32		= DataType(C.GDT_UInt32)
+	Int32		= DataType(C.GDT_Int32)
+	Float32		= DataType(C.GDT_Float32)
+	Float64		= DataType(C.GDT_Float64)
+	CInt16		= DataType(C.GDT_CInt16)
+	CInt32		= DataType(C.GDT_CInt32)
+	CFloat32	= DataType(C.GDT_CFloat32)
+	CFloat64	= DataType(C.GDT_CFloat64)
 )
 
 // Get data type size in bits.
@@ -102,11 +90,10 @@ func (dataType DataType) Union(dataTypeB DataType) DataType {
 type AsyncStatusType int
 
 const (
-	GARIO_PENDING   = AsyncStatusType(C.GARIO_PENDING)
-	GARIO_UPDATE    = AsyncStatusType(C.GARIO_UPDATE)
-	GARIO_ERROR     = AsyncStatusType(C.GARIO_ERROR)
-	GARIO_COMPLETE  = AsyncStatusType(C.GARIO_COMPLETE)
-	GARIO_TypeCount = AsyncStatusType(C.GARIO_TypeCount)
+	AR_Pending   = AsyncStatusType(C.GARIO_PENDING)
+	AR_Update    = AsyncStatusType(C.GARIO_UPDATE)
+	AR_Error     = AsyncStatusType(C.GARIO_ERROR)
+	AR_Complete  = AsyncStatusType(C.GARIO_COMPLETE)
 )
 
 func (statusType AsyncStatusType) Name() string {
@@ -124,9 +111,9 @@ type Access int
 
 const (
 	// Read only (no update) access
-	GA_ReadOnly = Access(C.GA_ReadOnly)
+	ReadOnly = Access(C.GA_ReadOnly)
 	// Read/write access.
-	GA_Update = Access(C.GA_Update)
+	Update = Access(C.GA_Update)
 )
 
 // Read/Write flag for RasterIO() method
@@ -134,33 +121,33 @@ type RWFlag int
 
 const (
 	// Read data
-	GF_Read = RWFlag(C.GF_Read)
+	Read = RWFlag(C.GF_Read)
 	// Write data
-	GF_Write = RWFlag(C.GF_Write)
+	Write = RWFlag(C.GF_Write)
 )
 
 // Types of color interpretation for raster bands.
 type ColorInterp int
 
 const (
-	GCI_Undefined		= ColorInterp(C.GCI_Undefined)
-	GCI_GrayIndex		= ColorInterp(C.GCI_GrayIndex)
-	GCI_PaletteIndex	= ColorInterp(C.GCI_PaletteIndex)
-	GCI_RedBand			= ColorInterp(C.GCI_RedBand)
-	GCI_GreenBand		= ColorInterp(C.GCI_GreenBand)
-	GCI_BlueBand		= ColorInterp(C.GCI_BlueBand)
-	GCI_AlphaBand		= ColorInterp(C.GCI_AlphaBand)
-	GCI_HueBand			= ColorInterp(C.GCI_HueBand)
-	GCI_SaturationBand	= ColorInterp(C.GCI_SaturationBand)
-	GCI_LightnessBand	= ColorInterp(C.GCI_LightnessBand)
-	GCI_CyanBand		= ColorInterp(C.GCI_CyanBand)
-	GCI_MagentaBand		= ColorInterp(C.GCI_MagentaBand)
-	GCI_YellowBand		= ColorInterp(C.GCI_YellowBand)
-	GCI_BlackBand		= ColorInterp(C.GCI_BlackBand)
-	GCI_YCbCr_YBand		= ColorInterp(C.GCI_YCbCr_YBand)
-	GCI_YCbCr_CbBand	= ColorInterp(C.GCI_YCbCr_CbBand)
-	GCI_YCbCr_CrBand	= ColorInterp(C.GCI_YCbCr_CrBand)
-	GCI_Max				= ColorInterp(C.GCI_Max)
+	CI_Undefined		= ColorInterp(C.GCI_Undefined)
+	CI_GrayIndex		= ColorInterp(C.GCI_GrayIndex)
+	CI_PaletteIndex	= ColorInterp(C.GCI_PaletteIndex)
+	CI_RedBand			= ColorInterp(C.GCI_RedBand)
+	CI_GreenBand		= ColorInterp(C.GCI_GreenBand)
+	CI_BlueBand		= ColorInterp(C.GCI_BlueBand)
+	CI_AlphaBand		= ColorInterp(C.GCI_AlphaBand)
+	CI_HueBand			= ColorInterp(C.GCI_HueBand)
+	CI_SaturationBand	= ColorInterp(C.GCI_SaturationBand)
+	CI_LightnessBand	= ColorInterp(C.GCI_LightnessBand)
+	CI_CyanBand		= ColorInterp(C.GCI_CyanBand)
+	CI_MagentaBand		= ColorInterp(C.GCI_MagentaBand)
+	CI_YellowBand		= ColorInterp(C.GCI_YellowBand)
+	CI_BlackBand		= ColorInterp(C.GCI_BlackBand)
+	CI_YCbCr_YBand		= ColorInterp(C.GCI_YCbCr_YBand)
+	CI_YCbCr_CbBand	= ColorInterp(C.GCI_YCbCr_CbBand)
+	CI_YCbCr_CrBand	= ColorInterp(C.GCI_YCbCr_CrBand)
+	CI_Max				= ColorInterp(C.GCI_Max)
 )
 
 func (colorInterp ColorInterp) Name() string {
@@ -178,13 +165,13 @@ type PaletteInterp int
 
 const (
 	// Grayscale (in GDALColorEntry.c1)
-	GPI_Gray	= PaletteInterp(C.GPI_Gray)
+	PI_Gray	= PaletteInterp(C.GPI_Gray)
 	// Red, Green, Blue and Alpha in (in c1, c2, c3 and c4)
-	GPI_RGB		= PaletteInterp(C.GPI_RGB)
+	PI_RGB		= PaletteInterp(C.GPI_RGB)
 	// Cyan, Magenta, Yellow and Black (in c1, c2, c3 and c4)
-	GPI_CMYK	= PaletteInterp(C.GPI_CMYK)
+	PI_CMYK	= PaletteInterp(C.GPI_CMYK)
 	// Hue, Lightness and Saturation (in c1, c2, and c3)
-	GPI_HLS		= PaletteInterp(C.GPI_HLS)
+	PI_HLS		= PaletteInterp(C.GPI_HLS)
 )
 
 func (paletteInterp PaletteInterp) Name() string {
@@ -197,13 +184,6 @@ const (
 	MD_AOP_AREA      = string(C.GDALMD_AOP_AREA)
 	MD_AOP_POINT     = string(C.GDALMD_AOP_POINT)
 )
-
-/* -------------------------------------------------------------------- */
-/*      GDAL Specific error codes.                                      */
-/*                                                                      */
-/*      error codes 100 to 299 reserved for GDAL.                       */
-/* -------------------------------------------------------------------- */
-const CPLE_WrongFormat = int(C.CPLE_WrongFormat)
 
 /* -------------------------------------------------------------------- */
 /*      Define handle types related to various internal classes.        */
@@ -616,22 +596,22 @@ func (dataset Dataset) RasterIO_uint8(
 
 	switch data := buffer.(type) {
 	case *int8:
-		dataType = GDT_Byte
+		dataType = Byte
 		dataPtr = unsafe.Pointer(data)
 	case *uint8:
-		dataType = GDT_Byte
+		dataType = Byte
 		dataPtr = unsafe.Pointer(data)
 	case *int16:
-		dataType = GDT_Int16
+		dataType = Int16
 		dataPtr = unsafe.Pointer(data)
 	case *uint16:
-		dataType = GDT_UInt16
+		dataType = UInt16
 		dataPtr = unsafe.Pointer(data)
 	case *int32:
-		dataType = GDT_Int32
+		dataType = Int32
 		dataPtr = unsafe.Pointer(data)
 	case *uint32:
-		dataType = GDT_UInt32
+		dataType = UInt32
 		dataPtr = unsafe.Pointer(data)
 	default:
 	}
@@ -860,22 +840,22 @@ func (rasterBand RasterBand) RasterIO(
 	var dataPtr unsafe.Pointer
 	switch data := buffer.(type) {
 	case *int8:
-		dataType = GDT_Byte
+		dataType = Byte
 		dataPtr = unsafe.Pointer(data)
 	case *uint8:
-		dataType = GDT_Byte
+		dataType = Byte
 		dataPtr = unsafe.Pointer(data)
 	case *int16:
-		dataType = GDT_Int16
+		dataType = Int16
 		dataPtr = unsafe.Pointer(data)
 	case *uint16:
-		dataType = GDT_UInt16
+		dataType = UInt16
 		dataPtr = unsafe.Pointer(data)
 	case *int32:
-		dataType = GDT_Int32
+		dataType = Int32
 		dataPtr = unsafe.Pointer(data)
 	case *uint32:
-		dataType = GDT_UInt32
+		dataType = UInt32
 		dataPtr = unsafe.Pointer(data)
 	default:
 	}
