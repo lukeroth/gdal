@@ -50,7 +50,7 @@ func main() {
 	spatialRef.FromEPSG(3857)
 
 	fmt.Printf("Converting to WKT\n")
-	srString, err := spatialRef.ToWkt()
+	srString, err := spatialRef.ToWKT()
 
 	fmt.Printf("Assigning projection: %s\n", srString)
 	dataset.SetProjection(srString)
