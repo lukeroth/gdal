@@ -6,6 +6,7 @@
 #define GO_GDAL_H_
 
 #include <gdal.h>
+#include <gdal_alg.h>
 #include <cpl_conv.h>
 #include <ogr_srs_api.h>
 
