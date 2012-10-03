@@ -3,7 +3,7 @@ Package gdal provides a wrapper for GDAL, the Geospatial Data Abstraction Librar
 
 Limitations
 
-The majority of the GDAL C API is covered.  Areas that are not currently covered include the asynchronous readers, color and raster attribute tables, and quite a few less oftenly used functions.  Spatial reference support is sufficient to support assigning spatial reference values to GDAL datasets, but little more.
+The majority of the GDAL C API is covered.  Areas that are not currently covered include the asynchronous readers and quite a few less oftenly used functions.  Spatial reference support is sufficient to support assigning basic spatial reference values to GDAL datasets, but little more.
 
 Usage
 

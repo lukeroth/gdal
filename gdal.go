@@ -1143,12 +1143,67 @@ func (rasterBand RasterBand) FlushCache() {
 	C.GDALFlushRasterCache(rasterBand.cval)
 }
 
-// Unimplemented: GetRasterHistogram
+// Compute raster histogram
+func (rb RasterBand) Histogram(
+	min, max float64,
+	buckets int,
+	includeOutOfRange, approxOK int,
+	progress ProgressFunc,
+	data interface{},
+) ([]int, error) {
+	arg := &goGDALProgressFuncProxyArgs{
+		progress, data,
+	}
 
-// Unimplemented: GetDefaultHistogram
+	histogram := make([]int, buckets)
+
+	err := C.GDALGetRasterHistogram(
+		rb.cval,
+		C.double(min),
+		C.double(max),
+		C.int(buckets),
+		(*C.int)(unsafe.Pointer(&histogram[0])),
+		C.int(includeOutOfRange),
+		C.int(approxOK),
+		C.goGDALProgressFuncProxyB(),
+		unsafe.Pointer(arg),
+	)
+
+	return histogram, error(err)
+}
+
+// Fetch default raster histogram
+func (rb RasterBand) DefaultHistogram(
+	force int,
+	progress ProgressFunc,
+	data interface{},
+) (min, max float64, buckets int, histogram []int, err error) {
+	arg := &goGDALProgressFuncProxyArgs{
+		progress, data,
+	}
+
+	var cHistogram **C.int
+
+	cErr := C.GDALGetDefaultHistogram(
+		rb.cval,
+		(*C.double)(&min),
+		(*C.double)(&max),
+		(*C.int)(unsafe.Pointer(&buckets)),
+		cHistogram,
+		C.int(force),
+		C.goGDALProgressFuncProxyB(),
+		unsafe.Pointer(arg),
+	)
+
+	return min, max, buckets, histogram, error(cErr)
+}
+
+// Set default raster histogram
+// Unimplemented: SetDefaultHistogram
 
 // Unimplemented: GetRandomRasterSample
 
+// Fetch best sampling overviews
 // Unimplemented: GetRasterSampleOverview
 
 // Fill this band with a constant value
