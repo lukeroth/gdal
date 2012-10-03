@@ -1,9 +1,11 @@
 /*
-Package gdal provides a wrapper for GDAL, the Geospatial Data Abstraction Library.  This C/C++ library provides access to a large number of geospatial data formats.  It also contains a wrapper for the related OGR library, although coverage of this library is currently much more limited.
+Package gdal provides a wrapper for GDAL, the Geospatial Data Abstraction Library.  This C/C++ library provides access to a large number of geospatial raster data formats.  It also contains a wrapper for the related OGR Simple Feature Library which provides similar functionality for vector formats.
 
 Limitations
 
-The majority of the GDAL C API is covered.  Areas that are not currently covered include the asynchronous readers and quite a few less oftenly used functions.  Spatial reference support is sufficient to support assigning basic spatial reference values to GDAL datasets, but little more.
+The majority of the GDAL C API is covered.  Areas that are not currently covered include the asynchronous readers and quite a few less oftenly used functions.  OGR support is currently much less complete.  Spatial reference support is sufficient to support assigning basic spatial reference values to GDAL datasets, but does not cover the majority of spatial reference formats yet.
+
+This wrapper has only been tested on 64-bit Ubuntu Linux, with version 1.9.1 of the GDAL library.
 
 Usage
 
@@ -46,6 +48,7 @@ More examples can be found in the ./examples subdirectory.
 
 Recent changes
 
-10/2/2012: Initial OGR and OSR support added
+A more complete changelog can be found on Github.
+10/2/2012: Initial OGR and OSR support added; color table and raster attribute table support added.
 */
 package gdal
