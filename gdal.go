@@ -235,7 +235,7 @@ type AsyncReader struct {
 }
 
 type ColorEntry struct {
-	cval C.GDALColorEntry
+	cval *C.GDALColorEntry
 }
 
 /* -------------------------------------------------------------------- */
@@ -1234,15 +1234,52 @@ func (sourceRaster RasterBand) RasterBandCopyWholeRaster(
 /*      Color tables.                                                   */
 /* ==================================================================== */
 
-// Unimplemented: CreateColorTable
-// Unimplemented: DestroyColorTable
-// Unimplemented: CloneColorTable
-// Unimplemented: GetPaletteInterpretation
-// Unimplemented: GetColorEntryCount
-// Unimplemented: GetColorEntry
-// Unimplemented: GetColorEntryAsRGB
-// Unimplemented: SetColorEntry
-// Unimplemented: CreateColorRamp
+// Construct a new color table
+func CreateColorTable(interp PaletteInterp) ColorTable {
+	ct := C.GDALCreateColorTable(C.GDALPaletteInterp(interp))
+	return ColorTable{ct}
+}
+
+// Destroy the color table
+func (ct ColorTable) Destroy() {
+	C.GDALDestroyColorTable(ct.cval)
+}
+
+// Make a copy of the color table
+func (ct ColorTable) Clone() ColorTable {
+	newCT := C.GDALCloneColorTable(ct.cval)
+	return ColorTable{newCT}
+}
+
+// Fetch palette interpretation
+func (ct ColorTable) PaletteInterpretation() PaletteInterp {
+	pi := C.GDALGetPaletteInterpretation(ct.cval)
+	return PaletteInterp(pi)
+}
+
+// Get number of color entries in table
+func (ct ColorTable) EntryCount() int {
+	count := C.GDALGetColorEntryCount(ct.cval)
+	return int(count)
+}
+
+// Fetch a color entry from table
+func (ct ColorTable) Entry(index int) ColorEntry {
+	entry := C.GDALGetColorEntry(ct.cval, C.int(index))
+	return ColorEntry{entry}
+}
+
+// Unimplemented: EntryAsRGB
+
+// Set entry in color table
+func (ct ColorTable) SetEntry(index int, entry ColorEntry) {
+	C.GDALSetColorEntry(ct.cval, C.int(index), entry.cval)
+}
+
+// Create color ramp
+func (ct ColorTable) CreateColorRamp(start, end int, startColor, endColor ColorEntry) {
+	C.GDALCreateColorRamp(ct.cval, C.int(start), startColor.cval, C.int(end), endColor.cval)
+}
 
 /* ==================================================================== */
 /*      Raster Attribute Table                                          */
@@ -1464,9 +1501,28 @@ func (sr SpatialReference) Fixup() error {
 	return error(err)
 }
 
-// Unimplemented: StripCTParams
-// Unimplemented: FromProj4
-// Unimplemented: FromESRI
+// Strip OGC CT parameters
+func (sr SpatialReference) StripCTParams() error {
+	err := C.OSRStripCTParms(sr.cval)
+	return error(err)
+}
+
+// Import PROJ.4 coordinate string
+func (sr SpatialReference) FromProj4(input string) error {
+	cString := C.CString(input)
+	defer C.free(unsafe.Pointer(cString))
+	err := C.OSRImportFromProj4(sr.cval, cString)
+	return error(err)
+}
+
+// Import coordinate system from ESRI .prj formats
+func (sr SpatialReference) FromESRI(input string) error {
+	cString := C.CString(input)
+	defer C.free(unsafe.Pointer(cString))
+	err := C.OSRImportFromProj4(sr.cval, cString)
+	return error(err)
+}
+
 // Unimplemented: FromPCI
 // Unimplemented: FromUSGS
 // Unimplemented: FromXML
@@ -1600,6 +1656,50 @@ func (ct CoordinateTransform) Destroy() {
 	C.OCTDestroyCoordinateTransformation(ct.cval)
 }
 
-// Unimplemented: ProjectionMethods
-// Unimplemented: ParameterList
+// Fetch list of possible projection methods
+func ProjectionMethods() []string {
+	p := C.OPTGetProjectionMethods()
+	var strings []string
+	q := uintptr(unsafe.Pointer(p))
+	for {
+		p = (**C.char)(unsafe.Pointer(q))
+		if *p == nil {
+			break
+		}
+		strings = append(strings, C.GoString(*p))
+		q += unsafe.Sizeof(q)
+	}
+	
+	return strings
+}
+
+// Fetch the parameters for a given projection method
+func ParameterList(method string) (params []string, name string) {
+	cMethod := C.CString(method)
+	defer C.free(unsafe.Pointer(cMethod))
+
+	var cName *C.char
+
+	p := C.OPTGetParameterList(cMethod, &cName)
+
+	name = C.GoString(cName)
+	
+	var strings []string
+	q := uintptr(unsafe.Pointer(p))
+	for {
+		p = (**C.char)(unsafe.Pointer(q))
+		if *p == nil {
+			break
+		}
+		strings = append(strings, C.GoString(*p))
+		q += unsafe.Sizeof(q)
+	}
+	
+	return strings, name
+}
+
 // Unimplemented: ParameterInfo
+
+
+
+
