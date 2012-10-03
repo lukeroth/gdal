@@ -49,6 +49,7 @@ More examples can be found in the ./examples subdirectory.
 Recent changes
 
 A more complete changelog can be found on Github.
+10/3/2012: Restructed OGR code, added initial algorithm functions and placeholders
 10/2/2012: Initial OGR and OSR support added; color table and raster attribute table support added.
 */
 package gdal
