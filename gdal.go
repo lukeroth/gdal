@@ -1676,6 +1676,14 @@ func (sr SpatialReference) FromProj4(input string) error {
 	return error(err)
 }
 
+// Unimplemented: ToProj4
+func(sr SpatialReference) ToProj4() (string, error) {
+	var p *C.char
+	err := C.OSRExportToProj4(sr.cval, &p)
+	proj4 := C.GoString(p)
+	return proj4, error(err)
+}
+
 // Import coordinate system from ESRI .prj formats
 func (sr SpatialReference) FromESRI(input string) error {
 	cString := C.CString(input)
@@ -1689,7 +1697,6 @@ func (sr SpatialReference) FromESRI(input string) error {
 // Unimplemented: FromXML
 // Unimplemented: FromERM
 // Unimplemented: FromURL
-// Unimplemented: ToProj4
 // Unimplemented: ToPCI
 // Unimplemented: ToUSGS
 // Unimplemented: ToXML

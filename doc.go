@@ -3,7 +3,7 @@ Package gdal provides a wrapper for GDAL, the Geospatial Data Abstraction Librar
 
 Limitations
 
-The majority of the GDAL C API is covered.  Areas that are not currently covered include the asynchronous readers and quite a few less oftenly used functions.  OGR support is currently much less complete.  Spatial reference support is sufficient to support assigning basic spatial reference values to GDAL datasets, but does not cover the majority of spatial reference formats yet.
+The majority of the GDAL C API is covered, with the exception of asynchronous readers and a number of less oftenly used functions.  OGR support is currently much less complete.  Spatial reference support is sufficient to support assigning spatial reference values to GDAL datasets from WKT and Proj.4 definitions, but does not cover the majority of spatial reference formats yet.
 
 This wrapper has only been tested on 64-bit Ubuntu Linux, with version 1.9.1 of the GDAL library.
 

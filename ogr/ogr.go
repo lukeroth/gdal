@@ -71,7 +71,7 @@ type Geometry struct {
 }
 
 //Create a geometry object from its well known binary representation
-func CreateFromWkb(wkb []uint8, srs SpatialReference, bytes int) (Geometry, error) {
+func CreateFromWKB(wkb []uint8, srs SpatialReference, bytes int) (Geometry, error) {
 	cString := (*C.uchar)(unsafe.Pointer(&wkb[0]))
 	var newGeom Geometry
 	err := C.OGR_G_CreateFromWkb(cString, srs.cval, &newGeom.cval, C.int(bytes))
@@ -79,7 +79,7 @@ func CreateFromWkb(wkb []uint8, srs SpatialReference, bytes int) (Geometry, erro
 }
 
 //Create a geometry object from its well known text representation
-func CreateFromWkt(wkt string, srs SpatialReference) (Geometry, error) {
+func CreateFromWKT(wkt string, srs SpatialReference) (Geometry, error) {
 	cString := C.CString(wkt)
 	defer C.free(unsafe.Pointer(cString))
 	var newGeom Geometry
@@ -99,26 +99,113 @@ func Create(geomType GeometryType) Geometry {
 }
 
 // Unimplemented: ApproximateArcAngles
-// Unimplemented: ForceToPolygon
-// Unimplemented: ForceToMultiPolygon
-// Unimplemented: ForceToMultiPoint
-// Unimplemented: ForceToMultiLineString
-// Unimplemented: GetDimension
-// Unimplemented: GetCoordinateDimension
-// Unimplemented: SetCoordinateDimension
-// Unimplemented: Clone
+
+// Convert to polygon
+func (geom Geometry) ForceToPolygon() Geometry {
+	newGeom := C.OGR_G_ForceToPolygon(geom.cval)
+	return Geometry{newGeom}
+}
+
+// Convert to multipolygon
+func (geom Geometry) ForceToMultiPolygon() Geometry {
+	newGeom := C.OGR_G_ForceToMultiPolygon(geom.cval)
+	return Geometry{newGeom}
+}
+
+// Convert to multipoint
+func (geom Geometry) ForceToMultiPoint() Geometry {
+	newGeom := C.OGR_G_ForceToMultiPoint(geom.cval)
+	return Geometry{newGeom}
+}
+
+// Convert to multilinestring
+func (geom Geometry) ForceToMultiLineString() Geometry {
+	newGeom := C.OGR_G_ForceToMultiLineString(geom.cval)
+	return Geometry{newGeom}
+}
+
+// Get the dimension of this geometry
+func (geom Geometry) Dimension() int {
+	dim := C.OGR_G_GetDimension(geom.cval)
+	return int(dim)
+}
+
+// Get the dimension of the coordinates in this geometry
+func (geom Geometry) CoordinateDimension() int {
+	dim := C.OGR_G_GetCoordinateDimension(geom.cval)
+	return int(dim)
+}
+
+// Set the dimension of the coordinates in this geometry
+func (geom Geometry) SetCoordinateDimension(dim int) {
+	C.OGR_G_SetCoordinateDimension(geom.cval, C.int(dim))
+}
+
+// Create a copy of this geometry
+func (geom Geometry) Clone() Geometry {
+	newGeom := C.OGR_G_Clone(geom.cval)
+	return Geometry{newGeom}
+}
+
 // Unimplemented: GetEnvelope
 // Unimplemented: GetEnvelope3D
-// Unimplemented: ImportFromWkb
+
+// Assign a geometry from well known binary data
+func (geom Geometry) FromWKB(wkb []uint8, bytes int) error {
+	cString := (*C.uchar)(unsafe.Pointer(&wkb[0]))
+	err := C.OGR_G_ImportFromWkb(&geom.cval, cString, C.int(bytes))
+	return error(err)
+}
+
+// Convert a geometry to well known binary data
 // Unimplemented: ExportToWkb
-// Unimplemented: WkbSize
-// Unimplemented: ImportFromWkt
+
+// Returns size of related binary representation
+func (geom Geometry) WKBSize() int {
+	size := C.OGR_G_WkbSize(geom.cval)
+	return int(size)
+}
+
+// Assign geometry object from its well known text representation
+func (geom Geometry) FromWKT(wkt string) error {
+	cString := C.CString(wkt)
+	defer C.free(unsafe.Pointer(cString))
+	err := C.OGR_G_ImportFromWkt(&geom.cval, &cString)
+	return error(err)
+}
+
 // Unimplemented: ExportToWkt
-// Unimplemented: Type
-// Unimplemented: Name
+func (geom Geometry) ToWKT() (string, error) {
+	var p *C.char
+	err := C.OGR_G_ExportToWkt(geom.cval, &p)
+	wkt := C.GoString(p)
+	return wkt, error(err)
+}
+
+// Fetch geometry type
+func (geom Geometry) Type() GeometryType {
+	gt := C.OGR_G_GetGeometryType(geom.cval)
+	return GeometryType(gt)
+}
+
+// Fetch geometry name
+func (geom Geometry) Name() string {
+	name := C.OGR_G_GetGeometryname(geom.cval)
+	return C.GoString(name)
+}
+
 // Unimplemented: DumpReadable
-// Unimplemented: FlattenTo3D
-// Unimplemented: CloseRings
+
+// Convert geometry to strictly 2D
+func (geom Geometry) FlattenTo2D() {
+	C.OGR_G_FlattenTo2D(geom.cval)
+}
+
+// Force rings to be closed
+func (geom Geometry) CloseRings() {
+	C.OGR_G_CloseRings(geom.cval)
+}
+
 // Unimplemented: CreateFromGML
 // Unimplemented: ExportToGML
 // Unimplemented: ExportToGMLEx
