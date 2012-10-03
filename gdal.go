@@ -10,9 +10,10 @@ package gdal
 */
 import "C"
 import (
-	"unsafe"
 	"fmt"
+	"unsafe"
 )
+
 var _ = fmt.Println
 
 func init() {
@@ -24,13 +25,13 @@ func init() {
 /* -------------------------------------------------------------------- */
 
 const (
-	VERSION_MAJOR	= int(C.GDAL_VERSION_MAJOR)
-	VERSION_MINOR	= int(C.GDAL_VERSION_MINOR)
-	VERSION_REV	= int(C.GDAL_VERSION_REV)
-	VERSION_BUILD	= int(C.GDAL_VERSION_BUILD)
-	VERSION_NUM	= int(C.GDAL_VERSION_NUM)
-	RELEASE_DATE	= int(C.GDAL_RELEASE_DATE)
-	RELEASE_NAME	= string(C.GDAL_RELEASE_NAME)
+	VERSION_MAJOR = int(C.GDAL_VERSION_MAJOR)
+	VERSION_MINOR = int(C.GDAL_VERSION_MINOR)
+	VERSION_REV   = int(C.GDAL_VERSION_REV)
+	VERSION_BUILD = int(C.GDAL_VERSION_BUILD)
+	VERSION_NUM   = int(C.GDAL_VERSION_NUM)
+	RELEASE_DATE  = int(C.GDAL_RELEASE_DATE)
+	RELEASE_NAME  = string(C.GDAL_RELEASE_NAME)
 )
 
 // Error handling.  The following is bare-bones, and needs to be replaced with something more useful.
@@ -70,18 +71,18 @@ func (err _Ctype_OGRErr) Error() string {
 type DataType int
 
 const (
-	Unknown		= DataType(C.GDT_Unknown)
-	Byte		= DataType(C.GDT_Byte)
-	UInt16		= DataType(C.GDT_UInt16)
-	Int16		= DataType(C.GDT_Int16)
-	UInt32		= DataType(C.GDT_UInt32)
-	Int32		= DataType(C.GDT_Int32)
-	Float32		= DataType(C.GDT_Float32)
-	Float64		= DataType(C.GDT_Float64)
-	CInt16		= DataType(C.GDT_CInt16)
-	CInt32		= DataType(C.GDT_CInt32)
-	CFloat32	= DataType(C.GDT_CFloat32)
-	CFloat64	= DataType(C.GDT_CFloat64)
+	Unknown  = DataType(C.GDT_Unknown)
+	Byte     = DataType(C.GDT_Byte)
+	UInt16   = DataType(C.GDT_UInt16)
+	Int16    = DataType(C.GDT_Int16)
+	UInt32   = DataType(C.GDT_UInt32)
+	Int32    = DataType(C.GDT_Int32)
+	Float32  = DataType(C.GDT_Float32)
+	Float64  = DataType(C.GDT_Float64)
+	CInt16   = DataType(C.GDT_CInt16)
+	CInt32   = DataType(C.GDT_CInt32)
+	CFloat32 = DataType(C.GDT_CFloat32)
+	CFloat64 = DataType(C.GDT_CFloat64)
 )
 
 // Get data type size in bits.
@@ -107,10 +108,10 @@ func (dataType DataType) Union(dataTypeB DataType) DataType {
 type AsyncStatusType int
 
 const (
-	AR_Pending   = AsyncStatusType(C.GARIO_PENDING)
-	AR_Update    = AsyncStatusType(C.GARIO_UPDATE)
-	AR_Error     = AsyncStatusType(C.GARIO_ERROR)
-	AR_Complete  = AsyncStatusType(C.GARIO_COMPLETE)
+	AR_Pending  = AsyncStatusType(C.GARIO_PENDING)
+	AR_Update   = AsyncStatusType(C.GARIO_UPDATE)
+	AR_Error    = AsyncStatusType(C.GARIO_ERROR)
+	AR_Complete = AsyncStatusType(C.GARIO_COMPLETE)
 )
 
 func (statusType AsyncStatusType) Name() string {
@@ -147,24 +148,24 @@ const (
 type ColorInterp int
 
 const (
-	CI_Undefined		= ColorInterp(C.GCI_Undefined)
-	CI_GrayIndex		= ColorInterp(C.GCI_GrayIndex)
-	CI_PaletteIndex	= ColorInterp(C.GCI_PaletteIndex)
-	CI_RedBand			= ColorInterp(C.GCI_RedBand)
-	CI_GreenBand		= ColorInterp(C.GCI_GreenBand)
-	CI_BlueBand		= ColorInterp(C.GCI_BlueBand)
-	CI_AlphaBand		= ColorInterp(C.GCI_AlphaBand)
-	CI_HueBand			= ColorInterp(C.GCI_HueBand)
-	CI_SaturationBand	= ColorInterp(C.GCI_SaturationBand)
-	CI_LightnessBand	= ColorInterp(C.GCI_LightnessBand)
-	CI_CyanBand		= ColorInterp(C.GCI_CyanBand)
-	CI_MagentaBand		= ColorInterp(C.GCI_MagentaBand)
-	CI_YellowBand		= ColorInterp(C.GCI_YellowBand)
-	CI_BlackBand		= ColorInterp(C.GCI_BlackBand)
-	CI_YCbCr_YBand		= ColorInterp(C.GCI_YCbCr_YBand)
-	CI_YCbCr_CbBand	= ColorInterp(C.GCI_YCbCr_CbBand)
-	CI_YCbCr_CrBand	= ColorInterp(C.GCI_YCbCr_CrBand)
-	CI_Max				= ColorInterp(C.GCI_Max)
+	CI_Undefined      = ColorInterp(C.GCI_Undefined)
+	CI_GrayIndex      = ColorInterp(C.GCI_GrayIndex)
+	CI_PaletteIndex   = ColorInterp(C.GCI_PaletteIndex)
+	CI_RedBand        = ColorInterp(C.GCI_RedBand)
+	CI_GreenBand      = ColorInterp(C.GCI_GreenBand)
+	CI_BlueBand       = ColorInterp(C.GCI_BlueBand)
+	CI_AlphaBand      = ColorInterp(C.GCI_AlphaBand)
+	CI_HueBand        = ColorInterp(C.GCI_HueBand)
+	CI_SaturationBand = ColorInterp(C.GCI_SaturationBand)
+	CI_LightnessBand  = ColorInterp(C.GCI_LightnessBand)
+	CI_CyanBand       = ColorInterp(C.GCI_CyanBand)
+	CI_MagentaBand    = ColorInterp(C.GCI_MagentaBand)
+	CI_YellowBand     = ColorInterp(C.GCI_YellowBand)
+	CI_BlackBand      = ColorInterp(C.GCI_BlackBand)
+	CI_YCbCr_YBand    = ColorInterp(C.GCI_YCbCr_YBand)
+	CI_YCbCr_CbBand   = ColorInterp(C.GCI_YCbCr_CbBand)
+	CI_YCbCr_CrBand   = ColorInterp(C.GCI_YCbCr_CrBand)
+	CI_Max            = ColorInterp(C.GCI_Max)
 )
 
 func (colorInterp ColorInterp) Name() string {
@@ -182,13 +183,13 @@ type PaletteInterp int
 
 const (
 	// Grayscale (in GDALColorEntry.c1)
-	PI_Gray	= PaletteInterp(C.GPI_Gray)
+	PI_Gray = PaletteInterp(C.GPI_Gray)
 	// Red, Green, Blue and Alpha in (in c1, c2, c3 and c4)
-	PI_RGB		= PaletteInterp(C.GPI_RGB)
+	PI_RGB = PaletteInterp(C.GPI_RGB)
 	// Cyan, Magenta, Yellow and Black (in c1, c2, c3 and c4)
-	PI_CMYK	= PaletteInterp(C.GPI_CMYK)
+	PI_CMYK = PaletteInterp(C.GPI_CMYK)
 	// Hue, Lightness and Saturation (in c1, c2, and c3)
-	PI_HLS		= PaletteInterp(C.GPI_HLS)
+	PI_HLS = PaletteInterp(C.GPI_HLS)
 )
 
 func (paletteInterp PaletteInterp) Name() string {
@@ -281,7 +282,7 @@ func DestroyScaledProgress(data unsafe.Pointer) {
 
 type goGDALProgressFuncProxyArgs struct {
 	progresssFunc ProgressFunc
-	data         interface{}
+	data          interface{}
 }
 
 //export goGDALProgressFuncProxyA
@@ -299,16 +300,16 @@ func goGDALProgressFuncProxyA(complete C.double, message *C.char, data *interfac
 /* ==================================================================== */
 
 const (
-	DMD_LONGNAME			= string(C.GDAL_DMD_LONGNAME)
-	DMD_HELPTOPIC			= string(C.GDAL_DMD_HELPTOPIC)
-	DMD_MIMETYPE			= string(C.GDAL_DMD_MIMETYPE)
-	DMD_EXTENSION			= string(C.GDAL_DMD_EXTENSION)
-	DMD_CREATIONOPTIONLIST	= string(C.GDAL_DMD_CREATIONOPTIONLIST)
-	DMD_CREATIONDATATYPES 	= string(C.GDAL_DMD_CREATIONDATATYPES)
+	DMD_LONGNAME           = string(C.GDAL_DMD_LONGNAME)
+	DMD_HELPTOPIC          = string(C.GDAL_DMD_HELPTOPIC)
+	DMD_MIMETYPE           = string(C.GDAL_DMD_MIMETYPE)
+	DMD_EXTENSION          = string(C.GDAL_DMD_EXTENSION)
+	DMD_CREATIONOPTIONLIST = string(C.GDAL_DMD_CREATIONOPTIONLIST)
+	DMD_CREATIONDATATYPES  = string(C.GDAL_DMD_CREATIONDATATYPES)
 
-	DCAP_CREATE     		= string(C.GDAL_DCAP_CREATE)
-	DCAP_CREATECOPY			= string(C.GDAL_DCAP_CREATECOPY)
-	DCAP_VIRTUALIO			= string(C.GDAL_DCAP_VIRTUALIO)
+	DCAP_CREATE     = string(C.GDAL_DCAP_CREATE)
+	DCAP_CREATECOPY = string(C.GDAL_DCAP_CREATECOPY)
+	DCAP_VIRTUALIO  = string(C.GDAL_DCAP_VIRTUALIO)
 )
 
 // Create a new dataset with this driver.
@@ -322,7 +323,7 @@ func (driver Driver) Create(
 	defer C.free(unsafe.Pointer(name))
 
 	length := len(options)
-	opts := make([]*C.char, length + 1)
+	opts := make([]*C.char, length+1)
 	for i := 0; i < length; i++ {
 		opts[i] = C.CString(options[i])
 		defer C.free(unsafe.Pointer(opts[i]))
@@ -343,7 +344,7 @@ func (driver Driver) Create(
 func (driver Driver) CreateCopy(
 	filename string,
 	sourceDataset Dataset,
-	strict int, 
+	strict int,
 	options []string,
 	progress ProgressFunc,
 	data interface{},
@@ -352,7 +353,7 @@ func (driver Driver) CreateCopy(
 	defer C.free(unsafe.Pointer(name))
 
 	length := len(options)
-	opts := make([]*C.char, length + 1)
+	opts := make([]*C.char, length+1)
 	for i := 0; i < length; i++ {
 		opts[i] = C.CString(options[i])
 		defer C.free(unsafe.Pointer(opts[i]))
@@ -379,7 +380,7 @@ func IdentifyDriver(filename string, filenameList []string) Driver {
 	defer C.free(unsafe.Pointer(cFilename))
 
 	length := len(filenameList)
-	cFilenameList := make([]*C.char, length + 1)
+	cFilenameList := make([]*C.char, length+1)
 	for i := 0; i < length; i++ {
 		cFilenameList[i] = C.CString(filenameList[i])
 		defer C.free(unsafe.Pointer(cFilenameList[i]))
@@ -585,7 +586,7 @@ func (dataset Dataset) RasterBand(band int) RasterBand {
 // Add a band to a dataset
 func (dataset Dataset) AddBand(dataType DataType, options []string) error {
 	length := len(options)
-	cOptions := make([]*C.char, length + 1)
+	cOptions := make([]*C.char, length+1)
 	for i := 0; i < length; i++ {
 		cOptions[i] = C.CString(options[i])
 		defer C.free(unsafe.Pointer(cOptions[i]))
@@ -593,8 +594,8 @@ func (dataset Dataset) AddBand(dataType DataType, options []string) error {
 	cOptions[length] = (*C.char)(unsafe.Pointer(nil))
 
 	err := C.GDALAddBand(
-		dataset.cval, 
-		C.GDALDataType(dataType), 		
+		dataset.cval,
+		C.GDALDataType(dataType),
 		(**C.char)(unsafe.Pointer(&cOptions[0])))
 
 	return error(err)
@@ -661,7 +662,7 @@ func (dataset Dataset) AdviseRead(
 	options []string,
 ) error {
 	length := len(options)
-	cOptions := make([]*C.char, length + 1)
+	cOptions := make([]*C.char, length+1)
 	for i := 0; i < length; i++ {
 		cOptions[i] = C.CString(options[i])
 		defer C.free(unsafe.Pointer(cOptions[i]))
@@ -721,7 +722,7 @@ func (dataset Dataset) GDALGetGCPCount() int {
 func (dataset Dataset) GDALGetInternalHandle(request string) unsafe.Pointer {
 	cRequest := C.CString(request)
 	defer C.free(unsafe.Pointer(cRequest))
-	
+
 	ptr := C.GDALGetInternalHandle(dataset.cval, cRequest)
 	return ptr
 }
@@ -796,7 +797,7 @@ func (sourceDataset Dataset) CopyWholeRaster(
 	arg := &goGDALProgressFuncProxyArgs{progress, data}
 
 	length := len(options)
-	cOptions := make([]*C.char, length + 1)
+	cOptions := make([]*C.char, length+1)
 	for i := 0; i < length; i++ {
 		cOptions[i] = C.CString(options[i])
 		defer C.free(unsafe.Pointer(cOptions[i]))
@@ -837,7 +838,7 @@ func (rasterBand RasterBand) AdviseRead(
 	options []string,
 ) error {
 	length := len(options)
-	cOptions := make([]*C.char, length + 1)
+	cOptions := make([]*C.char, length+1)
 	for i := 0; i < length; i++ {
 		cOptions[i] = C.CString(options[i])
 		defer C.free(unsafe.Pointer(cOptions[i]))
@@ -1007,14 +1008,14 @@ func (rasterBand RasterBand) CategoryNames() []string {
 		strings = append(strings, C.GoString(*p))
 		q += unsafe.Sizeof(q)
 	}
-	
+
 	return strings
 }
 
 // Set the category names for this band
 func (rasterBand RasterBand) SetRasterCategoryNames(names []string) error {
 	length := len(names)
-	cStrings := make([]*C.char, length + 1)
+	cStrings := make([]*C.char, length+1)
 	for i := 0; i < length; i++ {
 		cStrings[i] = C.CString(names[i])
 		defer C.free(unsafe.Pointer(cStrings[i]))
@@ -1022,7 +1023,7 @@ func (rasterBand RasterBand) SetRasterCategoryNames(names []string) error {
 	cStrings[length] = (*C.char)(unsafe.Pointer(nil))
 
 	err := C.GDALSetRasterCategoryNames(rasterBand.cval, (**C.char)(unsafe.Pointer(&cStrings[0])))
-	
+
 	return error(err)
 }
 
@@ -1102,7 +1103,7 @@ func (rasterBand RasterBand) SetUnitType(unit string) error {
 }
 
 // Fetch the raster value offset
-func (rasterBand RasterBand) GetOffset() (float64, bool) {	
+func (rasterBand RasterBand) GetOffset() (float64, bool) {
 	var success int
 	val := C.GDALGetRasterOffset(rasterBand.cval, (*C.int)(unsafe.Pointer(&success)))
 	return float64(val), (success != 0)
@@ -1202,7 +1203,7 @@ func (sourceRaster RasterBand) RasterBandCopyWholeRaster(
 	arg := &goGDALProgressFuncProxyArgs{progress, data}
 
 	length := len(options)
-	cOptions := make([]*C.char, length + 1)
+	cOptions := make([]*C.char, length+1)
 	for i := 0; i < length; i++ {
 		cOptions[i] = C.CString(options[i])
 		defer C.free(unsafe.Pointer(cOptions[i]))
@@ -1317,28 +1318,133 @@ const (
 	GFU_MaxCount   = RATFieldUsage(C.GFU_MaxCount)
 )
 
-// Unimplemented: CreateRasterAttributeTable
-// Unimplemented: DestroyRasterAttributeTable
-// Unimplemented: GetColumnCount
-// Unimplemented: GetNameOfCol
-// Unimplemented: GetUsageOfCol
-// Unimplemented: GetTypeOfCol
-// Unimplemented: GetColOfUsage
-// Unimplemented: GetRowCount
-// Unimplemented: GetValueAsString
-// Unimplemented: GetValueAsInt
-// Unimplemented: GetValueAsDouble
-// Unimplemented: SetValueAsString
-// Unimplemented: SetValueAsInt
-// Unimplemented: SetValueAsDouble
-// Unimplemented: SetRowCount
-// Unimplemented: CreateColumn
-// Unimplemented: SetLinearBinning
-// Unimplemented: GetLinearBinning
-// Unimplemented: InitializeFromColorTable
-// Unimplemented: TranslateToColorTable
+// Construct empty raster attribute table
+func CreateRasterAttributeTable() RasterAttributeTable {
+	rat := C.GDALCreateRasterAttributeTable()
+	return RasterAttributeTable{rat}
+}
+
+// Destroy a RAT
+func (rat RasterAttributeTable) Destroy() {
+	C.GDALDestroyRasterAttributeTable(rat.cval)
+}
+
+// Fetch table column count
+func (rat RasterAttributeTable) ColumnCount() int {
+	count := C.GDALRATGetColumnCount(rat.cval)
+	return int(count)
+}
+
+// Fetch the name of indicated column
+func (rat RasterAttributeTable) NameOfCol(index int) string {
+	name := C.GDALRATGetNameOfCol(rat.cval, C.int(index))
+	return C.GoString(name)
+}
+
+// Fetch the usage of indicated column
+func (rat RasterAttributeTable) UsageOfCol(index int) RATFieldUsage {
+	rfu := C.GDALRATGetUsageOfCol(rat.cval, C.int(index))
+	return RATFieldUsage(rfu)
+}
+
+// Fetch the type of indicated column
+func (rat RasterAttributeTable) TypeOfCol(index int) RATFieldType {
+	rft := C.GDALRATGetTypeOfCol(rat.cval, C.int(index))
+	return RATFieldType(rft)
+}
+
+// Fetch column index for indicated usage
+func (rat RasterAttributeTable) ColOfUsage(rfu RATFieldUsage) int {
+	index := C.GDALRATGetColOfUsage(rat.cval, C.GDALRATFieldUsage(rfu))
+	return int(index)
+}
+
+// Fetch row count
+func (rat RasterAttributeTable) RowCount() int {
+	count := C.GDALRATGetRowCount(rat.cval)
+	return int(count)
+}
+
+// Fetch field value as string
+func (rat RasterAttributeTable) ValueAsString(row, field int) string {
+	cString := C.GDALRATGetValueAsString(rat.cval, C.int(row), C.int(field))
+	return C.GoString(cString)
+}
+
+// Fetch field value as integer
+func (rat RasterAttributeTable) ValueAsInt(row, field int) int {
+	val := C.GDALRATGetValueAsInt(rat.cval, C.int(row), C.int(field))
+	return int(val)
+}
+
+// Fetch field value as float64
+func (rat RasterAttributeTable) ValueAsFloat64(row, field int) float64 {
+	val := C.GDALRATGetValueAsDouble(rat.cval, C.int(row), C.int(field))
+	return float64(val)
+}
+
+// Set field value from string
+func (rat RasterAttributeTable) SetValueAsString(row, field int, val string) {
+	cVal := C.CString(val)
+	defer C.free(unsafe.Pointer(cVal))
+	C.GDALRATSetValueAsString(rat.cval, C.int(row), C.int(field), cVal)
+}
+
+// Set field value from integer
+func (rat RasterAttributeTable) SetValueAsInt(row, field, val int) {
+	C.GDALRATSetValueAsInt(rat.cval, C.int(row), C.int(field), C.int(val))
+}
+
+// Set field value from float64
+func (rat RasterAttributeTable) SetValueAsFloat64(row, field int, val float64) {
+	C.GDALRATSetValueAsDouble(rat.cval, C.int(row), C.int(field), C.double(val))
+}
+
+// Set row count
+func (rat RasterAttributeTable) SetRowCount(count int) {
+	C.GDALRATSetRowCount(rat.cval, C.int(count))
+}
+
+// Create new column
+func (rat RasterAttributeTable) CreateColumn(name string, rft RATFieldType, rfu RATFieldUsage) error {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	err := C.GDALRATCreateColumn(rat.cval, cName, C.GDALRATFieldType(rft), C.GDALRATFieldUsage(rfu))
+	return error(err)
+}
+
+// Set linear binning information
+func (rat RasterAttributeTable) SetLinearBinning(row0min, binsize float64) error {
+	err := C.GDALRATSetLinearBinning(rat.cval, C.double(row0min), C.double(binsize))
+	return error(err)
+}
+
+// Fetch linear binning information
+func (rat RasterAttributeTable) LinearBinning() (row0min, binsize float64, exists bool) {
+	success := C.GDALRATGetLinearBinning(rat.cval, (*C.double)(&row0min), (*C.double)(&binsize))
+	return row0min, binsize, success != 0
+}
+
+// Initialize RAT from color table
+func (rat RasterAttributeTable) FromColorTable(ct ColorTable) error {
+	err := C.GDALRATInitializeFromColorTable(rat.cval, ct.cval)
+	return error(err)
+}
+
+// Translate RAT to a color table
+func (rat RasterAttributeTable) ToColorTable(count int) ColorTable {
+	ct := C.GDALRATTranslateToColorTable(rat.cval, C.int(count))
+	return ColorTable{ct}
+}
+
+// Dump RAT in readable form to a file
 // Unimplemented: DumpReadable
-// Unimplemented: GetRowOfValue
+
+// Get row for pixel value
+func (rat RasterAttributeTable) RowOfValue(val float64) (int, bool) {
+	row := C.GDALRATGetRowOfValue(rat.cval, C.double(val))
+	return int(row), row != -1
+}
 
 /* ==================================================================== */
 /*      GDAL Cache Management                                           */
@@ -1644,7 +1750,7 @@ type CoordinateTransform struct {
 
 // Create a new CoordinateTransform
 func CreateCoordinateTransform(
-	source SpatialReference, 
+	source SpatialReference,
 	dest SpatialReference,
 ) CoordinateTransform {
 	ct := C.OCTNewCoordinateTransformation(source.cval, dest.cval)
@@ -1669,7 +1775,7 @@ func ProjectionMethods() []string {
 		strings = append(strings, C.GoString(*p))
 		q += unsafe.Sizeof(q)
 	}
-	
+
 	return strings
 }
 
@@ -1683,7 +1789,7 @@ func ParameterList(method string) (params []string, name string) {
 	p := C.OPTGetParameterList(cMethod, &cName)
 
 	name = C.GoString(cName)
-	
+
 	var strings []string
 	q := uintptr(unsafe.Pointer(p))
 	for {
@@ -1694,12 +1800,8 @@ func ParameterList(method string) (params []string, name string) {
 		strings = append(strings, C.GoString(*p))
 		q += unsafe.Sizeof(q)
 	}
-	
+
 	return strings, name
 }
 
 // Unimplemented: ParameterInfo
-
-
-
-

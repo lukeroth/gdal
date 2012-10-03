@@ -24,7 +24,7 @@ A simple program to create a georeferenced blank 256x256 GeoTIFF:
 			return
 		}
 		buffer := make([]uint8, 256 * 256)
-		
+
 		driver, err := gdal.GetDriverByName("GTiff")
 		if err != nil {
 			fmt.Println(err.Error())
@@ -33,7 +33,7 @@ A simple program to create a georeferenced blank 256x256 GeoTIFF:
 
 		dataset := driver.Create(filename, 256, 256, 1, gdal.Byte, nil)
 		defer dataset.Close()
-		
+
 		spatialRef := gdal.CreateSpatialReference("")
 		spatialRef.FromEPSG(3857)
 		srString, err := spatialRef.ToWKT()
