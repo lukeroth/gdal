@@ -45,6 +45,15 @@ const (
 )
 
 /* -------------------------------------------------------------------- */
+/*      Misc functions                                                  */
+/* -------------------------------------------------------------------- */
+
+// Clean up all OGR related resources
+func CleanupOGR() {
+	C.OGRCleanupAll()
+}
+
+/* -------------------------------------------------------------------- */
 /*      Geometry functions                                              */
 /* -------------------------------------------------------------------- */
 
@@ -247,256 +256,6 @@ func (geom Geometry) CloseRings() {
 // Unimplemented: BuildPolygonFromEdges
 
 /* -------------------------------------------------------------------- */
-/*      Spatial reference functions.                                    */
-/* -------------------------------------------------------------------- */
-
-type SpatialReference struct {
-	cval C.OGRSpatialReferenceH
-}
-
-// Create a new SpatialReference
-func CreateSpatialReference(wkt string) SpatialReference {
-	cString := C.CString(wkt)
-	defer C.free(unsafe.Pointer(cString))
-	sr := C.OSRNewSpatialReference(cString)
-	return SpatialReference{sr}
-}
-
-// Initialize SRS based on WKT string
-func (sr SpatialReference) FromWKT(wkt string) error {
-	cString := C.CString(wkt)
-	defer C.free(unsafe.Pointer(cString))
-	err := C.OSRImportFromWkt(sr.cval, &cString)
-	return error(err)
-}
-
-// Export coordinate system to WKT
-func (sr SpatialReference) ToWKT() (string, error) {
-	var p *C.char
-	err := C.OSRExportToWkt(sr.cval, &p)
-	wkt := C.GoString(p)
-	return wkt, error(err)
-}
-
-// Export coordinate system to a nicely formatted WKT string
-func (sr SpatialReference) ToPrettyWKT(simplify bool) (string, error) {
-	var p *C.char
-	var cBool int
-	if simplify {
-		cBool = 1
-	} else {
-		cBool = 0
-	}
-	err := C.OSRExportToPrettyWkt(sr.cval, &p, C.int(cBool))
-	wkt := C.GoString(p)
-	return wkt, error(err)
-}
-
-// Initialize SRS based on EPSG code
-func (sr SpatialReference) FromEPSG(code int) error {
-	err := C.OSRImportFromEPSG(sr.cval, C.int(code))
-	return error(err)
-}
-
-// Initialize SRS based on EPSG code, using EPSG lat/long ordering
-func (sr SpatialReference) FromEPSGA(code int) error {
-	err := C.OSRImportFromEPSGA(sr.cval, C.int(code))
-	return error(err)
-}
-
-// Destroy the spatial reference
-func (sr SpatialReference) Destroy() {
-	C.OSRDestroySpatialReference(sr.cval)
-}
-
-// Make a duplicate of this spatial reference
-func (sr SpatialReference) Clone() SpatialReference {
-	newSR := C.OSRClone(sr.cval)
-	return SpatialReference{newSR}
-}
-
-// Make a duplicate of the GEOGCS node of this spatial reference
-func (sr SpatialReference) CloneGeogCS() SpatialReference {
-	newSR := C.OSRCloneGeogCS(sr.cval)
-	return SpatialReference{newSR}
-}
-
-// Increments the reference count by one, returning reference count
-func (sr SpatialReference) Reference() int {
-	count := C.OSRReference(sr.cval)
-	return int(count)
-}
-
-// Decrements the reference count by one, returning reference count
-func (sr SpatialReference) Dereference() int {
-	count := C.OSRDereference(sr.cval)
-	return int(count)
-}
-
-// Decrements the reference count by one and destroy if zero
-func (sr SpatialReference) Release() {
-	C.OSRRelease(sr.cval)
-}
-
-// Validate spatial reference tokens
-func (sr SpatialReference) Validate() error {
-	err := C.OSRValidate(sr.cval)
-	return error(err)
-}
-
-// Correct parameter ordering to match CT specification
-func (sr SpatialReference) FixupOrdering() error {
-	err := C.OSRFixupOrdering(sr.cval)
-	return error(err)
-}
-
-// Fix up spatial reference as needed
-func (sr SpatialReference) Fixup() error {
-	err := C.OSRFixup(sr.cval)
-	return error(err)
-}
-
-// Strip OGC CT parameters
-func (sr SpatialReference) StripCTParams() error {
-	err := C.OSRStripCTParms(sr.cval)
-	return error(err)
-}
-
-// Import PROJ.4 coordinate string
-func (sr SpatialReference) FromProj4(input string) error {
-	cString := C.CString(input)
-	defer C.free(unsafe.Pointer(cString))
-	err := C.OSRImportFromProj4(sr.cval, cString)
-	return error(err)
-}
-
-// Unimplemented: ToProj4
-func (sr SpatialReference) ToProj4() (string, error) {
-	var p *C.char
-	err := C.OSRExportToProj4(sr.cval, &p)
-	proj4 := C.GoString(p)
-	return proj4, error(err)
-}
-
-// Import coordinate system from ESRI .prj formats
-func (sr SpatialReference) FromESRI(input string) error {
-	cString := C.CString(input)
-	defer C.free(unsafe.Pointer(cString))
-	err := C.OSRImportFromProj4(sr.cval, cString)
-	return error(err)
-}
-
-// Unimplemented: FromPCI
-// Unimplemented: FromUSGS
-// Unimplemented: FromXML
-// Unimplemented: FromERM
-// Unimplemented: FromURL
-// Unimplemented: ToPCI
-// Unimplemented: ToUSGS
-// Unimplemented: ToXML
-// Unimplemented: ToMICoordSys
-// Unimplemented: ToERM
-// Unimplemented: MorphToESRI
-// Unimplemented: MorphFromESRI
-// Unimplemented: SetAttrValue
-// Unimplemented: AttrValue
-// Unimplemented: SetAngularUnits
-// Unimplemented: AngularUnits
-// Unimplemented: SetLinearUnits
-// Unimplemented: SetTargetLinearUnits
-// Unimplemented: SetLinearUnitsAndUpdateParameters
-// Unimplemented: LinearUnits
-// Unimplemented: TargetLinearUnits
-// Unimplemented: PrimeMeridian
-// Unimplemented: IsGeographic
-// Unimplemented: IsLocal
-// Unimplemented: IsProjected
-// Unimplemented: IsCompound
-// Unimplemented: IsGeocentric
-// Unimplemented: IsVertical
-// Unimplemented: IsSameGeogCS
-// Unimplemented: IsSameVertCS
-// Unimplemented: IsSame
-// Unimplemented: SetLocalCS
-// Unimplemented: SetProjCS
-// Unimplemented: SetGeocCS
-// Unimplemented: SetWellKnownGeogCS
-// Unimplemented: SetFromUserInput
-// Unimplemented: CopyGeogCSFrom
-// Unimplemented: SetTOWGS84
-// Unimplemented: TOWGS84
-// Unimplemented: SetCompoundCS
-// Unimplemented: SetGeogCS
-// Unimplemented: SetVertCS
-// Unimplemented: SemiMajor
-// Unimplemented: SemiMinor
-// Unimplemented: InvFlattening
-// Unimplemented: SetAuthority
-// Unimplemented: AuthorityCode
-// Unimplemented: AuthorityName
-// Unimplemented: SetProjection
-// Unimplemented: SetProjParm
-// Unimplemented: ProjParm
-// Unimplemented: SetNormProjParm
-// Unimplemented: NormProjParm
-// Unimplemented: SetUTM
-// Unimplemented: UTMZone
-// Unimplemented: SetStatePlane
-// Unimplemented: SetStatePlaneWithUnits
-// Unimplemented: AutoIdentifyEPSG
-// Unimplemented: EPSGTreatsAsLatLong
-// Unimplemented: Axis
-// Unimplemented: SetACEA
-// Unimplemented: SetAE
-// Unimplemented: SetBonne
-// Unimplemented: SetCEA
-// Unimplemented: SetCS
-// Unimplemented: SetEC
-// Unimplemented: SetEckert
-// Unimplemented: SetEckertIV
-// Unimplemented: SetEckertVI
-// Unimplemented: SetEquirectangular
-// Unimplemented: SetEquirectangular2
-// Unimplemented: SetGS
-// Unimplemented: SetGH
-// Unimplemented: SetIGH
-// Unimplemented: SetGEOS
-// Unimplemented: SetGaussSchreiberTMercator
-// Unimplemented: SetGnomonic
-// Unimplemented: SetOM
-// Unimplemented: SetHOM
-// Unimplemented: SetHOM2PNO
-// Unimplemented: SetIWMPolyconic
-// Unimplemented: SetKrovak
-// Unimplemented: SetLAEA
-// Unimplemented: SetLCC
-// Unimplemented: SetLCC1SP
-// Unimplemented: SetLCCB
-// Unimplemented: SetMC
-// Unimplemented: SetMercator
-// Unimplemented: SetMollweide
-// Unimplemented: SetNZMG
-// Unimplemented: SetOS
-// Unimplemented: SetOrthographic
-// Unimplemented: SetPolyconic
-// Unimplemented: SetPS
-// Unimplemented: SetRobinson
-// Unimplemented: SetSinusoidal
-// Unimplemented: SetStereographic
-// Unimplemented: SetSOC
-// Unimplemented: SetTM
-// Unimplemented: SetTMVariant
-// Unimplemented: SetTMG
-// Unimplemented: SetTMSO
-// Unimplemented: SetVDG
-// Unimplemented: SetWagner
-
-// Cleanup cached SRS related memory
-func CleanupSR() {
-	C.OSRCleanup()
-}
-
-/* -------------------------------------------------------------------- */
 /*      Field definition functions                                      */
 /* -------------------------------------------------------------------- */
 
@@ -605,42 +364,156 @@ type Layer struct {
 	cval C.OGRLayerH
 }
 
-// Unimplemented: Name
-// Unimplemented: GeomType
-// Unimplemented: SpatialFilter
-// Unimplemented: SetSpatialFilter
-// Unimplemented: SetSpatialFilterRect
-// Unimplemented: SetAttributeFilter
-// Unimplemented: ResetReading
-// Unimplemented: NextFeature
-// Unimplemented: SetNextByIndex
-// Unimplemented: Feature
-// Unimplemented: SetFeature
-// Unimplemented: CreateFeature
-// Unimplemented: DeleteFeature
+// Return the layer name
+func (layer Layer) Name() string {
+	name := C.OGR_L_GetName(layer.cval)
+	return C.GoString(name)
+}
+
+// Return the layer geometry type
+func (layer Layer) Type() GeometryType {
+	gt := C.OGR_L_GetGeomType(layer.cval)
+	return GeometryType(gt)
+}
+
+// Return the current spatial filter for this layer
+func (layer Layer) SpatialFilter() Geometry {
+	geom := C.OGR_L_GetSpatialFilter(layer.cval)
+	return Geometry{geom}
+}
+
+// Set a new spatial filter for this layer
+func (layer Layer) SetSpatialFilter(filter Geometry) {
+	C.OGR_L_SetSpatialFilter(layer.cval, filter.cval)
+}
+
+// Set a new rectangular spatial filter for this layer 
+func (layer Layer) SetSpatialFilterRect(minX, minY, maxX, maxY float64) {
+	C.OGR_L_SetSpatialFilterRect(
+		layer.cval, 
+		C.double(minX), C.double(minY), C.double(maxX), C.double(maxY),
+	)
+}
+
+// Set a new attribute query filter
+func (layer Layer) SetAttributeFilter(filter string) error {
+	cFilter := C.CString(filter)
+	defer C.free(unsafe.Pointer(cFilter))
+	err := C.OGR_L_SetAttributeFilter(layer.cval, cFilter)
+	return error(err)
+}
+
+// Reset reading to start on the first featre
+func (layer Layer) ResetReading() {
+	C.OGR_L_ResetReading(layer.cval)
+}
+
+// Fetch the next available feature from this layer
+func (layer Layer) NextFeature() Feature {
+	feature := C.OGR_L_GetNextFeature(layer.cval)
+	return Feature{feature}
+}
+
+// Move read cursor to the provided index
+func (layer Layer) SetNextByIndex(index int) error {
+	err := C.OGR_L_SetNextByIndex(layer.cval, C.long(index))
+	return error(err)
+}
+
+// Fetch a feature by its index
+func (layer Layer) Feature(index int) Feature {
+	feature := C.OGR_L_GetFeature(layer.cval, C.long(index))
+	return Feature{feature}
+}
+
+// Rewrite the provided feature
+func (layer Layer) SetFeature(feature Feature) error {
+	err := C.OGR_L_SetFeature(layer.cval, feature.cval)
+	return error(err)
+}
+
+// Create and write a new feature within a layer
+func (layer Layer) Create(feature Feature) error {
+	err := C.OGR_L_CreateFeature(layer.cval, feature.cval)
+	return error(err)
+}
+
+// Delete indicated feature from layer
+func (layer Layer) Delete(index int) error {
+	err := C.OGR_L_DeleteFeature(layer.cval, C.long(index))
+	return error(err)
+}
+
+// Fetch the schema information for this layer
 // Unimplemented: LayerDefn
+
+// Fetch the spatial reference system for this layer
 // Unimplemented: SpatialRef
+
+// Fetch the feature count for this layer
 // Unimplemented: FeatureCount
+
+// Fetch the extent of this layer
 // Unimplemented: Extent
+
+// Test if this layer supports the named capability
 // Unimplemented: TestCapability
+
+// Create a new field on a layer
 // Unimplemented: CreateField
+
+// Delete a field from the layer
 // Unimplemented: DeleteField
+
+// Reorder all the fields of a layer
 // Unimplemented: ReorderFields
+
+// Reorder an existing field of a layer
 // Unimplemented: ReorderField
+
+// Alter the definition of an existing field of a layer
 // Unimplemented: AlterFieldDefn
+
+// Begin a transation on data sources which support it
 // Unimplemented: StartTransaction
+
+// Commit a transaction on data sources which support it
 // Unimplemented: CommitTransaction
+
+// Roll back the current transaction on data sources which support it
 // Unimplemented: RollbackTransaction
+
+// Flush pending changes to the layer
 // Unimplemented: SyncToDisk
+
+// Fetch the index of the FID column
 // Unimplemented: FIDColumn
+
+// Fetch the index of the geometry column
 // Unimplemented: GeometryColumn
+
+// Set which fields can be ignored when retrieving features from the layer
 // Unimplemented: SetIgnoredFields
+
+// Return the intersection of two layers
 // Unimplemented: Intersection
+
+// Return the union of two layers
 // Unimplemented: Union
+
+// Return the symmetric difference of two layers
 // Unimplemented: SymDifference
+
+// Identify features in this layer with ones from the provided layer
 // Unimplemented: Identity
+
+// Update this layer with features from the provided layer
 // Unimplemented: Update
+
+// Clip off areas that are not covered by the provided layer
 // Unimplemented: Clip
+
+// Remove areas that are covered by the provided layer
 // Unimplemented: Erase
 
 /* -------------------------------------------------------------------- */
@@ -651,21 +524,166 @@ type DataSource struct {
 	cval C.OGRDataSourceH
 }
 
-// Unimplemented: Open
-// Unimplemented: Release
-// Unimplemented: Destroy
-// Unimplemented: Name
-// Unimplemented: LayerCount
-// Unimplemented: Layer
-// Unimplemented: LayerByName
-// Unimplemented: DeleteLayer
-// Unimplemented: Driver
-// Unimplemented: CreateLayer
-// Unimplemented: CopyLayer
-// Unimplemented: TestCapability
-// Unimplemented: ExecuteSQL
-// Unimplemented: ReleaseResultSet
-// Unimplemented: SyncToDisk
+// Open a file / data source with one of the registered drivers
+func OpenDataSource(name string, update int) DataSource {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	ds := C.OGROpen(cName, C.int(update), nil)
+	return DataSource{ds}
+}
+
+// Open a shared file / data source with one of the registered drivers
+func OpenSharedDataSource(name string, update int) DataSource {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	ds := C.OGROpenShared(cName, C.int(update), nil)
+	return DataSource{ds}
+}
+
+// Drop a reference to this datasource and destroy if reference is zero
+func (ds DataSource) Release() error {
+	err := C.OGRReleaseDataSource(ds.cval);
+	return error(err)
+}
+
+// Return the number of opened data sources
+func OpenDataSourceCount() int {
+	count := C.OGRGetOpenDSCount()
+	return int(count)
+}
+
+// Return the i'th datasource opened
+func OpenDataSourceByIndex(index int) DataSource {
+	ds := C.OGRGetOpenDS(C.int(index))
+	return DataSource{ds}
+}
+
+// Closes datasource and releases resources
+func (ds DataSource) Destroy() {
+	C.OGR_DS_Destroy(ds.cval)
+}
+
+// Fetch the name of the data source
+func (ds DataSource) Name() string {
+	name := C.OGR_DS_GetName(ds.cval)
+	return C.GoString(name)
+}
+
+// Fetch the number of layers in this data source
+func (ds DataSource) LayerCount() int {
+	count := C.OGR_DS_GetLayerCount(ds.cval)
+	return int(count)
+}
+
+// Fetch a layer of this data source by index
+func (ds DataSource) LayerByIndex(index int) Layer {
+	layer := C.OGR_DS_GetLayer(ds.cval, C.int(index))
+	return Layer{layer}
+}
+
+// Fetch a layer of this data source by name
+func (ds DataSource) LayerByName(name string) Layer {
+	cString := C.CString(name)
+	defer C.free(unsafe.Pointer(cString))
+	layer := C.OGR_DS_GetLayerByName(ds.cval, cString)
+	return Layer{layer}
+}
+
+// Delete the layer from the data source
+func (ds DataSource) Delete(index int) error {
+	err := C.OGR_DS_DeleteLayer(ds.cval, C.int(index))
+	return error(err)
+}
+
+// Fetch the driver that the data source was opened with
+func (ds DataSource) Driver() OGRDriver {
+	driver := C.OGR_DS_GetDriver(ds.cval)
+	return OGRDriver{driver}
+}
+
+// Create a new layer on the data source
+func (ds DataSource) CreateLayer(
+	name string, 
+	sr SpatialReference,
+	geomType GeometryType,
+	options []string,
+) Layer {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+
+	length := len(options)
+	opts := make([]*C.char, length+1)
+	for i := 0; i < length; i++ {
+		opts[i] = C.CString(options[i])
+		defer C.free(unsafe.Pointer(opts[i]))
+	}
+	opts[length] = (*C.char)(unsafe.Pointer(nil))
+
+	layer := C.OGR_DS_CreateLayer(
+		ds.cval,
+		cName,
+		sr.cval,
+		C.OGRwkbGeometryType(geomType),
+		(**C.char)(unsafe.Pointer(&opts[0])),
+	)
+	return Layer{layer}
+}
+
+// Duplicate an existing layer
+func (ds DataSource) CopyLayer(
+	source Layer,
+	name string, 
+	options []string,
+) Layer {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+
+	length := len(options)
+	opts := make([]*C.char, length+1)
+	for i := 0; i < length; i++ {
+		opts[i] = C.CString(options[i])
+		defer C.free(unsafe.Pointer(opts[i]))
+	}
+	opts[length] = (*C.char)(unsafe.Pointer(nil))
+
+	layer := C.OGR_DS_CopyLayer(
+		ds.cval,
+		source.cval,
+		cName,
+		(**C.char)(unsafe.Pointer(&opts[0])),
+	)
+	return Layer{layer}
+}
+
+// Test if the data source has the indicated capability
+func (ds DataSource) TestCapability(capability string) bool {
+	cString := C.CString(capability)
+	defer C.free(unsafe.Pointer(cString))
+	val := C.OGR_DS_TestCapability(ds.cval, cString)
+	return val != 0
+}
+
+// Execute an SQL statement against the data source
+func (ds DataSource) ExecuteSQL(sql string, filter Geometry, dialect string) Layer {
+	cSQL := C.CString(sql)
+	defer C.free(unsafe.Pointer(cSQL))
+	cDialect := C.CString(dialect)
+	defer C.free(unsafe.Pointer(cDialect))
+
+	layer := C.OGR_DS_ExecuteSQL(ds.cval, cSQL, filter.cval, cDialect)
+	return Layer{layer}
+}
+
+// Release the results of ExecuteSQL
+func (ds DataSource) ReleaseResultSet(layer Layer) {
+	C.OGR_DS_ReleaseResultSet(ds.cval, layer.cval)
+}
+
+// Flush pending changes to the data source
+func (ds DataSource) Sync() error {
+	err := C.OGR_DS_SyncToDisk(ds.cval)
+	return error(err)
+}
 
 /* -------------------------------------------------------------------- */
 /*      Driver functions                                                */
@@ -675,17 +693,99 @@ type OGRDriver struct {
 	cval C.OGRSFDriverH
 }
 
-// Unimplemented: Name
-// Unimplemented: Open
-// Unimplemented: TestCapability
-// Unimplemented: CreateDataSource
-// Unimplemented: CopyDataSource
-// Unimplemented: DeleteDataSource
-// Unimplemented: Register
-// Unimplemented: Deregister
-// Unimplemented: DriverCount
-// Unimplemented: DriverByIndex
-// Unimplemented: DriverByName
+// Fetch name of driver (file format)
+func (driver OGRDriver) Name() string {
+	name := C.OGR_Dr_GetName(driver.cval)
+	return C.GoString(name)
+}
+
+// Attempt to open file with this driver
+func (driver OGRDriver) Open(filename string, update int) (newDS DataSource, ok bool) {
+	cFilename := C.CString(filename)
+	defer C.free(unsafe.Pointer(cFilename))
+	ds := C.OGR_Dr_Open(driver.cval, cFilename, C.int(update))
+	return DataSource{ds}, ds != nil
+}
+
+// Test if this driver supports the named capability
+func (driver OGRDriver) TestCapability(capability string) bool {
+	cString := C.CString(capability)
+	defer C.free(unsafe.Pointer(cString))
+	val := C.OGR_Dr_TestCapability(driver.cval, cString)
+	return val != 0
+}
+
+// Create a new data source based on this driver
+func (driver OGRDriver) Create(name string, options []string) (newDS DataSource, ok bool) {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+
+	length := len(options)
+	opts := make([]*C.char, length+1)
+	for i := 0; i < length; i++ {
+		opts[i] = C.CString(options[i])
+		defer C.free(unsafe.Pointer(opts[i]))
+	}
+	opts[length] = (*C.char)(unsafe.Pointer(nil))
+	
+	ds := C.OGR_Dr_CreateDataSource(driver.cval, cName, (**C.char)(unsafe.Pointer(&opts[0])))
+	return DataSource{ds}, ds != nil
+}
+	
+// Create a new datasource with this driver by copying all layers of the existing datasource
+func (driver OGRDriver) Copy(source DataSource, name string, options []string) (newDS DataSource, ok bool) {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+
+	length := len(options)
+	opts := make([]*C.char, length+1)
+	for i := 0; i < length; i++ {
+		opts[i] = C.CString(options[i])
+		defer C.free(unsafe.Pointer(opts[i]))
+	}
+	opts[length] = (*C.char)(unsafe.Pointer(nil))
+
+	ds := C.OGR_Dr_CopyDataSource(driver.cval, source.cval, cName, (**C.char)(unsafe.Pointer(&opts[0])))
+	return DataSource{ds}, ds != nil
+}
+
+// Delete a data source
+func (driver OGRDriver) Delete(filename string) error {
+	cFilename := C.CString(filename)
+	defer C.free(unsafe.Pointer(cFilename))
+	err := C.OGR_Dr_DeleteDataSource(driver.cval, cFilename)
+	return error(err)
+}
+
+// Add a driver to the list of registered drivers
+func (driver OGRDriver) Register() {
+	C.OGRRegisterDriver(driver.cval)
+}
+
+// Remove a driver from the list of registered drivers
+func (driver OGRDriver) Deregister() {
+	C.OGRDeregisterDriver(driver.cval)
+}
+
+// Fetch the number of registered drivers
+func OGRDriverCount() int {
+	count := C.OGRGetDriverCount()
+	return int(count)
+}
+
+// Fetch the indicated driver by index
+func OGRDriverByIndex(index int) OGRDriver {
+	driver := C.OGRGetDriver(C.int(index))
+	return OGRDriver{driver}
+}
+
+// Fetch the indicated driver by name
+func OGRDriverByName(name string) OGRDriver {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	driver := C.OGRGetDriverByName(cName)
+	return OGRDriver{driver}
+}
 
 /* -------------------------------------------------------------------- */
 /*      Style manager functions                                         */
@@ -800,11 +900,3 @@ func ParameterList(method string) (params []string, name string) {
 }
 
 // Unimplemented: ParameterInfo
-
-/* -------------------------------------------------------------------- */
-/*      Misc functions                                                  */
-/* -------------------------------------------------------------------- */
-
-// Unimplemented: OpenDSCount
-// Unimplemented: OpenDS
-// Unimplemented: CleanupAll
