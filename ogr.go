@@ -45,12 +45,62 @@ const (
 )
 
 /* -------------------------------------------------------------------- */
+/*      Envelope functions                                              */
+/* -------------------------------------------------------------------- */
+
+type Envelope struct {
+	cval C.OGREnvelope
+}
+
+func (env Envelope) MinX() float64 {
+	return float64(env.cval.MinX)
+}
+
+func (env Envelope) MaxX() float64 {
+	return float64(env.cval.MaxX)
+}
+
+func (env Envelope) MinY() float64 {
+	return float64(env.cval.MinY)
+}
+
+func (env Envelope) MaxY() float64 {
+	return float64(env.cval.MaxY)
+}
+
+func (env Envelope) SetMinX(val float64) {
+	env.cval.MinX = C.double(val)
+}
+
+func (env Envelope) SetMaxX(val float64) {
+	env.cval.MaxX = C.double(val)
+}
+
+func (env Envelope) SetMinY(val float64) {
+	env.cval.MinY = C.double(val)
+}
+
+func (env Envelope) SetMaxY(val float64) {
+	env.cval.MaxY = C.double(val)
+}
+
+/* -------------------------------------------------------------------- */
 /*      Misc functions                                                  */
 /* -------------------------------------------------------------------- */
 
 // Clean up all OGR related resources
 func CleanupOGR() {
 	C.OGRCleanupAll()
+}
+
+// Convert a go bool to a C int
+func BoolToCInt(in bool) (out C.int) {
+	if in {
+		out = 1
+	} else {
+		out = 0
+	}
+	return
 }
 
 /* -------------------------------------------------------------------- */
@@ -259,7 +309,7 @@ func (geom Geometry) CloseRings() {
 /*      Field definition functions                                      */
 /* -------------------------------------------------------------------- */
 
-type FieldDefn struct {
+type FieldDefinition struct {
 	cval C.OGRFieldDefnH
 }
 
@@ -284,7 +334,7 @@ type FieldDefn struct {
 /*      Feature definition functions                                    */
 /* -------------------------------------------------------------------- */
 
-type FeatureDefn struct {
+type FeatureDefinition struct {
 	cval C.OGRFeatureDefnH
 }
 
@@ -445,25 +495,48 @@ func (layer Layer) Delete(index int) error {
 }
 
 // Fetch the schema information for this layer
-// Unimplemented: LayerDefn
+func (layer Layer) Definition() FeatureDefinition {
+	defn := C.OGR_L_GetLayerDefn(layer.cval)
+	return FeatureDefinition{defn}
+}
 
 // Fetch the spatial reference system for this layer
-// Unimplemented: SpatialRef
+func (layer Layer) SpatialReference() SpatialReference {
+	sr := C.OGR_L_GetSpatialRef(layer.cval)
+	return SpatialReference{sr}
+}
 
 // Fetch the feature count for this layer
-// Unimplemented: FeatureCount
+func (layer Layer) FeatureCount(force bool) (count int, ok bool) {
+	count = int(C.OGR_L_GetFeatureCount(layer.cval, BoolToCInt(force)))
+	return count, count != -1
+}
 
 // Fetch the extent of this layer
-// Unimplemented: Extent
+func (layer Layer) Extent(force bool) (env Envelope, err error) {
+	err = error(C.OGR_L_GetExtent(layer.cval, &env.cval, BoolToCInt(force)))
+	return
+}
 
 // Test if this layer supports the named capability
-// Unimplemented: TestCapability
+func (layer Layer) TestCapability(capability string) bool {
+	cString := C.CString(capability)
+	defer C.free(unsafe.Pointer(cString))
+	val := C.OGR_L_TestCapability(layer.cval, cString)
+	return val != 0
+}
 
 // Create a new field on a layer
-// Unimplemented: CreateField
+func (layer Layer) CreateField(fd FieldDefinition, approxOK bool) error {
+	err := C.OGR_L_CreateField(layer.cval, fd.cval, BoolToCInt(approxOK))
+	return error(err)
+}
 
 // Delete a field from the layer
-// Unimplemented: DeleteField
+func (layer Layer) DeleteField(index int) error {
+	err := C.OGR_L_DeleteField(layer.cval, C.int(index))
+	return error(err)
+}
 
 // Reorder all the fields of a layer
 // Unimplemented: ReorderFields
