@@ -369,6 +369,10 @@ type FieldDefinition struct {
 	cval C.OGRFieldDefnH
 }
 
+type Field struct {
+	cval *C.OGRField
+}
+
 // Unimplemented: Create
 
 // Unimplemented: Destroy
@@ -537,13 +541,29 @@ func (feature Feature) UnnsetField(index int) {
 	C.OGR_F_UnsetField(feature.cval, C.int(index))
 }
 
-// Unimplemented: RawFieldRef
+// Fetch a reference to the internal field value
+func (feature Feature) RawField(index int) Field {
+	field := C.OGR_F_GetRawFieldRef(feature.cval, C.int(index))
+	return Field{field}
+}
 
-// Unimplemented: FieldAsInteger
+// Fetch field value as integer
+func (feature Feature) FieldAsInteger(index int) int {
+	val := C.OGR_F_GetFieldAsInteger(feature.cval, C.int(index))
+	return int(val)
+}
 
-// Unimplemented: FieldAsDouble
+// Fetch field value as float64
+func (feature Feature) FieldAsFloat64(index int) float64 {
+	val := C.OGR_F_GetFieldAsDouble(feature.cval, C.int(index))
+	return float64(val)
+}
 
-// Unimplemented: FieldAsString
+// Fetch field value as string
+func (feature Feature) FieldAsString(index int) string {
+	val := C.OGR_F_GetFieldAsString(feature.cval, C.int(index))
+	return C.GoString(val)
+}
 
 // Unimplemented: FieldAsIntegerList
 
