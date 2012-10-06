@@ -248,61 +248,117 @@ func (geom Geometry) CloseRings() {
 }
 
 // Unimplemented: CreateFromGML
+
 // Unimplemented: ExportToGML
+
 // Unimplemented: ExportToGMLEx
+
 // Unimplemented: ExportToKML
+
 // Unimplemented: ExportToJson
+
 // Unimplemented: ExportToJsonEx
+
 // Unimplemented: SetSpatialReference
+
 // Unimplemented: SpatialReference
+
 // Unimplemented: Transform
+
 // Unimplemented: TransformTo
+
 // Unimplemented: Simplify
+
 // Unimplemented: SimplifyPreserveTopology
+
 // Unimplemented: Segmentize
+
 // Unimplemented: Intersects
+
 // Unimplemented: Equals
+
 // Unimplemented: Disjoint
+
 // Unimplemented: Touches
+
 // Unimplemented: Crosses
+
 // Unimplemented: Within
+
 // Unimplemented: Contains
+
 // Unimplemented: Overlaps
+
 // Unimplemented: Boundary
+
 // Unimplemented: ConvexHull
+
 // Unimplemented: Buffer
+
 // Unimplemented: Intersection
+
 // Unimplemented: Union
+
 // Unimplemented: UnionCascaded
+
 // Unimplemented: PointOnSurface
+
 // Unimplemented: Difference
+
 // Unimplemented: SymDifference
+
 // Unimplemented: Distance
+
 // Unimplemented: Length
+
 // Unimplemented: Area
+
 // Unimplemented: Centroid
+
 // Unimplemented: Empty
+
 // Unimplemented: IsEmpty
+
 // Unimplemented: IsValid
+
 // Unimplemented: IsSimple
+
 // Unimplemented: IsRing
+
 // Unimplemented: Polygonize
+
 // Unimplemented: SymmetricDifference
+
 // Unimplemented: PointCount
+
 // Unimplemented: Points
+
 // Unimplemented: X
+
 // Unimplemented: Y
+
 // Unimplemented: Z
+
 // Unimplemented: Point
+
 // Unimplemented: SetPoint
+
 // Unimplemented: SetPoint_2D
+
 // Unimplemented: AddPoint
+
 // Unimplemented: AddPoint_2D
+
 // Unimplemented: GeometryCount
+
 // Unimplemented: GeometryRef
+
 // Unimplemented: AddGeometry
+
 // Unimplemented: AddGeometryDirectly
+
 // Unimplemented: RemoveGeometry
+
 // Unimplemented: BuildPolygonFromEdges
 
 /* -------------------------------------------------------------------- */
@@ -314,20 +370,35 @@ type FieldDefinition struct {
 }
 
 // Unimplemented: Create
+
 // Unimplemented: Destroy
+
 // Unimplemented: Name
+
 // Unimplemented: SetName
+
 // Unimplemented: Type
+
 // Unimplemented: SetType
+
 // Unimplemented: Justify
+
 // Unimplemented: SetJustify
+
 // Unimplemented: Width
+
 // Unimplemented: SetWidth
+
 // Unimplemented: Precision
+
 // Unimplemented: SetPrecision
+
 // Unimplemented: Set
+
 // Unimplemented: IsIgnorned
+
 // Unimplemented: SetIgnored
+
 // Unimplemented: FieldTypeName
 
 /* -------------------------------------------------------------------- */
@@ -339,22 +410,39 @@ type FeatureDefinition struct {
 }
 
 // Unimplemented: Create
+
 // Unimplemented: Destroy
+
 // Unimplemented: Release
+
 // Unimplemented: Name
+
 // Unimplemented: FieldCount
+
 // Unimplemented: FieldDefn
+
 // Unimplemented: FieldIndex
+
 // Unimplemented: AddFieldDefn
+
 // Unimplemented: DeleteFieldDefn
+
 // Unimplemented: GeomType
+
 // Unimplemented: SetGeomType
+
 // Unimplemented: IsGeometryIgnored
+
 // Unimplemented: SetGeometryIgnored
+
 // Unimplemented: IsStyleIgnored
+
 // Unimplemented: SetStyleIgnored
+
 // Unimplemented: Reference
+
 // Unimplemented: Dereference
+
 // Unimplemented: ReferenceCount
 
 /* -------------------------------------------------------------------- */
@@ -365,45 +453,140 @@ type Feature struct {
 	cval C.OGRFeatureH
 }
 
-// Unimplemented: Create
-// Unimplemented: Destroy
-// Unimplemented: DefnRef
-// Unimplemented: SetGeometryDirectly
-// Unimplemented: SetGeometryDirectly
-// Unimplemented: GeometryRef
-// Unimplemented: StealGeometry
-// Unimplemented: Clone
-// Unimplemented: Equal
-// Unimplemented: FieldCount
-// Unimplemented: FieldDefnRef
-// Unimplemented: FieldIndex
-// Unimplemented: IsFieldSet
-// Unimplemented: UnsetField
+// Create a feature from this feature definition
+func (fd FeatureDefinition) Create() Feature {
+	feature := C.OGR_F_Create(fd.cval)
+	return Feature{feature}
+}
+
+// Destroy this feature
+func (feature Feature) Destroy() {
+	C.OGR_F_Destroy(feature.cval)
+}
+
+// Fetch feature definition
+func (feature Feature) Definition() FeatureDefinition {
+	fd := C.OGR_F_GetDefnRef(feature.cval)
+	return FeatureDefinition{fd}
+}
+
+// Set feature geometry
+func (feature Feature) SetGeometry(geom Geometry) error {
+	err := C.OGR_F_SetGeometry(feature.cval, geom.cval)
+	return error(err)
+}
+
+// Set feature geometry, passing ownership to the feature
+func (feature Feature) SetGeometryDirectly(geom Geometry) error {
+	err := C.OGR_F_SetGeometryDirectly(feature.cval, geom.cval)
+	return error(err)
+}
+
+// Fetch geometry of this feature
+func (feature Feature) Geometry() Geometry {
+	geom := C.OGR_F_GetGeometryRef(feature.cval)
+	return Geometry{geom}
+}
+
+// Fetch geometry of this feature and assume ownership
+func (feature Feature) StealGeometry() Geometry {
+	geom := C.OGR_F_StealGeometry(feature.cval)
+	return Geometry{geom}
+}
+
+// Duplicate feature
+func (feature Feature) Clone() Feature {
+	newFeature := C.OGR_F_Clone(feature.cval)
+	return Feature{newFeature}
+}
+
+// Test if two features are the same
+func (f1 Feature) Equal(f2 Feature) bool {
+	equal := C.OGR_F_Equal(f1.cval, f2.cval)
+	return equal != 0
+}
+
+// Fetch number of fields on this feature
+func (feature Feature) FieldCount() int {
+	count := C.OGR_F_GetFieldCount(feature.cval)
+	return int(count)
+}
+
+// Fetch definition for the indicated field
+func (feature Feature) FieldDefinition(index int) FieldDefinition {
+	defn := C.OGR_F_GetFieldDefnRef(feature.cval, C.int(index))
+	return FieldDefinition{defn}
+}
+
+// Fetch the field index for the given field name
+func (feature Feature) FieldIndex(name string) int {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	index := C.OGR_F_GetFieldIndex(feature.cval, cName)
+	return int(index)
+}
+
+// Return if a field has ever been assigned a value
+func (feature Feature) IsFieldSet(index int) bool {
+	set := C.OGR_F_IsFieldSet(feature.cval, C.int(index))
+	return set != 0
+}
+
+// Clear a field and mark it as unset
+func (feature Feature) UnnsetField(index int) {
+	C.OGR_F_UnsetField(feature.cval, C.int(index))
+}
+
 // Unimplemented: RawFieldRef
+
 // Unimplemented: FieldAsInteger
+
 // Unimplemented: FieldAsDouble
+
 // Unimplemented: FieldAsString
+
 // Unimplemented: FieldAsIntegerList
+
 // Unimplemented: FieldAsDoubleList
+
 // Unimplemented: FieldAsStringList
+
 // Unimplemented: FieldAsBinary
+
 // Unimplemented: FieldAsDateTime
+
 // Unimplemented: SetFieldInteger
+
 // Unimplemented: SetFieldDouble
+
 // Unimplemented: SetFieldString
+
 // Unimplemented: SetFieldIntegerList
+
 // Unimplemented: SetFieldDoubleList
+
 // Unimplemented: SetFieldStringList
+
 // Unimplemented: SetFieldRaw
+
 // Unimplemented: SetFieldBinary
+
 // Unimplemented: SetFieldDateTime
+
 // Unimplemented: FID
+
 // Unimplemented: SetFID
+
 // Unimplemented: DumpReadable
+
 // Unimplemented: SetFrom
+
 // Unimplemented: SetFromWithMap
+
 // Unimplemented: StyleString
+
 // Unimplemented: SetStyleString
+
 // Unimplemented: SetStyleStringDirectly
 
 /* -------------------------------------------------------------------- */
@@ -599,24 +782,31 @@ func (layer Layer) SetIgnoredFields(names []string) error {
 
 // Return the intersection of two layers
 // Unimplemented: Intersection
+// Will be new in 2.0
 
 // Return the union of two layers
 // Unimplemented: Union
+// Will be new in 2.0
 
 // Return the symmetric difference of two layers
 // Unimplemented: SymDifference
+// Will be new in 2.0
 
 // Identify features in this layer with ones from the provided layer
 // Unimplemented: Identity
+// Will be new in 2.0
 
 // Update this layer with features from the provided layer
 // Unimplemented: Update
+// Will be new in 2.0
 
 // Clip off areas that are not covered by the provided layer
 // Unimplemented: Clip
+// Will be new in 2.0
 
 // Remove areas that are covered by the provided layer
 // Unimplemented: Erase
+// Will be new in 2.0
 
 /* -------------------------------------------------------------------- */
 /*      Data source functions                                           */
