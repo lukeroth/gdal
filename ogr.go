@@ -548,25 +548,54 @@ func (layer Layer) DeleteField(index int) error {
 // Unimplemented: AlterFieldDefn
 
 // Begin a transation on data sources which support it
-// Unimplemented: StartTransaction
+func (layer Layer) StartTransaction() error {
+	err := C.OGR_L_StartTransaction(layer.cval)
+	return error(err)
+}
 
 // Commit a transaction on data sources which support it
-// Unimplemented: CommitTransaction
+func (layer Layer) CommitTransaction() error {
+	err := C.OGR_L_CommitTransaction(layer.cval)
+	return error(err)
+}
 
 // Roll back the current transaction on data sources which support it
-// Unimplemented: RollbackTransaction
+func (layer Layer) RollbackTransaction() error {
+	err := C.OGR_L_RollbackTransaction(layer.cval)
+	return error(err)
+}
 
 // Flush pending changes to the layer
-// Unimplemented: SyncToDisk
+func (layer Layer) Sync() error {
+	err := C.OGR_L_SyncToDisk(layer.cval)
+	return error(err)
+}
 
-// Fetch the index of the FID column
-// Unimplemented: FIDColumn
+// Fetch the name of the FID column
+func (layer Layer) FIDColumn() string {
+	name := C.OGR_L_GetFIDColumn(layer.cval)
+	return C.GoString(name)
+}
 
-// Fetch the index of the geometry column
-// Unimplemented: GeometryColumn
+// Fetch the name of the geometry column
+func (layer Layer) GeometryColumn() string {
+	name := C.OGR_L_GetGeometryColumn(layer.cval)
+	return C.GoString(name)
+}
 
 // Set which fields can be ignored when retrieving features from the layer
-// Unimplemented: SetIgnoredFields
+func (layer Layer) SetIgnoredFields(names []string) error {
+	length := len(names)
+	cNames := make([]*C.char, length+1)
+	for i := 0; i < length; i++ {
+		cNames[i] = C.CString(names[i])
+		defer C.free(unsafe.Pointer(cNames[i]))
+	}
+	cNames[length] = (*C.char)(unsafe.Pointer(nil))
+
+	err := C.OGR_L_SetIgnoredFields(layer.cval, (**C.char)(unsafe.Pointer(&cNames[0])))
+	return error(err)
+}
 
 // Return the intersection of two layers
 // Unimplemented: Intersection
