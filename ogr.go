@@ -415,41 +415,111 @@ type FeatureDefinition struct {
 	cval C.OGRFeatureDefnH
 }
 
-// Unimplemented: Create
+// Create a new feature definition object
+func CreateFeatureDefinition(name string) FeatureDefinition {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	fd := C.OGR_FD_Create(cName)
+	return FeatureDefinition{fd}
+}
 
-// Unimplemented: Destroy
+// Destroy a feature definition object
+func (fd FeatureDefinition) Destroy() {
+	C.OGR_FD_Destroy(fd.cval)
+}
 
-// Unimplemented: Release
+// Drop a reference, and delete object if no references remain
+func (fd FeatureDefinition) Release() {
+	C.OGR_FD_Release(fd.cval)
+}
 
-// Unimplemented: Name
+// Fetch the name of this feature definition
+func (fd FeatureDefinition) Name() string {
+	name := C.OGR_FD_GetName(fd.cval)
+	return C.GoString(name)
+}
 
-// Unimplemented: FieldCount
+// Fetch the number of fields in the feature definition
+func (fd FeatureDefinition) FieldCount() int {
+	count := C.OGR_FD_GetFieldCount(fd.cval)
+	return int(count)
+}
 
-// Unimplemented: FieldDefn
+// Fetch the definition of the indicated field
+func (fd FeatureDefinition) FieldDefinition(index int) FieldDefinition {
+	fieldDefn := C.OGR_FD_GetFieldDefn(fd.cval, C.int(index))
+	return FieldDefinition{fieldDefn}
+}
 
-// Unimplemented: FieldIndex
+// Fetch the index of the named field
+func (fd FeatureDefinition) FieldIndex(name string) int {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	index := C.OGR_FD_GetFieldIndex(fd.cval, cName)
+	return int(index)
+}
 
-// Unimplemented: AddFieldDefn
+// Add a new field definition to this feature definition
+func (fd FeatureDefinition) AddFieldDefinition(fieldDefn FieldDefinition) {
+	C.OGR_FD_AddFieldDefn(fd.cval, fieldDefn.cval)
+}
 
-// Unimplemented: DeleteFieldDefn
+// Delete a field definition from this feature definition
+func (fd FeatureDefinition) DeleteFieldDefinition(index int) error {
+	err := C.OGR_FD_DeleteFieldDefn(fd.cval, C.int(index))
+	return error(err)
+}
 
-// Unimplemented: GeomType
+// Fetch the geometry base type of this feature definition
+func (fd FeatureDefinition) GeometryType() GeometryType {
+	gt := C.OGR_FD_GetGeomType(fd.cval)
+	return GeometryType(gt)
+}
 
-// Unimplemented: SetGeomType
+// Set the geometry base type for this feature definition
+func (fd FeatureDefinition) SetGeometryType(geomType GeometryType) {
+	C.OGR_FD_SetGeomType(fd.cval, C.OGRwkbGeometryType(geomType))
+}
 
-// Unimplemented: IsGeometryIgnored
+// Fetch if the geometry can be ignored when fetching features
+func (fd FeatureDefinition) IsGeometryIgnored() bool {
+	isIgnored := C.OGR_FD_IsGeometryIgnored(fd.cval)
+	return isIgnored != 0
+}
 
-// Unimplemented: SetGeometryIgnored
+// Set whether the geometry can be ignored when fetching features
+func (fd FeatureDefinition) SetGeometryIgnored(val bool) {
+	C.OGR_FD_SetGeometryIgnored(fd.cval, BoolToCInt(val))
+}
 
-// Unimplemented: IsStyleIgnored
+// Fetch if the style can be ignored when fetching features
+func (fd FeatureDefinition) IsStyleIgnored() bool {
+	isIgnored := C.OGR_FD_IsStyleIgnored(fd.cval)
+	return isIgnored != 0
+}
 
-// Unimplemented: SetStyleIgnored
+// Set whether the style can be ignored when fetching features
+func (fd FeatureDefinition) SetStyleIgnored(val bool) {
+	C.OGR_FD_SetStyleIgnored(fd.cval, BoolToCInt(val))
+}
 
-// Unimplemented: Reference
+// Increment the reference count by one
+func (fd FeatureDefinition) Reference() int {
+	count := C.OGR_FD_Reference(fd.cval)
+	return int(count)
+}
 
-// Unimplemented: Dereference
+// Decrement the reference count by one
+func (fd FeatureDefinition) Dereference() int {
+	count := C.OGR_FD_Dereference(fd.cval)
+	return int(count)
+}
 
-// Unimplemented: ReferenceCount
+// Fetch the current reference count
+func (fd FeatureDefinition) ReferenceCount() int {
+	count := C.OGR_FD_GetReferenceCount(fd.cval)
+	return int(count)
+}
 
 /* -------------------------------------------------------------------- */
 /*      Feature functions                                               */
