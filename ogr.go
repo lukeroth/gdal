@@ -11,6 +11,8 @@ package gdal
 import "C"
 import (
 	"unsafe"
+	"reflect"
+	"time"
 )
 
 func init() {
@@ -565,49 +567,204 @@ func (feature Feature) FieldAsString(index int) string {
 	return C.GoString(val)
 }
 
-// Unimplemented: FieldAsIntegerList
+// Fetch field as list of integers
+func (feature Feature) FieldAsIntegerList(index int) []int {
+	var count int
+	cArray := C.OGR_F_GetFieldAsIntegerList(feature.cval, C.int(index), (*C.int)(unsafe.Pointer(&count)))
+	var goSlice []int
+	header := (*reflect.SliceHeader)((unsafe.Pointer(&goSlice)))
+	header.Cap = count
+	header.Len = count
+	header.Data = uintptr(unsafe.Pointer(cArray))
+	return goSlice
+}
 
-// Unimplemented: FieldAsDoubleList
+// Fetch field as list of float64
+func (feature Feature) FieldAsFloat64List(index int) []float64 {
+	var count int
+	cArray := C.OGR_F_GetFieldAsDoubleList(feature.cval, C.int(index), (*C.int)(unsafe.Pointer(&count)))
+	var goSlice []float64
+	header := (*reflect.SliceHeader)((unsafe.Pointer(&goSlice)))
+	header.Cap = count
+	header.Len = count
+	header.Data = uintptr(unsafe.Pointer(cArray))
+	return goSlice
+}
 
-// Unimplemented: FieldAsStringList
+// Fetch field as list of strings
+func (feature Feature) FieldAsStringList(index int) []string {
+	p := C.OGR_F_GetFieldAsStringList(feature.cval, C.int(index))
 
-// Unimplemented: FieldAsBinary
+	var strings []string
+	q := uintptr(unsafe.Pointer(p))
+	for {
+		p = (**C.char)(unsafe.Pointer(q))
+		if *p == nil {
+			break
+		}
+		strings = append(strings, C.GoString(*p))
+		q += unsafe.Sizeof(q)
+	}
 
-// Unimplemented: FieldAsDateTime
+	return strings
+}
 
-// Unimplemented: SetFieldInteger
+// Fetch field as binary data
+func (feature Feature) FieldAsBinary(index int) []uint8 {
+	var count int
+	cArray := C.OGR_F_GetFieldAsBinary(feature.cval, C.int(index), (*C.int)(unsafe.Pointer(&count)))
+	var goSlice []uint8
+	header := (*reflect.SliceHeader)((unsafe.Pointer(&goSlice)))
+	header.Cap = count
+	header.Len = count
+	header.Data = uintptr(unsafe.Pointer(cArray))
+	return goSlice
+}
 
-// Unimplemented: SetFieldDouble
+// Fetch field as date and time
+func (feature Feature) FieldAsDateTime(index int) (time.Time, bool) {
+	var year, month, day, hour, minute, second, tzFlag int
+	success := C.OGR_F_GetFieldAsDateTime(
+		feature.cval,
+		C.int(index),
+		(*C.int)(unsafe.Pointer(&year)),
+		(*C.int)(unsafe.Pointer(&month)),
+		(*C.int)(unsafe.Pointer(&day)),
+		(*C.int)(unsafe.Pointer(&hour)),
+		(*C.int)(unsafe.Pointer(&minute)),
+		(*C.int)(unsafe.Pointer(&second)),
+		(*C.int)(unsafe.Pointer(&tzFlag)),
+	)
+	t := time.Date(year, time.Month(month), day, hour, minute, second, 0, time.UTC)
+	return t, success != 0
+}
 
-// Unimplemented: SetFieldString
+// Set field to integer value
+func (feature Feature) SetFieldInteger(index, value int) {
+	C.OGR_F_SetFieldInteger(feature.cval, C.int(index), C.int(value))
+}
 
-// Unimplemented: SetFieldIntegerList
+// Set field to float64 value
+func (feature Feature) SetFieldFloat64(index int, value float64) {
+	C.OGR_F_SetFieldDouble(feature.cval, C.int(index), C.double(value))
+}
 
-// Unimplemented: SetFieldDoubleList
+// Set field to string value
+func (feature Feature) SetFieldString(index int, value string) {
+	cVal := C.CString(value)
+	defer C.free(unsafe.Pointer(cVal))
+	C.OGR_F_SetFieldString(feature.cval, C.int(index), cVal)
+}
 
-// Unimplemented: SetFieldStringList
+// Set field to list of integers
+func (feature Feature) SetFieldIntegerList(index int, value []int) {
+	C.OGR_F_SetFieldIntegerList(
+		feature.cval,
+		C.int(index),
+		C.int(len(value)),
+		(*C.int)(unsafe.Pointer(&value[0])),
+	)
+}
 
-// Unimplemented: SetFieldRaw
+// Set field to list of float64
+func (feature Feature) SetFieldFloat64List(index int, value []float64) {
+	C.OGR_F_SetFieldDoubleList(
+		feature.cval,
+		C.int(index),
+		C.int(len(value)),
+		(*C.double)(unsafe.Pointer(&value[0])),
+	)
+}
 
+// Set field to list of strings
+func (feature Feature) SetFieldStringList(index int, value []string) {
+	length := len(value)
+	cValue := make([]*C.char, length+1)
+	for i := 0; i < length; i++ {
+		cValue[i] = C.CString(value[i])
+		defer C.free(unsafe.Pointer(cValue[i]))
+	}
+	cValue[length] = (*C.char)(unsafe.Pointer(nil))
+
+	C.OGR_F_SetFieldStringList(
+		feature.cval,
+		C.int(index),
+		(**C.char)(unsafe.Pointer(&cValue[0])),
+	)
+}
+	
+// Set field from the raw field pointer
+func (feature Feature) SetFieldRaw(index int, field Field) {
+	C.OGR_F_SetFieldRaw(feature.cval, C.int(index), field.cval)
+}
+	
 // Unimplemented: SetFieldBinary
+func (feature Feature) SetFieldBinary(index int, value []uint8) {
+	C.OGR_F_SetFieldBinary(
+		feature.cval,
+		C.int(index),
+		C.int(len(value)),
+		(*C.GByte)(unsafe.Pointer(&value[0])),
+	)
+}
 
 // Unimplemented: SetFieldDateTime
+func (feature Feature) SetFieldDateTime(index int, dt time.Time) {
+	C.OGR_F_SetFieldDateTime(
+		feature.cval,
+		C.int(index),
+		C.int(dt.Year()),
+		C.int(dt.Month()),
+		C.int(dt.Day()),
+		C.int(dt.Hour()),
+		C.int(dt.Minute()),
+		C.int(dt.Second()),
+		C.int(1),
+	)
+}
 
-// Unimplemented: FID
+// Fetch feature indentifier
+func (feature Feature) FID() int {
+	fid := C.OGR_F_GetFID(feature.cval)
+	return int(fid)
+}
 
-// Unimplemented: SetFID
+// Set feature identifier
+func (feature Feature) SetFID(fid int) error {
+	err := C.OGR_F_SetFID(feature.cval, C.long(fid))
+	return error(err)
+}
 
 // Unimplemented: DumpReadable
 
-// Unimplemented: SetFrom
+// Set one feature from another
+func (this Feature) SetFrom(other Feature, forgiving int) error {
+	err := C.OGR_F_SetFrom(this.cval, other.cval, C.int(forgiving))
+	return error(err)
+}
 
-// Unimplemented: SetFromWithMap
+// Set one feature from another, using field map
+func (this Feature) SetFromWithMap(other Feature, forgiving int, fieldMap []int) error {
+	err := C.OGR_F_SetFromWithMap(
+		this.cval,
+		other.cval,
+		C.int(forgiving),
+		(*C.int)(unsafe.Pointer(&fieldMap[0])),
+	)
+	return error(err)
+}
 
-// Unimplemented: StyleString
+// Fetch style string for this feature
+func (feature Feature) StlyeString() string {
+	style := C.OGR_F_GetStyleString(feature.cval)
+	return C.GoString(style)
+}
 
-// Unimplemented: SetStyleString
-
-// Unimplemented: SetStyleStringDirectly
+// Set style string for this feature
+func (feature Feature) SetStyleString(style string) {
+	cStyle := C.CString(style)
+	C.OGR_F_SetStyleStringDirectly(feature.cval, cStyle)
+}
 
 /* -------------------------------------------------------------------- */
 /*      Layer functions                                                 */
