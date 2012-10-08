@@ -11,6 +11,7 @@ package gdal
 import "C"
 import (
 	"unsafe"
+	"reflect"
 )
 
 /* -------------------------------------------------------------------- */
@@ -212,6 +213,9 @@ func (sr SpatialReference) FromURL(url string) error {
 func (sr SpatialReference) ToPCI() (proj, units string, params []float64, errVal error) {
 	var p, u *C.char
 	err := C.OSRExportToPCI(sr.cval, &p, &u, (**C.double)(unsafe.Pointer(&params[0])))
+	header := (*reflect.SliceHeader)((unsafe.Pointer(&params)))
+	header.Cap = 17
+	header.Len = 17
 	defer C.free(unsafe.Pointer(p))
 	defer C.free(unsafe.Pointer(u))
 	return C.GoString(p), C.GoString(u), params, error(err)
@@ -225,6 +229,11 @@ func (sr SpatialReference) ToUSGS() (proj, zone int, params []float64, datum int
 		(*C.long)(unsafe.Pointer(&zone)),
 		(**C.double)(unsafe.Pointer(&params[0])),
 		(*C.long)(unsafe.Pointer(&datum)))
+
+	header := (*reflect.SliceHeader)((unsafe.Pointer(&params)))
+	header.Cap = 15
+	header.Len = 15
+		
 	return proj, zone, params, datum, error(err)
 }
 
@@ -277,57 +286,204 @@ func (sr SpatialReference) SetAttrValue(path, value string) error {
 	return error(err)
 }
 
-// Unimplemented: SetAngularUnits
+// Set the angular units for the geographic coordinate system
+func (sr SpatialReference) SetAngularUnits(units string, radians float64) error {
+	cUnits := C.CString(units)
+	defer C.free(unsafe.Pointer(cUnits))
+	err := C.OSRSetAngularUnits(sr.cval, cUnits, C.double(radians))
+	return error(err)
+}
 
-// Unimplemented: AngularUnits
+// Fetch the angular units for the geographic coordinate system
+func (sr SpatialReference) AngularUnits() (string, float64) {
+	var x *C.char
+	factor := C.OSRGetAngularUnits(sr.cval, &x)
+	defer C.free(unsafe.Pointer(x))
+	return C.GoString(x), float64(factor)
+}
 
-// Unimplemented: SetLinearUnits
+// Set the linear units for the projection
+func (sr SpatialReference) SetLinearUnits(name string, toMeters float64) error {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	err := C.OSRSetLinearUnits(sr.cval, cName, C.double(toMeters))
+	return error(err)
+}
 
-// Unimplemented: SetTargetLinearUnits
+// Set the linear units for the target node
+func (sr SpatialReference) SetTargetLinearUnits(target, units string, toMeters float64) error {
+	cTarget := C.CString(target)
+	defer C.free(unsafe.Pointer(cTarget))
+	cUnits := C.CString(units)
+	defer C.free(unsafe.Pointer(cUnits))
+	err := C.OSRSetTargetLinearUnits(sr.cval, cTarget, cUnits, C.double(toMeters))
+	return error(err)
+}
 
-// Unimplemented: SetLinearUnitsAndUpdateParameters
+// Set the linear units for the target node and update all existing linear parameters
+func (sr SpatialReference) SetLinearUnitsAndUpdateParameters(name string, toMeters float64) error {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	err := C.OSRSetLinearUnitsAndUpdateParameters(sr.cval, cName, C.double(toMeters))
+	return error(err)
+}
 
-// Unimplemented: LinearUnits
+// Fetch linear projection units
+func (sr SpatialReference) LinearUnits() (string, float64) {
+	var x *C.char
+	factor := C.OSRGetLinearUnits(sr.cval, &x)
+	defer C.free(unsafe.Pointer(x))
+	return C.GoString(x), float64(factor)
+}
 
-// Unimplemented: TargetLinearUnits
+// Fetch linear units for target
+func (sr SpatialReference) TargetLinearUnits(target string) (string, float64) {
+	cTarget := C.CString(target)
+	defer C.free(unsafe.Pointer(cTarget))
+	var x *C.char
+	factor := C.OSRGetTargetLinearUnits(sr.cval, cTarget, &x)
+	defer C.free(unsafe.Pointer(x))
+	return C.GoString(x), float64(factor)
+}
 
-// Unimplemented: PrimeMeridian
+// Fetch prime meridian information
+func (sr SpatialReference) PrimeMeridian() (string, float64) {
+	var x *C.char
+	offset := C.OSRGetPrimeMeridian(sr.cval, &x)
+	defer C.free(unsafe.Pointer(x))
+	return C.GoString(x), float64(offset)
+}
 
-// Unimplemented: IsGeographic
+// Return true if geographic coordinate system
+func (sr SpatialReference) IsGeographic() bool {
+	val := C.OSRIsGeographic(sr.cval)
+	return val != 0
+}
 
-// Unimplemented: IsLocal
+// Return true if local coordinate system
+func (sr SpatialReference) IsLocal() bool {
+	val := C.OSRIsLocal(sr.cval)
+	return val != 0
+}
 
-// Unimplemented: IsProjected
+// Return true if projected coordinate system
+func (sr SpatialReference) IsProjected() bool {
+	val := C.OSRIsProjected(sr.cval)
+	return val != 0
+}
 
-// Unimplemented: IsCompound
+// Return true if compound coordinate system
+func (sr SpatialReference) IsCompound() bool {
+	val := C.OSRIsCompound(sr.cval)
+	return val != 0
+}
 
-// Unimplemented: IsGeocentric
+// Return true if geocentric coordinate system
+func (sr SpatialReference) IsGeocentric() bool {
+	val := C.OSRIsGeocentric(sr.cval)
+	return val != 0
+}
 
-// Unimplemented: IsVertical
+// Return true if vertical coordinate system
+func (sr SpatialReference) IsVertical() bool {
+	val := C.OSRIsVertical(sr.cval)
+	return val != 0
+}
 
-// Unimplemented: IsSameGeogCS
+// Return true if the geographic coordinate systems match
+func (sr SpatialReference) IsSameGeographicCS(other SpatialReference) bool {
+	val := C.OSRIsSameGeogCS(sr.cval, other.cval)
+	return val != 0
+}
 
-// Unimplemented: IsSameVertCS
+// Return true if the vertical coordinate systems match
+func (sr SpatialReference) IsSameVerticalCS(other SpatialReference) bool {
+	val := C.OSRIsSameVertCS(sr.cval, other.cval)
+	return val != 0
+}
 
-// Unimplemented: IsSame
+// Return true if the coordinate systems describe the same system
+func (sr SpatialReference) IsSame(other SpatialReference) bool {
+	val := C.OSRIsSame(sr.cval, other.cval)
+	return val != 0
+}
 
-// Unimplemented: SetLocalCS
+// Set the user visible local CS name
+func (sr SpatialReference) SetLocalCS(name string) error {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	err := C.OSRSetLocalCS(sr.cval, cName)
+	return error(err)
+}
 
-// Unimplemented: SetProjCS
+// Set the user visible projected CS name
+func (sr SpatialReference) SetProjectedCS(name string) error {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	err := C.OSRSetProjCS(sr.cval, cName)
+	return error(err)
+}
 
-// Unimplemented: SetGeocCS
+// Set the user visible geographic CS name
+func (sr SpatialReference) SetGeocentricCS(name string) error {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	err := C.OSRSetGeocCS(sr.cval, cName)
+	return error(err)
+}
 
-// Unimplemented: SetWellKnownGeogCS
+// Set geographic CS based on well known name
+func (sr SpatialReference) SetWellKnownGeographicCS(name string) error {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	err := C.OSRSetWellKnownGeogCS(sr.cval, cName)
+	return error(err)
+}
 
-// Unimplemented: SetFromUserInput
+// Set spatial reference from various text formats
+func (sr SpatialReference) SetFromUserInput(name string) error {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	err := C.OSRSetFromUserInput(sr.cval, cName)
+	return error(err)
+}
 
-// Unimplemented: CopyGeogCSFrom
+// Copy geographic CS from another spatial reference
+func (sr SpatialReference) CopyGeographicCSFrom(other SpatialReference) error {
+	err := C.OSRCopyGeogCSFrom(sr.cval, other.cval)
+	return error(err)
+}
 
-// Unimplemented: SetTOWGS84
+// Set the Bursa-Wolf conversion to WGS84
+func (sr SpatialReference) SetTOWGS84(dx, dy, dz, ex, ey, ez, ppm float64) error {
+	err := C.OSRSetTOWGS84(
+		sr.cval,
+		C.double(dx),
+		C.double(dy),
+		C.double(dz),
+		C.double(ex),
+		C.double(ey),
+		C.double(ez),
+		C.double(ppm))
+	return error(err)
+}
 
-// Unimplemented: TOWGS84
+// Fetch the TOWGS84 parameters if available
+func (sr SpatialReference) TOWGS84() (coeff [7]float64, errVal error) {
+	err := C.OSRGetTOWGS84(sr.cval, (*C.double)(unsafe.Pointer(&coeff[0])), 7)
+	return coeff, error(err)
+}
 
-// Unimplemented: SetCompoundCS
+// Setup a compound coordinate system
+func (sr SpatialReference) SetCompoundCS(
+	name string,
+	horizontal, vertical SpatialReference,
+) error {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	err := C.OSRSetCompoundCS(sr.cval, cName, horizontal.cval, vertical.cval)
+	return error(err)
+}
 
 // Unimplemented: SetGeogCS
 
