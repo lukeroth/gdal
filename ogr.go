@@ -86,6 +86,66 @@ func (env Envelope) SetMaxY(val float64) {
 	env.cval.MaxY = C.double(val)
 }
 
+func (env Envelope) IsInit() bool {
+	return (env.cval.MinX != 0 || env.cval.MinY != 0 || env.cval.MaxX != 0 || env.cval.MaxY != 0)
+}
+
+func min(a, b C.double) C.double { if a < b { return a }; return b }
+func max(a, b C.double) C.double { if a > b { return a }; return b }
+
+// Return the union of this envelope with another one
+func (env Envelope) Union(other Envelope) {
+	if env.IsInit() {
+		env.cval.MinX = min(env.cval.MinX, other.cval.MinX)
+		env.cval.MinY = min(env.cval.MinY, other.cval.MinY)
+		env.cval.MaxX = max(env.cval.MaxX, other.cval.MaxX)
+		env.cval.MaxY = max(env.cval.MaxY, other.cval.MaxY)
+	} else {
+		env.cval.MinX = other.cval.MinX
+		env.cval.MinY = other.cval.MinY
+		env.cval.MaxX = other.cval.MaxX
+		env.cval.MaxY = other.cval.MaxY
+	}
+}
+
+// Return the intersection of this envelope with another
+func (env Envelope) Intersect(other Envelope) {
+	if env.Intersects(other) {
+		if env.IsInit() {
+			env.cval.MinX = max(env.cval.MinX, other.cval.MinX)
+			env.cval.MinY = max(env.cval.MinY, other.cval.MinY)
+			env.cval.MaxX = min(env.cval.MaxX, other.cval.MaxX)
+			env.cval.MaxY = min(env.cval.MaxY, other.cval.MaxY)
+		} else {
+			env.cval.MinX = other.cval.MinX
+			env.cval.MinY = other.cval.MinY
+			env.cval.MaxX = other.cval.MaxX
+			env.cval.MaxY = other.cval.MaxY
+		}
+	} else {
+		env.cval.MinX = 0
+		env.cval.MinY = 0
+		env.cval.MaxX = 0
+		env.cval.MaxY = 0
+	}
+}
+
+// Test if one envelope intersects another
+func (env Envelope) Intersects(other Envelope) bool {
+	return (env.cval.MinX <= other.cval.MaxX &&
+		env.cval.MaxX >= other.cval.MinX &&
+		env.cval.MinY <= other.cval.MaxY &&
+		env.cval.MaxY >= other.cval.MinY)
+}
+
+// Test if one envelope completely contains another
+func (env Envelope) Contains(other Envelope) bool {
+	return (env.cval.MinX <= other.cval.MinX &&
+		env.cval.MaxX >= other.cval.MaxX &&
+		env.cval.MinY <= other.cval.MinY &&
+		env.cval.MaxY >= other.cval.MaxY)
+}
+
 /* -------------------------------------------------------------------- */
 /*      Misc functions                                                  */
 /* -------------------------------------------------------------------- */
@@ -141,7 +201,28 @@ func Create(geomType GeometryType) Geometry {
 	return Geometry{geom}
 }
 
-// Unimplemented: ApproximateArcAngles
+// Stroke arc to linestring
+func ApproximateArcAngles(
+	x, y, z, 
+	primaryRadius, 
+	secondaryRadius, 
+	rotation, 
+	startAngle, 
+	endAngle, 
+	stepSizeDegrees float64,
+) Geometry {
+	geom := C.OGR_G_ApproximateArcAngles(
+		C.double(x),
+		C.double(y),
+		C.double(z),
+		C.double(primaryRadius),
+		C.double(secondaryRadius),
+		C.double(rotation),
+		C.double(startAngle),
+		C.double(endAngle),
+		C.double(stepSizeDegrees))
+	return Geometry{geom}
+}
 
 // Convert to polygon
 func (geom Geometry) ForceToPolygon() Geometry {
@@ -190,7 +271,13 @@ func (geom Geometry) Clone() Geometry {
 	return Geometry{newGeom}
 }
 
-// Unimplemented: GetEnvelope
+// Compute and return the bounding envelope for this geometry
+func (geom Geometry) Envelope() Envelope {
+	var env Envelope
+	C.OGR_G_GetEnvelope(geom.cval, &env.cval)
+	return env
+}
+
 // Unimplemented: GetEnvelope3D
 
 // Assign a geometry from well known binary data
@@ -249,123 +336,391 @@ func (geom Geometry) CloseRings() {
 	C.OGR_G_CloseRings(geom.cval)
 }
 
-// Unimplemented: CreateFromGML
+// Create a geometry from its GML representation
+func CreateFromGML(gml string) Geometry {
+	cString := C.CString(gml)
+	defer C.free(unsafe.Pointer(cString))
+	geom := C.OGR_G_CreateFromGML(cString)
+	return Geometry{geom}
+}
 
-// Unimplemented: ExportToGML
+// Convert a geometry to GML format
+func (geom Geometry) ToGML() string {
+	val := C.OGR_G_ExportToGML(geom.cval)
+	return C.GoString(val)
+}
 
-// Unimplemented: ExportToGMLEx
+// Convert a geometry to GML format with options
+func (geom Geometry) ToGML_Ex(options []string) string {
+	length := len(options)
+	opts := make([]*C.char, length+1)
+	for i := 0; i < length; i++ {
+		opts[i] = C.CString(options[i])
+		defer C.free(unsafe.Pointer(opts[i]))
+	}
+	opts[length] = (*C.char)(unsafe.Pointer(nil))
 
-// Unimplemented: ExportToKML
+	val := C.OGR_G_ExportToGMLEx(geom.cval, (**C.char)(unsafe.Pointer(&opts[0])))
+	return C.GoString(val)
+}
 
-// Unimplemented: ExportToJson
+// Convert a geometry to KML format
+func (geom Geometry) ToKML() string {
+	val := C.OGR_G_ExportToKML(geom.cval, nil)
+	return C.GoString(val)
+}
 
-// Unimplemented: ExportToJsonEx
+// Convert a geometry to JSON format
+func (geom Geometry) ToJSON() string {
+	val := C.OGR_G_ExportToJson(geom.cval)
+	return C.GoString(val)
+}
 
-// Unimplemented: SetSpatialReference
+// Convert a geometry to JSON format with options
+func (geom Geometry) ToJSON_ex(options []string) string {
+	length := len(options)
+	opts := make([]*C.char, length+1)
+	for i := 0; i < length; i++ {
+		opts[i] = C.CString(options[i])
+		defer C.free(unsafe.Pointer(opts[i]))
+	}
+	opts[length] = (*C.char)(unsafe.Pointer(nil))
 
-// Unimplemented: SpatialReference
+	val := C.OGR_G_ExportToJsonEx(geom.cval, (**C.char)(unsafe.Pointer(&opts[0])))
+	return C.GoString(val)
+}
 
-// Unimplemented: Transform
+// Fetch the spatial reference associated with this geometry
+func (geom Geometry) SpatialReference() SpatialReference {
+	spatialRef := C.OGR_G_GetSpatialReference(geom.cval)
+	return SpatialReference{spatialRef}
+}
 
-// Unimplemented: TransformTo
+// Assign a spatial reference to this geometry
+func (geom Geometry) SetSpatialReference(spatialRef SpatialReference) {
+	C.OGR_G_AssignSpatialReference(geom.cval, spatialRef.cval)
+}
 
-// Unimplemented: Simplify
+// Apply coordinate transformation to geometry
+func (geom Geometry) Transform(ct CoordinateTransform) error {
+	err := C.OGR_G_Transform(geom.cval, ct.cval)
+	return error(err)
+}
 
-// Unimplemented: SimplifyPreserveTopology
+// Transform geometry to new spatial reference system
+func (geom Geometry) TransformTo(sr SpatialReference) error {
+	err := C.OGR_G_TransformTo(geom.cval, sr.cval)
+	return error(err)
+}
 
-// Unimplemented: Segmentize
+// Simplify the geometry
+func (geom Geometry) Simplify(tolerance float64) Geometry {
+	newGeom := C.OGR_G_Simplify(geom.cval, C.double(tolerance))
+	return Geometry{newGeom}
+}
 
-// Unimplemented: Intersects
+// Simplify the geometry while preserving topology
+func (geom Geometry) SimplifyPreservingTopology(tolerance float64) Geometry {
+	newGeom := C.OGR_G_SimplifyPreserveTopology(geom.cval, C.double(tolerance))
+	return Geometry{newGeom}
+}
 
-// Unimplemented: Equals
+// Modify the geometry such that it has no line segment longer than the given distance
+func (geom Geometry) Segmentize(distance float64) {
+	C.OGR_G_Segmentize(geom.cval, C.double(distance))
+}
 
-// Unimplemented: Disjoint
+// Return true if these features intersect
+func (geom Geometry) Intersects(other Geometry) bool {
+	val := C.OGR_G_Intersects(geom.cval, other.cval)
+	return val != 0
+}
 
-// Unimplemented: Touches
+// Return true if these features are equal
+func (geom Geometry) Equals(other Geometry) bool {
+	val := C.OGR_G_Equals(geom.cval, other.cval)
+	return val != 0
+}
 
-// Unimplemented: Crosses
+// Return true if the features are disjoint
+func (geom Geometry) Disjoint(other Geometry) bool {
+	val := C.OGR_G_Disjoint(geom.cval, other.cval)
+	return val != 0
+}
 
-// Unimplemented: Within
+// Return true if this feature touches the other
+func (geom Geometry) Touches(other Geometry) bool {
+	val := C.OGR_G_Touches(geom.cval, other.cval)
+	return val != 0
+}
 
-// Unimplemented: Contains
+// Return true if this feature crosses the other
+func (geom Geometry) Crosses(other Geometry) bool {
+	val := C.OGR_G_Crosses(geom.cval, other.cval)
+	return val != 0
+}
 
-// Unimplemented: Overlaps
+// Return true if this geometry is within the other
+func (geom Geometry) Within(other Geometry) bool {
+	val := C.OGR_G_Within(geom.cval, other.cval)
+	return val != 0
+}
 
-// Unimplemented: Boundary
+// Return true if this geometry contains the other
+func (geom Geometry) Contains(other Geometry) bool {
+	val := C.OGR_G_Contains(geom.cval, other.cval)
+	return val != 0
+}
 
-// Unimplemented: ConvexHull
+// Return true if this geometry overlaps the other
+func (geom Geometry) Overlaps(other Geometry) bool {
+	val := C.OGR_G_Overlaps(geom.cval, other.cval)
+	return val != 0
+}
 
-// Unimplemented: Buffer
+// Compute boundary for the geometry
+func (geom Geometry) Boundary() Geometry {
+	newGeom := C.OGR_G_Boundary(geom.cval)
+	return Geometry{newGeom}
+}
 
-// Unimplemented: Intersection
+// Compute convex hull for the geometry
+func (geom Geometry) ConvexHull() Geometry {
+	newGeom := C.OGR_G_ConvexHull(geom.cval)
+	return Geometry{newGeom}
+}
 
-// Unimplemented: Union
+// Compute buffer of the geometry
+func (geom Geometry) Buffer(distance float64, segments int) Geometry {
+	newGeom := C.OGR_G_Buffer(geom.cval, C.double(distance), C.int(segments))
+	return Geometry{newGeom}
+}
+
+// Compute intersection of this geometry with the other
+func (geom Geometry) Intersection(other Geometry) Geometry {
+	newGeom := C.OGR_G_Intersection(geom.cval, other.cval)
+	return Geometry{newGeom}
+}
+
+// Compute union of this geometry with the other
+func (geom Geometry) Union(other Geometry) Geometry {
+	newGeom := C.OGR_G_Union(geom.cval, other.cval)
+	return Geometry{newGeom}
+}
 
 // Unimplemented: UnionCascaded
 
-// Unimplemented: PointOnSurface
+// Unimplemented: PointOn Surface (until 2.0)
+// Return a point guaranteed to lie on the surface
+// func (geom Geometry) PointOnSurface() Geometry {
+//	newGeom := C.OGR_G_PointOnSurface(geom.cval)
+//	return Geometry{newGeom}
+// }
 
-// Unimplemented: Difference
+// Compute difference between this geometry and the other
+func (geom Geometry) Difference(other Geometry) Geometry {
+	newGeom := C.OGR_G_Difference(geom.cval, other.cval)
+	return Geometry{newGeom}
+}
 
-// Unimplemented: SymDifference
+// Compute symmetric difference between this geometry and the other
+func (geom Geometry) SymmetricDifference(other Geometry) Geometry {
+	newGeom := C.OGR_G_SymDifference(geom.cval, other.cval)
+	return Geometry{newGeom}
+}
 
-// Unimplemented: Distance
+// Compute distance between thie geometry and the other
+func (geom Geometry) Distance(other Geometry) float64 {
+	dist := C.OGR_G_Distance(geom.cval, other.cval)
+	return float64(dist)
+}
 
-// Unimplemented: Length
+// Compute length of geometry
+func (geom Geometry) Length() float64 {
+	length := C.OGR_G_Length(geom.cval)
+	return float64(length)
+}
 
-// Unimplemented: Area
+// Compute area of geometry
+func (geom Geometry) Area() float64 {
+	area := C.OGR_G_Area(geom.cval)
+	return float64(area)
+}
 
-// Unimplemented: Centroid
+// Compute centroid of geometry
+func (geom Geometry) Centroid() Geometry {
+	var centroid Geometry
+	C.OGR_G_Centroid(geom.cval, centroid.cval)
+	return centroid
+}
 
-// Unimplemented: Empty
+// Clear the geometry to its uninitialized state
+func (geom Geometry) Empty() {
+	C.OGR_G_Empty(geom.cval)
+}
 
-// Unimplemented: IsEmpty
+// Test if the geometry is empty
+func (geom Geometry) IsEmpty() bool {
+	val := C.OGR_G_IsEmpty(geom.cval)
+	return val != 0
+}
 
-// Unimplemented: IsValid
+// Test if the geometry is valid
+func (geom Geometry) IsValid() bool {
+	val := C.OGR_G_IsEmpty(geom.cval)
+	return val != 0
+}
 
-// Unimplemented: IsSimple
+// Test if the geometry is simple
+func (geom Geometry) IsSimple() bool {
+	val := C.OGR_G_IsEmpty(geom.cval)
+	return val != 0
+}
 
-// Unimplemented: IsRing
+// Test if the geometry is a ring
+func (geom Geometry) IsRing() bool {
+	val := C.OGR_G_IsEmpty(geom.cval)
+	return val != 0
+}
 
-// Unimplemented: Polygonize
+// Polygonize a set of sparse edges
+func (geom Geometry) Polygonize() Geometry {
+	newGeom := C.OGR_G_Polygonize(geom.cval)
+	return Geometry{newGeom}
+}
 
-// Unimplemented: SymmetricDifference
-
-// Unimplemented: PointCount
+// Fetch number of points in the geometry
+func (geom Geometry) PointCount() int {
+	count := C.OGR_G_GetPointCount(geom.cval)
+	return int(count)
+}
 
 // Unimplemented: Points
 
-// Unimplemented: X
+// Fetch the X coordinate of a point in the geometry
+func (geom Geometry) X(index int) float64 {
+	x := C.OGR_G_GetX(geom.cval, C.int(index))
+	return float64(x)
+}
 
-// Unimplemented: Y
+// Fetch the Y coordinate of a point in the geometry
+func (geom Geometry) Y(index int) float64 {
+	y := C.OGR_G_GetY(geom.cval, C.int(index))
+	return float64(y)
+}
 
-// Unimplemented: Z
+// Fetch the Z coordinate of a point in the geometry
+func (geom Geometry) Z(index int) float64 {
+	z := C.OGR_G_GetZ(geom.cval, C.int(index))
+	return float64(z)
+}
 
-// Unimplemented: Point
+// Fetch the coordinates of a point in the geometry
+func (geom Geometry) Point(index int) (x, y, z float64) {
+	C.OGR_G_GetPoint(
+		geom.cval,
+		C.int(index),
+		(*C.double)(&x),
+		(*C.double)(&y),
+		(*C.double)(&z))
+	return
+}
 
-// Unimplemented: SetPoint
+// Set the coordinates of a point in the geometry
+func (geom Geometry) SetPoint(index int, x, y, z float64) {
+	C.OGR_G_SetPoint(
+		geom.cval,
+		C.int(index),
+		C.double(x),
+		C.double(y),
+		C.double(z))
+}
 
-// Unimplemented: SetPoint_2D
+// Set the coordinates of a point in the geometry, ignoring the 3rd dimension
+func (geom Geometry) SetPoint2D(index int, x, y float64) {
+	C.OGR_G_SetPoint_2D(geom.cval, C.int(index), C.double(x), C.double(y))
+}
 
-// Unimplemented: AddPoint
+// Add a new point to the geometry (line string or polygon only)
+func (geom Geometry) AddPoint(x, y, z float64) {
+	C.OGR_G_AddPoint(geom.cval, C.double(x), C.double(y), C.double(z))
+}
 
-// Unimplemented: AddPoint_2D
+// Add a new point to the geometry (line string or polygon only), ignoring the 3rd dimension
+func (geom Geometry) AddPoint2D(x, y float64) {
+	C.OGR_G_AddPoint_2D(geom.cval, C.double(x), C.double(y))
+}
 
-// Unimplemented: GeometryCount
+// Fetch the number of elements in the geometry, or number of geometries in the container
+func (geom Geometry) GeometryCount() int {
+	count := C.OGR_G_GetGeometryCount(geom.cval)
+	return int(count)
+}
 
-// Unimplemented: GeometryRef
+// Fetch geometry from a geometry container
+func (geom Geometry) Geometry(index int) Geometry {
+	newGeom := C.OGR_G_GetGeometryRef(geom.cval, C.int(index))
+	return Geometry{newGeom}
+}
 
-// Unimplemented: AddGeometry
+// Add a geometry to a geometry container
+func (geom Geometry) AddGeometry(other Geometry) error {
+	err := C.OGR_G_AddGeometry(geom.cval, other.cval)
+	return error(err)
+}
 
-// Unimplemented: AddGeometryDirectly
+// Add a geometry to a geometry container and assign ownership to that container
+func (geom Geometry) AddGeometryDirectly(other Geometry) error {
+	err := C.OGR_G_AddGeometryDirectly(geom.cval, other.cval)
+	return error(err)
+}
 
-// Unimplemented: RemoveGeometry
+// Remove a geometry from the geometry container
+func (geom Geometry) RemoveGeometry(index int, delete bool) error {
+	err := C.OGR_G_RemoveGeometry(geom.cval, C.int(index), BoolToCInt(delete))
+	return error(err)
+}
 
-// Unimplemented: BuildPolygonFromEdges
+// Build a polygon / ring from a set of lines
+func(geom Geometry) BuildPolygonFromEdges(autoClose bool, tolerance float64) (Geometry, error) {
+	var err C.OGRErr
+	newGeom := C.OGRBuildPolygonFromEdges(
+		geom.cval,
+		0,
+		BoolToCInt(autoClose),
+		C.double(tolerance),
+		&err,
+	)
+	return Geometry{newGeom}, error(err)
+}
 
 /* -------------------------------------------------------------------- */
 /*      Field definition functions                                      */
 /* -------------------------------------------------------------------- */
+
+// List of well known binary geometry types
+type FieldType int
+
+const (
+	FT_Integer			= FieldType(C.OFTInteger)
+	FT_IntegerList		= FieldType(C.OFTIntegerList)
+	FT_Real				= FieldType(C.OFTReal)
+	FT_RealList			= FieldType(C.OFTRealList)
+	FT_String			= FieldType(C.OFTString)
+	FT_StringList		= FieldType(C.OFTStringList)
+	FT_Binary			= FieldType(C.OFTBinary)
+	FT_Date				= FieldType(C.OFTDate)
+	FT_Time				= FieldType(C.OFTTime)
+	FT_DateTime			= FieldType(C.OFTDateTime)
+)
+
+type Justification int
+
+const (
+	J_Undefined		= Justification(C.OJUndefined)
+	J_Left			= Justification(C.OJLeft)
+	J_Right			= Justification(C.OJRight)
+)
 
 type FieldDefinition struct {
 	cval C.OGRFieldDefnH
@@ -375,37 +730,112 @@ type Field struct {
 	cval *C.OGRField
 }
 
-// Unimplemented: Create
+// Create a new field definition
+func CreateFieldDefinition(name string, fieldType FieldType) FieldDefinition {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	fieldDef := C.OGR_Fld_Create(cName, C.OGRFieldType(fieldType))
+	return FieldDefinition{fieldDef}
+}
 
-// Unimplemented: Destroy
+// Destroy the field definition
+func (fd FieldDefinition) Destroy() {
+	C.OGR_Fld_Destroy(fd.cval)
+}
 
-// Unimplemented: Name
+// Fetch the name of the field
+func (fd FieldDefinition) Name() string {
+	name := C.OGR_Fld_GetNameRef(fd.cval)
+	return C.GoString(name)
+}
 
-// Unimplemented: SetName
+// Set the name of the field
+func (fd FieldDefinition) SetName(name string) {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	C.OGR_Fld_SetName(fd.cval, cName)
+}
 
-// Unimplemented: Type
+// Fetch the type of this field
+func (fd FieldDefinition) Type() FieldType {
+	fType := C.OGR_Fld_GetType(fd.cval)
+	return FieldType(fType)
+}
 
-// Unimplemented: SetType
+// Set the type of this field
+func (fd FieldDefinition) SetType(fType FieldType) {
+	C.OGR_Fld_SetType(fd.cval, C.OGRFieldType(fType))
+}
 
-// Unimplemented: Justify
+// Fetch the justification for this field
+func (fd FieldDefinition) Justification() Justification {
+	justify := C.OGR_Fld_GetJustify(fd.cval)
+	return Justification(justify)
+}
 
-// Unimplemented: SetJustify
+// Set the justification for this field
+func (fd FieldDefinition) SetJustification(justify Justification) {
+	C.OGR_Fld_SetJustify(fd.cval, C.OGRJustification(justify))
+}
 
-// Unimplemented: Width
+// Fetch the formatting width for this field
+func (fd FieldDefinition) Width() int {
+	width := C.OGR_Fld_GetWidth(fd.cval)
+	return int(width)
+}
 
-// Unimplemented: SetWidth
+// Set the formatting width for this field
+func (fd FieldDefinition) SetWidth(width int) {
+	C.OGR_Fld_SetWidth(fd.cval, C.int(width))
+}
 
-// Unimplemented: Precision
+// Fetch the precision for this field
+func (fd FieldDefinition) Precision() int {
+	precision := C.OGR_Fld_GetPrecision(fd.cval)
+	return int(precision)
+}
 
-// Unimplemented: SetPrecision
+// Set the precision for this field
+func (fd FieldDefinition) SetPrecision(precision int) {
+	C.OGR_Fld_SetPrecision(fd.cval, C.int(precision))
+}
 
-// Unimplemented: Set
+// Set defining parameters of field in a single call
+func (fd FieldDefinition) Set(
+	name string, 
+	fType FieldType, 
+	width, precision int,
+	justify Justification,
+) {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
 
-// Unimplemented: IsIgnorned
+	C.OGR_Fld_Set(
+		fd.cval,
+		cName,
+		C.OGRFieldType(fType),
+		C.int(width),
+		C.int(precision),
+		C.OGRJustification(justify),
+	)
+}
 
-// Unimplemented: SetIgnored
+// Fetch whether this field should be ignored when fetching features
+func (fd FieldDefinition) IsIgnored() bool {
+	ignore := C.OGR_Fld_IsIgnored(fd.cval)
+	return ignore != 0
+}
 
-// Unimplemented: FieldTypeName
+// Set whether this field should be ignored when fetching features
+func (fd FieldDefinition) SetIgnored(ignore bool) {
+	C.OGR_Fld_SetIgnored(fd.cval, BoolToCInt(ignore))
+}
+
+// Fetch human readable name for the field type
+func (ft FieldType) Name() string {
+	name := C.OGR_GetFieldTypeName(C.OGRFieldType(ft))
+	return C.GoString(name)
+}
 
 /* -------------------------------------------------------------------- */
 /*      Feature definition functions                                    */
