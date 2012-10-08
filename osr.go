@@ -137,7 +137,7 @@ func (sr SpatialReference) FromProj4(input string) error {
 	return error(err)
 }
 
-// Unimplemented: ToProj4
+// Export coordinate system in PROJ.4 format
 func (sr SpatialReference) ToProj4() (string, error) {
 	var p *C.char
 	err := C.OSRExportToProj4(sr.cval, &p)
@@ -153,112 +153,402 @@ func (sr SpatialReference) FromESRI(input string) error {
 	return error(err)
 }
 
-// Unimplemented: FromPCI
-// Unimplemented: FromUSGS
-// Unimplemented: FromXML
-// Unimplemented: FromERM
-// Unimplemented: FromURL
-// Unimplemented: ToPCI
-// Unimplemented: ToUSGS
-// Unimplemented: ToXML
-// Unimplemented: ToMICoordSys
+// Import coordinate system from PCI projection definition
+func (sr SpatialReference) FromPCI(proj, units string, params []float64) error {
+	cProj := C.CString(proj)
+	defer C.free(unsafe.Pointer(cProj))
+	cUnits := C.CString(units)
+	defer C.free(unsafe.Pointer(cUnits))
+
+	err := C.OSRImportFromPCI(
+		sr.cval,
+		cProj,
+		cUnits,
+		(*C.double)(unsafe.Pointer(&params[0])))
+	return error(err)
+}
+
+// Import coordinate system from USGS projection definition
+func (sr SpatialReference) FromUSGS(projsys, zone int, params []float64, datum int) error {
+	err := C.OSRImportFromUSGS(
+		sr.cval,
+		C.long(projsys),
+		C.long(zone),
+		(*C.double)(unsafe.Pointer(&params[0])),
+		C.long(datum))
+	return error(err)
+}
+
+// Import coordinate system from XML format (GML only currently)
+func (sr SpatialReference) FromXML(xml string) error {
+	cXml := C.CString(xml)
+	defer C.free(unsafe.Pointer(cXml))
+	err := C.OSRImportFromXML(sr.cval, cXml)
+	return error(err)
+}
+
+// Import coordinate system from ERMapper projection definitions
+func (sr SpatialReference) FromERM(proj, datum, units string) error {
+	cProj := C.CString(proj)
+	defer C.free(unsafe.Pointer(cProj))
+	cDatum := C.CString(datum)
+	defer C.free(unsafe.Pointer(cDatum))
+	cUnits := C.CString(units)
+	defer C.free(unsafe.Pointer(cUnits))
+
+	err := C.OSRImportFromERM(sr.cval, cProj, cDatum, cUnits)
+	return error(err)
+}
+
+// Import coordinate system from a URL
+func (sr SpatialReference) FromURL(url string) error {
+	cURL := C.CString(url)
+	defer C.free(unsafe.Pointer(cURL))
+	err := C.OSRImportFromXML(sr.cval, cURL)
+	return error(err)
+}
+
+// Export coordinate system in PCI format
+func (sr SpatialReference) ToPCI() (proj, units string, params []float64, errVal error) {
+	var p, u *C.char
+	err := C.OSRExportToPCI(sr.cval, &p, &u, (**C.double)(unsafe.Pointer(&params[0])))
+	defer C.free(unsafe.Pointer(p))
+	defer C.free(unsafe.Pointer(u))
+	return C.GoString(p), C.GoString(u), params, error(err)
+}
+
+// Export coordinate system to USGS GCTP projection definition
+func (sr SpatialReference) ToUSGS() (proj, zone int, params []float64, datum int, errVal error) {
+	err := C.OSRExportToUSGS(
+		sr.cval, 
+		(*C.long)(unsafe.Pointer(&proj)),
+		(*C.long)(unsafe.Pointer(&zone)),
+		(**C.double)(unsafe.Pointer(&params[0])),
+		(*C.long)(unsafe.Pointer(&datum)))
+	return proj, zone, params, datum, error(err)
+}
+
+// Export coordinate system in XML format
+func (sr SpatialReference) ToXML() (xml string, errVal error) {
+	var x *C.char
+	err := C.OSRExportToXML(sr.cval, &x, nil)
+	defer C.free(unsafe.Pointer(x))
+	return C.GoString(x), error(err)
+}
+
+// Export coordinate system in Mapinfo style CoordSys format
+func (sr SpatialReference) ToMICoordSys() (output string, errVal error) {
+	var x *C.char
+	err := C.OSRExportToMICoordSys(sr.cval, &x)
+	defer C.free(unsafe.Pointer(x))
+	return C.GoString(x), error(err)
+}
+
+// Export coordinate system in ERMapper format
 // Unimplemented: ToERM
-// Unimplemented: MorphToESRI
-// Unimplemented: MorphFromESRI
-// Unimplemented: SetAttrValue
-// Unimplemented: AttrValue
+
+// Convert in place to ESRI WKT format
+func (sr SpatialReference) MorphToESRI() error {
+	err := C.OSRMorphToESRI(sr.cval)
+	return error(err)
+}
+
+// Convert in place from ESRI WKT format
+func (sr SpatialReference) MorphFromESRI() error {
+	err := C.OSRMorphFromESRI(sr.cval)
+	return error(err)
+}
+
+// Fetch indicated attribute of named node
+func (sr SpatialReference) AttrValue(key string, child int) (value string, ok bool) {
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+	val := C.OSRGetAttrValue(sr.cval, cKey, C.int(child))
+	return C.GoString(val), val != nil
+}
+
+// Set attribute value in spatial reference
+func (sr SpatialReference) SetAttrValue(path, value string) error {
+	cPath := C.CString(path)
+	defer C.free(unsafe.Pointer(cPath))
+	cValue := C.CString(value)
+	defer C.free(unsafe.Pointer(cValue))
+	err := C.OSRSetAttrValue(sr.cval, cPath, cValue)
+	return error(err)
+}
+
 // Unimplemented: SetAngularUnits
+
 // Unimplemented: AngularUnits
+
 // Unimplemented: SetLinearUnits
+
 // Unimplemented: SetTargetLinearUnits
+
 // Unimplemented: SetLinearUnitsAndUpdateParameters
+
 // Unimplemented: LinearUnits
+
 // Unimplemented: TargetLinearUnits
+
 // Unimplemented: PrimeMeridian
+
 // Unimplemented: IsGeographic
+
 // Unimplemented: IsLocal
+
 // Unimplemented: IsProjected
+
 // Unimplemented: IsCompound
+
 // Unimplemented: IsGeocentric
+
 // Unimplemented: IsVertical
+
 // Unimplemented: IsSameGeogCS
+
 // Unimplemented: IsSameVertCS
+
 // Unimplemented: IsSame
+
 // Unimplemented: SetLocalCS
+
 // Unimplemented: SetProjCS
+
 // Unimplemented: SetGeocCS
+
 // Unimplemented: SetWellKnownGeogCS
+
 // Unimplemented: SetFromUserInput
+
 // Unimplemented: CopyGeogCSFrom
+
 // Unimplemented: SetTOWGS84
+
 // Unimplemented: TOWGS84
+
 // Unimplemented: SetCompoundCS
+
 // Unimplemented: SetGeogCS
+
 // Unimplemented: SetVertCS
+
 // Unimplemented: SemiMajor
+
 // Unimplemented: SemiMinor
+
 // Unimplemented: InvFlattening
+
 // Unimplemented: SetAuthority
+
 // Unimplemented: AuthorityCode
+
 // Unimplemented: AuthorityName
+
 // Unimplemented: SetProjection
+
 // Unimplemented: SetProjParm
+
 // Unimplemented: ProjParm
+
 // Unimplemented: SetNormProjParm
+
 // Unimplemented: NormProjParm
+
 // Unimplemented: SetUTM
+
 // Unimplemented: UTMZone
+
 // Unimplemented: SetStatePlane
+
 // Unimplemented: SetStatePlaneWithUnits
+
 // Unimplemented: AutoIdentifyEPSG
+
 // Unimplemented: EPSGTreatsAsLatLong
+
 // Unimplemented: Axis
+
 // Unimplemented: SetACEA
+
 // Unimplemented: SetAE
+
 // Unimplemented: SetBonne
+
 // Unimplemented: SetCEA
+
 // Unimplemented: SetCS
+
 // Unimplemented: SetEC
+
 // Unimplemented: SetEckert
+
 // Unimplemented: SetEckertIV
+
 // Unimplemented: SetEckertVI
+
 // Unimplemented: SetEquirectangular
+
 // Unimplemented: SetEquirectangular2
+
 // Unimplemented: SetGS
+
 // Unimplemented: SetGH
+
 // Unimplemented: SetIGH
+
 // Unimplemented: SetGEOS
+
 // Unimplemented: SetGaussSchreiberTMercator
+
 // Unimplemented: SetGnomonic
+
 // Unimplemented: SetOM
+
 // Unimplemented: SetHOM
+
 // Unimplemented: SetHOM2PNO
+
 // Unimplemented: SetIWMPolyconic
+
 // Unimplemented: SetKrovak
+
 // Unimplemented: SetLAEA
+
 // Unimplemented: SetLCC
+
 // Unimplemented: SetLCC1SP
+
 // Unimplemented: SetLCCB
+
 // Unimplemented: SetMC
+
 // Unimplemented: SetMercator
+
 // Unimplemented: SetMollweide
+
 // Unimplemented: SetNZMG
+
 // Unimplemented: SetOS
+
 // Unimplemented: SetOrthographic
+
 // Unimplemented: SetPolyconic
+
 // Unimplemented: SetPS
+
 // Unimplemented: SetRobinson
+
 // Unimplemented: SetSinusoidal
+
 // Unimplemented: SetStereographic
+
 // Unimplemented: SetSOC
+
 // Unimplemented: SetTM
+
 // Unimplemented: SetTMVariant
+
 // Unimplemented: SetTMG
+
 // Unimplemented: SetTMSO
+
 // Unimplemented: SetVDG
+
 // Unimplemented: SetWagner
 
 // Cleanup cached SRS related memory
 func CleanupSR() {
 	C.OSRCleanup()
+}
+
+/* -------------------------------------------------------------------- */
+/*      Coordinate transformation functions.                            */
+/* -------------------------------------------------------------------- */
+
+type CoordinateTransform struct {
+	cval C.OGRCoordinateTransformationH
+}
+
+// Create a new CoordinateTransform
+func CreateCoordinateTransform(
+	source SpatialReference,
+	dest SpatialReference,
+) CoordinateTransform {
+	ct := C.OCTNewCoordinateTransformation(source.cval, dest.cval)
+	return CoordinateTransform{ct}
+}
+
+// Destroy CoordinateTransform
+func (ct CoordinateTransform) Destroy() {
+	C.OCTDestroyCoordinateTransformation(ct.cval)
+}
+
+// Fetch list of possible projection methods
+func ProjectionMethods() []string {
+	p := C.OPTGetProjectionMethods()
+	var strings []string
+	q := uintptr(unsafe.Pointer(p))
+	for {
+		p = (**C.char)(unsafe.Pointer(q))
+		if *p == nil {
+			break
+		}
+		strings = append(strings, C.GoString(*p))
+		q += unsafe.Sizeof(q)
+	}
+
+	return strings
+}
+
+// Fetch the parameters for a given projection method
+func ParameterList(method string) (params []string, name string) {
+	cMethod := C.CString(method)
+	defer C.free(unsafe.Pointer(cMethod))
+
+	var cName *C.char
+
+	p := C.OPTGetParameterList(cMethod, &cName)
+
+	name = C.GoString(cName)
+
+	var strings []string
+	q := uintptr(unsafe.Pointer(p))
+	for {
+		p = (**C.char)(unsafe.Pointer(q))
+		if *p == nil {
+			break
+		}
+		strings = append(strings, C.GoString(*p))
+		q += unsafe.Sizeof(q)
+	}
+
+	return strings, name
+}
+
+// Fetch information about a single parameter of a projection method
+func ParameterInfo(
+	projectionMethod, parameterName string,
+) (
+	username, paramType string, 
+	defaultValue float64,
+	ok bool,
+) {
+	cMethod := C.CString(projectionMethod)
+	defer C.free(unsafe.Pointer(cMethod))
+
+	cName := C.CString(parameterName)
+	defer C.free(unsafe.Pointer(cName))
+
+	var cUserName *C.char
+	var cParamType *C.char
+	var cDefaultValue C.double	
+	
+	success := C.OPTGetParameterInfo(
+		cMethod,
+		cName,
+		&cUserName,
+		&cParamType,
+		&cDefaultValue)
+	return C.GoString(cUserName), C.GoString(cParamType), float64(cDefaultValue), success != 0
 }

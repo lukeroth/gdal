@@ -1198,7 +1198,7 @@ func (feature Feature) SetFieldRaw(index int, field Field) {
 	C.OGR_F_SetFieldRaw(feature.cval, C.int(index), field.cval)
 }
 	
-// Unimplemented: SetFieldBinary
+// Set field as binary data
 func (feature Feature) SetFieldBinary(index int, value []uint8) {
 	C.OGR_F_SetFieldBinary(
 		feature.cval,
@@ -1208,7 +1208,7 @@ func (feature Feature) SetFieldBinary(index int, value []uint8) {
 	)
 }
 
-// Unimplemented: SetFieldDateTime
+// Set field as date / time
 func (feature Feature) SetFieldDateTime(index int, dt time.Time) {
 	C.OGR_F_SetFieldDateTime(
 		feature.cval,
@@ -1399,13 +1399,22 @@ func (layer Layer) DeleteField(index int) error {
 }
 
 // Reorder all the fields of a layer
-// Unimplemented: ReorderFields
+func (layer Layer) ReorderFields(layerMap []int) error {
+	err := C.OGR_L_ReorderFields(layer.cval, (*C.int)(unsafe.Pointer(&layerMap[0])))
+	return error(err)
+}
 
 // Reorder an existing field of a layer
-// Unimplemented: ReorderField
+func (layer Layer) ReorderField(oldIndex, newIndex int) error {
+	err := C.OGR_L_ReorderField(layer.cval, C.int(oldIndex), C.int(newIndex))
+	return error(err)
+}
 
 // Alter the definition of an existing field of a layer
-// Unimplemented: AlterFieldDefn
+func (layer Layer) AlterFieldDefn(index int, newDefn FieldDefinition, flags int) error {
+	err := C.OGR_L_AlterFieldDefn(layer.cval, C.int(index), newDefn.cval, C.int(flags))
+	return error(err)
+}
 
 // Begin a transation on data sources which support it
 func (layer Layer) StartTransaction() error {
@@ -1773,99 +1782,62 @@ type StyleTable struct {
 }
 
 // Unimplemented: CreateStyleManager
+
 // Unimplemented: Destroy
+
 // Unimplemented: InitFromFeature
+
 // Unimplemented: InitStyleString
+
 // Unimplemented: PartCount
+
 // Unimplemented: PartCount
+
 // Unimplemented: AddPart
+
 // Unimplemented: AddStyle
 
+
 // Unimplemented: CreateStyleTool
+
 // Unimplemented: Destroy
+
 // Unimplemented: Type
+
 // Unimplemented: Unit
+
 // Unimplemented: SetUnit
+
 // Unimplemented: ParamStr
+
 // Unimplemented: ParamNum
+
 // Unimplemented: ParamDbl
+
 // Unimplemented: SetParamStr
+
 // Unimplemented: SetParamNum
+
 // Unimplemented: SetParamDbl
+
 // Unimplemented: StyleString
+
 // Unimplemented: RGBFromString
 
+
 // Unimplemented: CreateStyleTable
+
 // Unimplemented: Destroy
+
 // Unimplemented: Save
+
 // Unimplemented: Load
+
 // Unimplemented: Find
+
 // Unimplemented: ResetStyleStringReading
+
 // Unimplemented: NextStyle
+
 // Unimplemented: LastStyleName
 
-/* -------------------------------------------------------------------- */
-/*      Coordinate transformation functions.                            */
-/* -------------------------------------------------------------------- */
-
-type CoordinateTransform struct {
-	cval C.OGRCoordinateTransformationH
-}
-
-// Create a new CoordinateTransform
-func CreateCoordinateTransform(
-	source SpatialReference,
-	dest SpatialReference,
-) CoordinateTransform {
-	ct := C.OCTNewCoordinateTransformation(source.cval, dest.cval)
-	return CoordinateTransform{ct}
-}
-
-// Destroy CoordinateTransform
-func (ct CoordinateTransform) Destroy() {
-	C.OCTDestroyCoordinateTransformation(ct.cval)
-}
-
-// Fetch list of possible projection methods
-func ProjectionMethods() []string {
-	p := C.OPTGetProjectionMethods()
-	var strings []string
-	q := uintptr(unsafe.Pointer(p))
-	for {
-		p = (**C.char)(unsafe.Pointer(q))
-		if *p == nil {
-			break
-		}
-		strings = append(strings, C.GoString(*p))
-		q += unsafe.Sizeof(q)
-	}
-
-	return strings
-}
-
-// Fetch the parameters for a given projection method
-func ParameterList(method string) (params []string, name string) {
-	cMethod := C.CString(method)
-	defer C.free(unsafe.Pointer(cMethod))
-
-	var cName *C.char
-
-	p := C.OPTGetParameterList(cMethod, &cName)
-
-	name = C.GoString(cName)
-
-	var strings []string
-	q := uintptr(unsafe.Pointer(p))
-	for {
-		p = (**C.char)(unsafe.Pointer(q))
-		if *p == nil {
-			break
-		}
-		strings = append(strings, C.GoString(*p))
-		q += unsafe.Sizeof(q)
-	}
-
-	return strings, name
-}
-
-// Unimplemented: ParameterInfo

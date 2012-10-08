@@ -340,7 +340,7 @@ func (driver Driver) Create(
 	return Dataset{h}
 }
 
-// Create a copy of a dataset.
+// Create a copy of a dataset
 func (driver Driver) CreateCopy(
 	filename string,
 	sourceDataset Dataset,
