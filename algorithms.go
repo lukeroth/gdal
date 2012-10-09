@@ -235,7 +235,7 @@ func (src RasterBand) SieveFilter(
 	)
 	return error(err)
 }
-	
+
 /* --------------------------------------------- */
 /* Warp functions                                */
 /* --------------------------------------------- */

@@ -10,8 +10,8 @@ package gdal
 */
 import "C"
 import (
-	"unsafe"
 	"reflect"
+	"unsafe"
 )
 
 /* -------------------------------------------------------------------- */
@@ -224,7 +224,7 @@ func (sr SpatialReference) ToPCI() (proj, units string, params []float64, errVal
 // Export coordinate system to USGS GCTP projection definition
 func (sr SpatialReference) ToUSGS() (proj, zone int, params []float64, datum int, errVal error) {
 	err := C.OSRExportToUSGS(
-		sr.cval, 
+		sr.cval,
 		(*C.long)(unsafe.Pointer(&proj)),
 		(*C.long)(unsafe.Pointer(&zone)),
 		(**C.double)(unsafe.Pointer(&params[0])),
@@ -233,7 +233,7 @@ func (sr SpatialReference) ToUSGS() (proj, zone int, params []float64, datum int
 	header := (*reflect.SliceHeader)((unsafe.Pointer(&params)))
 	header.Cap = 15
 	header.Len = 15
-		
+
 	return proj, zone, params, datum, error(err)
 }
 
@@ -686,7 +686,7 @@ func ParameterList(method string) (params []string, name string) {
 func ParameterInfo(
 	projectionMethod, parameterName string,
 ) (
-	username, paramType string, 
+	username, paramType string,
 	defaultValue float64,
 	ok bool,
 ) {
@@ -698,8 +698,8 @@ func ParameterInfo(
 
 	var cUserName *C.char
 	var cParamType *C.char
-	var cDefaultValue C.double	
-	
+	var cDefaultValue C.double
+
 	success := C.OPTGetParameterInfo(
 		cMethod,
 		cName,

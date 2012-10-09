@@ -10,9 +10,9 @@ package gdal
 */
 import "C"
 import (
-	"unsafe"
 	"reflect"
 	"time"
+	"unsafe"
 )
 
 func init() {
@@ -90,8 +90,18 @@ func (env Envelope) IsInit() bool {
 	return (env.cval.MinX != 0 || env.cval.MinY != 0 || env.cval.MaxX != 0 || env.cval.MaxY != 0)
 }
 
-func min(a, b C.double) C.double { if a < b { return a }; return b }
-func max(a, b C.double) C.double { if a > b { return a }; return b }
+func min(a, b C.double) C.double {
+	if a < b {
+		return a
+	}
+	return b
+}
+func max(a, b C.double) C.double {
+	if a > b {
+		return a
+	}
+	return b
+}
 
 // Return the union of this envelope with another one
 func (env Envelope) Union(other Envelope) {
@@ -203,12 +213,12 @@ func Create(geomType GeometryType) Geometry {
 
 // Stroke arc to linestring
 func ApproximateArcAngles(
-	x, y, z, 
-	primaryRadius, 
-	secondaryRadius, 
-	rotation, 
-	startAngle, 
-	endAngle, 
+	x, y, z,
+	primaryRadius,
+	secondaryRadius,
+	rotation,
+	startAngle,
+	endAngle,
 	stepSizeDegrees float64,
 ) Geometry {
 	geom := C.OGR_G_ApproximateArcAngles(
@@ -682,7 +692,7 @@ func (geom Geometry) RemoveGeometry(index int, delete bool) error {
 }
 
 // Build a polygon / ring from a set of lines
-func(geom Geometry) BuildPolygonFromEdges(autoClose bool, tolerance float64) (Geometry, error) {
+func (geom Geometry) BuildPolygonFromEdges(autoClose bool, tolerance float64) (Geometry, error) {
 	var err C.OGRErr
 	newGeom := C.OGRBuildPolygonFromEdges(
 		geom.cval,
@@ -702,24 +712,24 @@ func(geom Geometry) BuildPolygonFromEdges(autoClose bool, tolerance float64) (Ge
 type FieldType int
 
 const (
-	FT_Integer			= FieldType(C.OFTInteger)
-	FT_IntegerList		= FieldType(C.OFTIntegerList)
-	FT_Real				= FieldType(C.OFTReal)
-	FT_RealList			= FieldType(C.OFTRealList)
-	FT_String			= FieldType(C.OFTString)
-	FT_StringList		= FieldType(C.OFTStringList)
-	FT_Binary			= FieldType(C.OFTBinary)
-	FT_Date				= FieldType(C.OFTDate)
-	FT_Time				= FieldType(C.OFTTime)
-	FT_DateTime			= FieldType(C.OFTDateTime)
+	FT_Integer     = FieldType(C.OFTInteger)
+	FT_IntegerList = FieldType(C.OFTIntegerList)
+	FT_Real        = FieldType(C.OFTReal)
+	FT_RealList    = FieldType(C.OFTRealList)
+	FT_String      = FieldType(C.OFTString)
+	FT_StringList  = FieldType(C.OFTStringList)
+	FT_Binary      = FieldType(C.OFTBinary)
+	FT_Date        = FieldType(C.OFTDate)
+	FT_Time        = FieldType(C.OFTTime)
+	FT_DateTime    = FieldType(C.OFTDateTime)
 )
 
 type Justification int
 
 const (
-	J_Undefined		= Justification(C.OJUndefined)
-	J_Left			= Justification(C.OJLeft)
-	J_Right			= Justification(C.OJRight)
+	J_Undefined = Justification(C.OJUndefined)
+	J_Left      = Justification(C.OJLeft)
+	J_Right     = Justification(C.OJRight)
 )
 
 type FieldDefinition struct {
@@ -802,8 +812,8 @@ func (fd FieldDefinition) SetPrecision(precision int) {
 
 // Set defining parameters of field in a single call
 func (fd FieldDefinition) Set(
-	name string, 
-	fType FieldType, 
+	name string,
+	fType FieldType,
 	width, precision int,
 	justify Justification,
 ) {
@@ -1192,12 +1202,12 @@ func (feature Feature) SetFieldStringList(index int, value []string) {
 		(**C.char)(unsafe.Pointer(&cValue[0])),
 	)
 }
-	
+
 // Set field from the raw field pointer
 func (feature Feature) SetFieldRaw(index int, field Field) {
 	C.OGR_F_SetFieldRaw(feature.cval, C.int(index), field.cval)
 }
-	
+
 // Set field as binary data
 func (feature Feature) SetFieldBinary(index int, value []uint8) {
 	C.OGR_F_SetFieldBinary(
@@ -1300,7 +1310,7 @@ func (layer Layer) SetSpatialFilter(filter Geometry) {
 // Set a new rectangular spatial filter for this layer 
 func (layer Layer) SetSpatialFilterRect(minX, minY, maxX, maxY float64) {
 	C.OGR_L_SetSpatialFilterRect(
-		layer.cval, 
+		layer.cval,
 		C.double(minX), C.double(minY), C.double(maxX), C.double(maxY),
 	)
 }
@@ -1520,7 +1530,7 @@ func OpenSharedDataSource(name string, update int) DataSource {
 
 // Drop a reference to this datasource and destroy if reference is zero
 func (ds DataSource) Release() error {
-	err := C.OGRReleaseDataSource(ds.cval);
+	err := C.OGRReleaseDataSource(ds.cval)
 	return error(err)
 }
 
@@ -1581,7 +1591,7 @@ func (ds DataSource) Driver() OGRDriver {
 
 // Create a new layer on the data source
 func (ds DataSource) CreateLayer(
-	name string, 
+	name string,
 	sr SpatialReference,
 	geomType GeometryType,
 	options []string,
@@ -1610,7 +1620,7 @@ func (ds DataSource) CreateLayer(
 // Duplicate an existing layer
 func (ds DataSource) CopyLayer(
 	source Layer,
-	name string, 
+	name string,
 	options []string,
 ) Layer {
 	cName := C.CString(name)
@@ -1705,11 +1715,11 @@ func (driver OGRDriver) Create(name string, options []string) (newDS DataSource,
 		defer C.free(unsafe.Pointer(opts[i]))
 	}
 	opts[length] = (*C.char)(unsafe.Pointer(nil))
-	
+
 	ds := C.OGR_Dr_CreateDataSource(driver.cval, cName, (**C.char)(unsafe.Pointer(&opts[0])))
 	return DataSource{ds}, ds != nil
 }
-	
+
 // Create a new datasource with this driver by copying all layers of the existing datasource
 func (driver OGRDriver) Copy(source DataSource, name string, options []string) (newDS DataSource, ok bool) {
 	cName := C.CString(name)
@@ -1797,7 +1807,6 @@ type StyleTable struct {
 
 // Unimplemented: AddStyle
 
-
 // Unimplemented: CreateStyleTool
 
 // Unimplemented: Destroy
@@ -1824,7 +1833,6 @@ type StyleTable struct {
 
 // Unimplemented: RGBFromString
 
-
 // Unimplemented: CreateStyleTable
 
 // Unimplemented: Destroy
@@ -1840,4 +1848,3 @@ type StyleTable struct {
 // Unimplemented: NextStyle
 
 // Unimplemented: LastStyleName
-
