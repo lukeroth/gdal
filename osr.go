@@ -717,85 +717,517 @@ func (sr SpatialReference) SetCEA(stdp1, centralMeridian, falseEasting, falseNor
 	return error(err)
 }
 
-// Unimplemented: SetCS
+// Set to Cassini-Soldner
+func (sr SpatialReference) SetCS(centerLat, centerLong, falseEasting, falseNorthing float64) error {
+	err := C.OSRSetCS(
+		sr.cval,
+		C.double(centerLat),
+		C.double(centerLong),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetEC
+// Set to Equidistant Conic
+func (sr SpatialReference) SetEC(
+	stdp1, stdp2, centerLat, centerLong, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetEC(
+		sr.cval,
+		C.double(stdp1),
+		C.double(stdp2),
+		C.double(centerLat),
+		C.double(centerLong),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetEckert
+// Set to Eckert I-VI
+func (sr SpatialReference) SetEckert(variation int, centralMeridian, falseEasting, falseNorthing float64) error {
+	err := C.OSRSetEckert(
+		sr.cval,
+		C.int(variation),
+		C.double(centralMeridian),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetEckertIV
+// Set to Equirectangular
+func (sr SpatialReference) SetEquirectangular(
+	centerLat, centerLong, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetEquirectangular(
+		sr.cval,
+		C.double(centerLat),
+		C.double(centerLong),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetEckertVI
+// Set to Equirectangular (generalized form)
+func (sr SpatialReference) SetEquirectangularGeneralized(
+	centerLat, centerLong, psuedoStdParallel, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetEquirectangular2(
+		sr.cval,
+		C.double(centerLat),
+		C.double(centerLong),
+		C.double(psuedoStdParallel),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetEquirectangular
+// Set to Gall Stereographic
+func (sr SpatialReference) SetGS(centralMeridian, falseEasting, falseNorthing float64) error {
+	err := C.OSRSetGS(
+		sr.cval,
+		C.double(centralMeridian),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetEquirectangular2
+// Set to Goode Homolosine
+func (sr SpatialReference) SetGH(centralMeridian, falseEasting, falseNorthing float64) error {
+	err := C.OSRSetGH(
+		sr.cval,
+		C.double(centralMeridian),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetGS
+// Set to Interrupted Goode Homolosine
+func (sr SpatialReference) SetIGH() error {
+	err := C.OSRSetIGH(sr.cval)
+	return error(err)
+}
 
-// Unimplemented: SetGH
+// Set to GEOS - Geostationary Satellite View
+func (sr SpatialReference) SetGEOS(
+	centralMeridian, satelliteHeight, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetGEOS(
+		sr.cval,
+		C.double(centralMeridian),
+		C.double(satelliteHeight),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetIGH
+// Set to Gauss Schreiber Transverse Mercator
+func (sr SpatialReference) SetGSTM(
+	centerLat, centerLong, scale, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetGaussSchreiberTMercator(
+		sr.cval,
+		C.double(centerLat),
+		C.double(centerLong),
+		C.double(scale),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetGEOS
+// Set to gnomonic
+func (sr SpatialReference) SetGnomonic(
+	centerLat, centerLong, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetGnomonic(
+		sr.cval,
+		C.double(centerLat),
+		C.double(centerLong),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetGaussSchreiberTMercator
+// Set to Hotine Oblique Mercator projection using azimuth angle
+func (sr SpatialReference) SetHOM(
+	centerLat, centerLong, azimuth, rectToSkew, scale, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetHOM(
+		sr.cval,
+		C.double(centerLat),
+		C.double(centerLong),
+		C.double(azimuth),
+		C.double(rectToSkew),
+		C.double(scale),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetGnomonic
+// Set to Hotine Oblique Mercator projection using two points on projection centerline
+func (sr SpatialReference) SetHOM2PNO(
+	centerLat, lat1, long1, lat2, long2, scale, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetHOM2PNO(
+		sr.cval,
+		C.double(centerLat),
+		C.double(lat1),
+		C.double(long1),
+		C.double(lat2),
+		C.double(long2),
+		C.double(scale),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetOM
+// Set to International Map of the World Polyconic
+func (sr SpatialReference) SetIWMPolyconic(
+	lat1, lat2, centerLong, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetIWMPolyconic(
+		sr.cval,
+		C.double(lat1),
+		C.double(lat2),
+		C.double(centerLong),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetHOM
+// Set to Krovak Oblique Conic Conformal
+func (sr SpatialReference) SetKrovak(
+	centerLat, centerLong, azimuth, psuedoStdParallel, scale, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetKrovak(
+		sr.cval,
+		C.double(centerLat),
+		C.double(centerLong),
+		C.double(azimuth),
+		C.double(psuedoStdParallel),
+		C.double(scale),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetHOM2PNO
+// Set to Lambert Azimuthal Equal Area
+func (sr SpatialReference) SetLAEA(
+	centerLat, centerLong, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetLAEA(
+		sr.cval,
+		C.double(centerLat),
+		C.double(centerLong),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetIWMPolyconic
+// Set to Lambert Conformal Conic
+func (sr SpatialReference) SetLCC(
+	stdp1, stdp2, centerLat, centerLong, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetLCC(
+		sr.cval,
+		C.double(stdp1),
+		C.double(stdp2),
+		C.double(centerLat),
+		C.double(centerLong),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetKrovak
+// Set to Lambert Conformal Conic (1 standard parallel)
+func (sr SpatialReference) SetLCC1SP(
+	centerLat, centerLong, scale, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetLCC1SP(
+		sr.cval,
+		C.double(centerLat),
+		C.double(centerLong),
+		C.double(scale),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetLAEA
+// Set to Lambert Conformal Conic (Belgium)
+func (sr SpatialReference) SetLCCB(
+	stdp1, stdp2, centerLat, centerLong, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetLCCB(
+		sr.cval,
+		C.double(stdp1),
+		C.double(stdp2),
+		C.double(centerLat),
+		C.double(centerLong),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetLCC
+// Set to Miller Cylindrical
+func (sr SpatialReference) SetMC(
+	centerLat, centerLong, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetMC(
+		sr.cval,
+		C.double(centerLat),
+		C.double(centerLong),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetLCC1SP
+// Set to Mercator
+func (sr SpatialReference) SetMercator(
+	centerLat, centerLong, scale, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetMercator(
+		sr.cval,
+		C.double(centerLat),
+		C.double(centerLong),
+		C.double(scale),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetLCCB
+// Set tp Mollweide
+func (sr SpatialReference) SetMollweide(
+	centralMeridian, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetMollweide(
+		sr.cval,
+		C.double(centralMeridian),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetMC
+// Set to New Zealand Map Grid
+func (sr SpatialReference) SetNZMG(
+	centerLat, centerLong, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetNZMG(
+		sr.cval,
+		C.double(centerLat),
+		C.double(centerLong),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetMercator
+// Set to Oblique Stereographic
+func (sr SpatialReference) SetOS(
+	originLat, meridian, scale, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetOS(
+		sr.cval,
+		C.double(originLat),
+		C.double(meridian),
+		C.double(scale),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetMollweide
+// Set to Orthographic
+func (sr SpatialReference) SetOrthographic(
+	centerLat, centerLong, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetOrthographic(
+		sr.cval,
+		C.double(centerLat),
+		C.double(centerLong),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetNZMG
+// Set to Polyconic
+func (sr SpatialReference) SetPolyconic(
+	centerLat, centerLong, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetPolyconic(
+		sr.cval,
+		C.double(centerLat),
+		C.double(centerLong),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetOS
+// Set to Polar Stereographic
+func (sr SpatialReference) SetPS(
+	centerLat, centerLong, scale, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetPS(
+		sr.cval,
+		C.double(centerLat),
+		C.double(centerLong),
+		C.double(scale),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetOrthographic
+// Set to Robinson
+func (sr SpatialReference) SetRobinson(
+	centerLong, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetRobinson(
+		sr.cval,
+		C.double(centerLong),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetPolyconic
+// Set to Sinusoidal
+func (sr SpatialReference) SetSinusoidal(
+	centerLong, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetSinusoidal(
+		sr.cval,
+		C.double(centerLong),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetPS
+// Set to Stereographic
+func (sr SpatialReference) SetStereographic(
+	centerLat, centerLong, scale, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetStereographic(
+		sr.cval,
+		C.double(centerLat),
+		C.double(centerLong),
+		C.double(scale),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetRobinson
+// Set to Swiss Oblique Cylindrical
+func (sr SpatialReference) SetSOC(
+	latitudeOfOrigin, centralMeridian, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetSOC(
+		sr.cval,
+		C.double(latitudeOfOrigin),
+		C.double(centralMeridian),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetSinusoidal
+// Set to Transverse Mercator
+func (sr SpatialReference) SetTM(
+	centerLat, centerLong, scale, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetTM(
+		sr.cval,
+		C.double(centerLat),
+		C.double(centerLong),
+		C.double(scale),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetStereographic
+// Set to Transverse Mercator variant
+func (sr SpatialReference) SetTMVariant(
+	variantName string, centerLat, centerLong, scale, falseEasting, falseNorthing float64,
+) error {
+	cName := C.CString(variantName)
+	defer C.free(unsafe.Pointer(cName))
+	err := C.OSRSetTMVariant(
+		sr.cval,
+		cName,
+		C.double(centerLat),
+		C.double(centerLong),
+		C.double(scale),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetSOC
+// Set to Tunisia Mining Grid
+func (sr SpatialReference) SetTMG(
+	centerLat, centerLong, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetTMG(
+		sr.cval,
+		C.double(centerLat),
+		C.double(centerLong),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetTM
+// Set to Transverse Mercator (South Oriented)
+func (sr SpatialReference) SetTMSO(
+	centerLat, centerLong, scale, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetTMSO(
+		sr.cval,
+		C.double(centerLat),
+		C.double(centerLong),
+		C.double(scale),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetTMVariant
-
-// Unimplemented: SetTMG
-
-// Unimplemented: SetTMSO
-
-// Unimplemented: SetVDG
-
-// Unimplemented: SetWagner
+// Set to VanDerGrinten
+func (sr SpatialReference) SetVDG(
+	centerLong, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetVDG(
+		sr.cval,
+		C.double(centerLong),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
 // Cleanup cached SRS related memory
 func CleanupSR() {
