@@ -3,7 +3,9 @@ Package gdal provides a wrapper for GDAL, the Geospatial Data Abstraction Librar
 
 Limitations
 
-The majority of the GDAL C API is covered, with the exception of asynchronous readers and a number of less oftenly used functions.  OGR support is currently much less complete.  Spatial reference support is sufficient to support assigning spatial reference values to GDAL datasets from WKT and Proj.4 definitions, but does not cover the majority of spatial reference formats yet.
+Some less oftenly used functions are not yet implemented.  The majoriry of these involve style tables, asynchronous I/O, and GCPs.
+
+The documentation is fairly limited, but the functionality fairly closely matches that of the C++ api.
 
 This wrapper has only been tested on 64-bit Ubuntu Linux, with version 1.9.1 of the GDAL library.
 
@@ -46,11 +48,5 @@ A simple program to create a georeferenced blank 256x256 GeoTIFF:
 	}
 More examples can be found in the ./examples subdirectory.
 
-Recent changes
-
-A more complete changelog can be found on Github.
-10/4/2012: Renamed project to work better with go tools, additional OGR code
-10/3/2012: Restructed OGR code, added initial algorithm functions and placeholders
-10/2/2012: Initial OGR and OSR support added; color table and raster attribute table support added.
 */
 package gdal
