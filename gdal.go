@@ -12,6 +12,7 @@ import "C"
 import (
 	"fmt"
 	"unsafe"
+	"reflect"
 )
 
 var _ = fmt.Println
@@ -1182,19 +1183,24 @@ func (rb RasterBand) DefaultHistogram(
 		progress, data,
 	}
 
-	var cHistogram **C.int
+	var cHistogram *C.int
 
 	cErr := C.GDALGetDefaultHistogram(
 		rb.cval,
 		(*C.double)(&min),
 		(*C.double)(&max),
 		(*C.int)(unsafe.Pointer(&buckets)),
-		cHistogram,
+		&cHistogram,
 		C.int(force),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
 	)
 
+	sliceHeader := (*reflect.SliceHeader)(unsafe.Pointer(&histogram))
+	sliceHeader.Cap = buckets
+	sliceHeader.Len = buckets
+	sliceHeader.Data = uintptr(unsafe.Pointer(cHistogram))
+	
 	return min, max, buckets, histogram, error(cErr)
 }
 

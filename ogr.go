@@ -96,6 +96,7 @@ func min(a, b C.double) C.double {
 	}
 	return b
 }
+
 func max(a, b C.double) C.double {
 	if a > b {
 		return a
@@ -314,7 +315,7 @@ func (geom Geometry) FromWKT(wkt string) error {
 	return error(err)
 }
 
-// Unimplemented: ExportToWkt
+// Fetch geometry as WKT
 func (geom Geometry) ToWKT() (string, error) {
 	var p *C.char
 	err := C.OGR_G_ExportToWkt(geom.cval, &p)
