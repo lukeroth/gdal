@@ -49,13 +49,7 @@ func (sr SpatialReference) ToWKT() (string, error) {
 // Export coordinate system to a nicely formatted WKT string
 func (sr SpatialReference) ToPrettyWKT(simplify bool) (string, error) {
 	var p *C.char
-	var cBool int
-	if simplify {
-		cBool = 1
-	} else {
-		cBool = 0
-	}
-	err := C.OSRExportToPrettyWkt(sr.cval, &p, C.int(cBool))
+	err := C.OSRExportToPrettyWkt(sr.cval, &p, BoolToCInt(simplify))
 	wkt := C.GoString(p)
 	return wkt, error(err)
 }
@@ -485,53 +479,243 @@ func (sr SpatialReference) SetCompoundCS(
 	return error(err)
 }
 
-// Unimplemented: SetGeogCS
+// Set geographic coordinate system
+func (sr SpatialReference) SetGeographicCS(
+	geogName, datumName, spheroidName string,
+	semiMajor, flattening float64,
+	pmName string,
+	offset float64,
+	angularUnits string,
+	toRadians float64,
+) error {
+	cGeogName := C.CString(geogName)
+	defer C.free(unsafe.Pointer(cGeogName))
+	cDatumName := C.CString(datumName)
+	defer C.free(unsafe.Pointer(cDatumName))
+	cSpheroidName := C.CString(spheroidName)
+	defer C.free(unsafe.Pointer(cSpheroidName))
+	cPMName := C.CString(pmName)
+	defer C.free(unsafe.Pointer(cPMName))
+	cAngularUnits := C.CString(angularUnits)
+	defer C.free(unsafe.Pointer(cAngularUnits))
+	err := C.OSRSetGeogCS(
+		sr.cval,
+		cGeogName,
+		cDatumName,
+		cSpheroidName,
+		C.double(semiMajor),
+		C.double(flattening),
+		cPMName,
+		C.double(offset),
+		cAngularUnits,
+		C.double(toRadians))
+	return error(err)
+}
 
-// Unimplemented: SetVertCS
+// Set up the vertical coordinate system
+func (sr SpatialReference) SetVerticalCS(csName, datumName string, datumType int) error {
+	cCSName := C.CString(csName)
+	defer C.free(unsafe.Pointer(cCSName))
+	cDatumName := C.CString(datumName)
+	defer C.free(unsafe.Pointer(cDatumName))
+	err := C.OSRSetVertCS(sr.cval, cCSName, cDatumName, C.int(datumType))
+	return error(err)
+}
 
-// Unimplemented: SemiMajor
+// Get spheroid semi-major axis
+func (sr SpatialReference) SemiMajorAxis() (float64, error) {
+	var err C.OGRErr
+	axis := C.OSRGetSemiMajor(sr.cval, &err)
+	return float64(axis), error(err)
+}
 
-// Unimplemented: SemiMinor
+// Get spheroid semi-minor axis
+func (sr SpatialReference) SemiMinorAxis() (float64, error) {
+	var err C.OGRErr
+	axis := C.OSRGetSemiMinor(sr.cval, &err)
+	return float64(axis), error(err)
+}
 
-// Unimplemented: InvFlattening
+// Get spheroid inverse flattening axis
+func (sr SpatialReference) InverseFlattening() (float64, error) {
+	var err C.OGRErr
+	flat := C.OSRGetInvFlattening(sr.cval, &err)
+	return float64(flat), error(err)
+}
 
-// Unimplemented: SetAuthority
+// Sets the authority for a node
+func (sr SpatialReference) SetAuthority(target, authority string, code int) error {
+	cTarget := C.CString(target)
+	defer C.free(unsafe.Pointer(cTarget))
+	cAuthority := C.CString(authority)
+	defer C.free(unsafe.Pointer(cAuthority))
+	err := C.OSRSetAuthority(sr.cval, cTarget, cAuthority, C.int(code))
+	return error(err)
+}
 
-// Unimplemented: AuthorityCode
+// Get the authority code for a node
+func (sr SpatialReference) AuthorityCode(target string) string {
+	cTarget := C.CString(target)
+	defer C.free(unsafe.Pointer(cTarget))
+	code := C.OSRGetAuthorityCode(sr.cval, cTarget)
+	return C.GoString(code)
+}
 
-// Unimplemented: AuthorityName
+// Get the authority name for a node
+func (sr SpatialReference) AuthorityName(target string) string {
+	cTarget := C.CString(target)
+	defer C.free(unsafe.Pointer(cTarget))
+	code := C.OSRGetAuthorityName(sr.cval, cTarget)
+	return C.GoString(code)
+}
 
-// Unimplemented: SetProjection
+// Set a projection by name
+func (sr SpatialReference) SetProjectionByName(name string) error {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	err := C.OSRSetProjection(sr.cval, cName)
+	return error(err)
+}
 
-// Unimplemented: SetProjParm
+// Set a projection parameter value
+func (sr SpatialReference) SetProjectionParameter(name string, value float64) error {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	err := C.OSRSetProjParm(sr.cval, cName, C.double(value))
+	return error(err)
+}
 
-// Unimplemented: ProjParm
+// Fetch a projection parameter value
+func (sr SpatialReference) ProjectionParameter(name string, defaultValue float64) (float64, error) {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	var err C.OGRErr
+	value := C.OSRGetProjParm(sr.cval, cName, C.double(defaultValue), &err)
+	return float64(value), error(err)
+}
 
-// Unimplemented: SetNormProjParm
+// Set a projection parameter with a normalized value
+func (sr SpatialReference) SetNormalizedProjectionParameter(name string, value float64) error {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	err := C.OSRSetNormProjParm(sr.cval, cName, C.double(value))
+	return error(err)
+}
 
-// Unimplemented: NormProjParm
+// Fetch a normalized projection parameter value
+func (sr SpatialReference) NormalizedProjectionParameter(
+	name string, defaultValue float64,
+) (float64, error) {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	var err C.OGRErr
+	value := C.OSRGetProjParm(sr.cval, cName, C.double(defaultValue), &err)
+	return float64(value), error(err)
+}
 
-// Unimplemented: SetUTM
+// Set UTM projection definition
+func (sr SpatialReference) SetUTM(zone int, north bool) error {
+	err := C.OSRSetUTM(sr.cval, C.int(zone), BoolToCInt(north))
+	return error(err)
+}
 
-// Unimplemented: UTMZone
+// Get UTM zone information
+func (sr SpatialReference) UTMZone() (zone int, north bool) {
+	var northInt C.int
+	cZone := C.OSRGetUTMZone(sr.cval, &northInt)
+	return int(cZone), northInt != 0
+}
 
-// Unimplemented: SetStatePlane
+// Set State Plane projection definition
+func (sr SpatialReference) SetStatePlane(zone int, nad83 bool) error {
+	err := C.OSRSetStatePlane(sr.cval, C.int(zone), BoolToCInt(nad83))
+	return error(err)
+}
 
-// Unimplemented: SetStatePlaneWithUnits
+// Set State Plane projection definition
+func (sr SpatialReference) SetStatePlaneWithUnits(
+	zone int,
+	nad83 bool,
+	unitName string,
+	factor float64,
+) error {
+	cUnitName := C.CString(unitName)
+	defer C.free(unsafe.Pointer(cUnitName))
+	err := C.OSRSetStatePlaneWithUnits(
+		sr.cval,
+		C.int(zone),
+		BoolToCInt(nad83),
+		cUnitName,
+		C.double(factor))
+	return error(err)
+}
 
-// Unimplemented: AutoIdentifyEPSG
+// Set EPSG authority info if possible
+func (sr SpatialReference) AutoIdentifyEPSG() error {
+	err := C.OSRAutoIdentifyEPSG(sr.cval)
+	return error(err)
+}
 
-// Unimplemented: EPSGTreatsAsLatLong
+// Return true if EPSG feels this coordinate system should be treated as having lat/long coordinate ordering
+func (sr SpatialReference) EPSGTreatsAsLatLong() bool {
+	val := C.OSREPSGTreatsAsLatLong(sr.cval)
+	return val != 0
+}
 
+// Fetch the orientation of one axis
 // Unimplemented: Axis
 
-// Unimplemented: SetACEA
+// Set to Albers Conic Equal Area
+func (sr SpatialReference) SetACEA(
+	stdp1, stdp2, centerLat, centerLong, falseEasting, falseNorthing float64,
+) error {
+	err := C.OSRSetACEA(
+		sr.cval,
+		C.double(stdp1),
+		C.double(stdp2),
+		C.double(centerLat),
+		C.double(centerLong),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetAE
+// Set to Azimuthal Equidistant
+func (sr SpatialReference) SetAE(centerLat, centerLong, falseEasting, falseNorthing float64) error {
+	err := C.OSRSetAE(
+		sr.cval,
+		C.double(centerLat),
+		C.double(centerLong),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetBonne
+// Set to Bonne
+func (sr SpatialReference) SetBonne(standardParallel, centralMeridian, falseEasting, falseNorthing float64) error {
+	err := C.OSRSetBonne(
+		sr.cval,
+		C.double(standardParallel),
+		C.double(centralMeridian),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
-// Unimplemented: SetCEA
+// Set to Cylindrical Equal Area
+func (sr SpatialReference) SetCEA(stdp1, centralMeridian, falseEasting, falseNorthing float64) error {
+	err := C.OSRSetCEA(
+		sr.cval,
+		C.double(stdp1),
+		C.double(centralMeridian),
+		C.double(falseEasting),
+		C.double(falseNorthing),
+	)
+	return error(err)
+}
 
 // Unimplemented: SetCS
 
