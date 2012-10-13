@@ -24,7 +24,7 @@ func init() {
 /* -------------------------------------------------------------------- */
 
 // List of well known binary geometry types
-type GeometryType int
+type GeometryType uint32
 
 const (
 	GT_Unknown               = GeometryType(C.wkbUnknown)

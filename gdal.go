@@ -697,14 +697,14 @@ func (dataset Dataset) SetProjection(proj string) error {
 }
 
 // Get the affine transformation coefficients
-func (dataset Dataset) GeoTransform() []float64 {
-	var transform []float64
+func (dataset Dataset) GeoTransform() [6]float64 {
+	var transform [6]float64
 	C.GDALGetGeoTransform(dataset.cval, (*C.double)(unsafe.Pointer(&transform[0])))
 	return transform
 }
 
 // Set the affine transformation coefficients
-func (dataset Dataset) SetGeoTransform(transform []float64) error {
+func (dataset Dataset) SetGeoTransform(transform [6]float64) error {
 	err := C.GDALSetGeoTransform(dataset.cval, (*C.double)(unsafe.Pointer(&transform[0])))
 	return error(err)
 }

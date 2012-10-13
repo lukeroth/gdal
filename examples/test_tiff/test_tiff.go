@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"flag"
-	"github.com/lukeroth/gdal_go"
+	"github.com/lukeroth/gdal"
 )
 
 func main() {
@@ -56,13 +56,22 @@ func main() {
 	dataset.SetProjection(srString)
 
 	fmt.Printf("Setting geotransform\n")
-	dataset.SetGeoTransform([]float64{444720, 30, 0, 3751320, 0, -30})
+	dataset.SetGeoTransform([6]float64{444720, 30, 0, 3751320, 0, -30})
 
 	fmt.Printf("Getting raster band\n")
 	raster := dataset.RasterBand(1)
 
 	fmt.Printf("Writing to raster band\n")
 	raster.IO(gdal.Write, 0, 0, 256, 256, buffer, 256, 256, 0, 0)
-	
+
+	fmt.Printf("Reading geotransform:")
+	geoTransform := dataset.GeoTransform()
+	fmt.Printf("%v, %v, %v, %v, %v, %v\n", 
+		geoTransform[0], geoTransform[1], geoTransform[2], geoTransform[3], geoTransform[4], geoTransform[5])
+
+	fmt.Printf("Reading projection:")
+	wkt := dataset.Projection()
+	fmt.Printf("%s\n", wkt)
+		
 	fmt.Printf("End program\n")	
 }
