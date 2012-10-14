@@ -361,17 +361,30 @@ func (driver Driver) CreateCopy(
 	}
 	opts[length] = (*C.char)(unsafe.Pointer(nil))
 
-	arg := &goGDALProgressFuncProxyArgs{
-		progress, data,
+	var h C.GDALDatasetH
+
+	if progress == nil {
+		h = C.GDALCreateCopy(
+			driver.cval, name,
+			sourceDataset.cval,
+			C.int(strict),
+			(**C.char)(unsafe.Pointer(&opts[0])),
+			nil,
+			nil,
+		)
+	} else {
+		arg := &goGDALProgressFuncProxyArgs{
+			progress, data,
+		}
+		h = C.GDALCreateCopy(
+			driver.cval, name,
+			sourceDataset.cval,
+			C.int(strict), (**C.char)(unsafe.Pointer(&opts[0])),
+			C.goGDALProgressFuncProxyB(),
+			unsafe.Pointer(arg),
+		)
 	}
 
-	h := C.GDALCreateCopy(
-		driver.cval, name,
-		sourceDataset.cval,
-		C.int(strict), (**C.char)(unsafe.Pointer(&opts[0])),
-		C.goGDALProgressFuncProxyB(),
-		unsafe.Pointer(arg),
-	)
 	return Dataset{h}
 }
 
@@ -600,6 +613,27 @@ func (dataset Dataset) AddBand(dataType DataType, options []string) error {
 		(**C.char)(unsafe.Pointer(&cOptions[0])))
 
 	return error(err)
+}
+
+
+func (dataset Dataset) AutoCreateWarpedVRT(srcWKT,dstWKT string) (Dataset,error) {
+	c_srcWKT := C.CString(srcWKT)
+	defer C.free(unsafe.Pointer(c_srcWKT))
+	c_dstWKT := C.CString(dstWKT)
+	defer C.free(unsafe.Pointer(c_dstWKT))
+	/*
+	GDALResampleAlg {
+	  	GRA_NearestNeighbour = 0, GRA_Bilinear = 1, GRA_Cubic = 2, GRA_CubicSpline = 3,
+  		GRA_Lanczos = 4
+	}
+	 */
+	h:=C.GDALAutoCreateWarpedVRT(dataset.cval,c_srcWKT,c_dstWKT,/*GRA_NearestNeighbour*/0,0.0,nil)
+	d:=Dataset{h}
+	if h==nil {
+		return d,fmt.Errorf("AutoCreateWarpedVRT failed")
+	}
+	return d,nil
+
 }
 
 // Unimplemented: GDALBeginAsyncReader
