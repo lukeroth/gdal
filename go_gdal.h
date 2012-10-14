@@ -7,6 +7,7 @@
 
 #include <gdal.h>
 #include <gdal_alg.h>
+#include <gdalwarper.h>
 #include <cpl_conv.h>
 #include <ogr_srs_api.h>
 
