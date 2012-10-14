@@ -406,12 +406,15 @@ func IdentifyDriver(filename string, filenameList []string) Driver {
 }
 
 // Open an existing dataset
-func Open(filename string, access Access) Dataset {
+func Open(filename string, access Access) (Dataset,error) {
 	cFilename := C.CString(filename)
 	defer C.free(unsafe.Pointer(cFilename))
 
 	dataset := C.GDALOpen(cFilename, C.GDALAccess(access))
-	return Dataset{dataset}
+	if dataset == nil {
+		return Dataset{nil}, fmt.Errorf("Error: dataset '%s' open error", filename)
+	}
+	return Dataset{dataset},nil
 }
 
 // Open a shared existing dataset
@@ -543,6 +546,7 @@ func (object MajorObject) SetMetadata(metadata []string, domain string) {
 	return
 }
 
+
 // Fetch a single metadata item
 func (object MajorObject) MetadataItem(name, domain string) string {
 	panic("not implemented!")
@@ -553,6 +557,47 @@ func (object MajorObject) MetadataItem(name, domain string) string {
 func (object MajorObject) SetMetadataItem(name, value, domain string) {
 	panic("not implemented!")
 	return
+}
+
+// TODO: Make korrekt class hirerarchy via interfaces 
+
+func (object *RasterBand) SetMetadataItem(name, value, domain string) error {	
+	c_name := C.CString(name)
+	defer C.free(unsafe.Pointer(c_name))
+	
+	c_value := C.CString(value)
+	defer C.free(unsafe.Pointer(c_value))
+	
+	c_domain := C.CString(domain)
+	defer C.free(unsafe.Pointer(c_domain))
+	
+	err:=C.GDALSetMetadataItem( (C.GDALMajorObjectH)(unsafe.Pointer(object.cval)),c_name,c_value,c_domain)
+		
+	if err==0 {
+		return nil
+	}
+	return error(err)
+}
+
+
+// TODO: Make korrekt class hirerarchy via interfaces 
+
+func (object *Dataset) SetMetadataItem(name, value, domain string) error {	
+	c_name := C.CString(name)
+	defer C.free(unsafe.Pointer(c_name))
+	
+	c_value := C.CString(value)
+	defer C.free(unsafe.Pointer(c_value))
+	
+	c_domain := C.CString(domain)
+	defer C.free(unsafe.Pointer(c_domain))
+	
+	err:=C.GDALSetMetadataItem( (C.GDALMajorObjectH)(unsafe.Pointer(object.cval)),c_name,c_value,c_domain)
+		
+	if err==0 {
+		return nil
+	}
+	return error(err)
 }
 
 /* ==================================================================== */
@@ -611,7 +656,9 @@ func (dataset Dataset) AddBand(dataType DataType, options []string) error {
 		dataset.cval,
 		C.GDALDataType(dataType),
 		(**C.char)(unsafe.Pointer(&cOptions[0])))
-
+	if err==0 {
+		return nil
+	}
 	return error(err)
 }
 
