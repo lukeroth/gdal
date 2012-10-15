@@ -8,7 +8,7 @@ The gdal.go package provides a wrapper for GDAL, the Geospatial Data Abstraction
 Installation
 -------------
 
-go get github.com/lukeroth/gdal.go
+go get github.com/lukeroth/gdal
 
 -------------
 Compatibility
