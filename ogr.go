@@ -70,19 +70,19 @@ func (env Envelope) MaxY() float64 {
 	return float64(env.cval.MaxY)
 }
 
-func (env Envelope) SetMinX(val float64) {
+func (env *Envelope) SetMinX(val float64) {
 	env.cval.MinX = C.double(val)
 }
 
-func (env Envelope) SetMaxX(val float64) {
+func (env *Envelope) SetMaxX(val float64) {
 	env.cval.MaxX = C.double(val)
 }
 
-func (env Envelope) SetMinY(val float64) {
+func (env *Envelope) SetMinY(val float64) {
 	env.cval.MinY = C.double(val)
 }
 
-func (env Envelope) SetMaxY(val float64) {
+func (env *Envelope) SetMaxY(val float64) {
 	env.cval.MaxY = C.double(val)
 }
 
