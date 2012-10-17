@@ -13,7 +13,7 @@ static int goGDALProgressFuncProxyB_(
 	void *progressArg
 ) {
 	GoInterface* args = (GoInterface*)progressArg;
-	GoInt returnVal = goGDALProgressFuncProxyA(complete, (char*)message, args);
+	int returnVal = goGDALProgressFuncProxyA(complete, (char*)message, args);
 	return (int)returnVal;
 }
 
