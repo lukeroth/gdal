@@ -7,8 +7,8 @@ package gdal
 import "testing"
 
 func TestTiffDriver(t *testing.T) {
-	driver := gdal.GetDriverByName("GTiff")
-	if driver == nil {
-		t.Errorf("GeoTIFF driver not found")
-	}
+	_,err := GetDriverByName("GTiff")
+        if err != nil {
+                t.Errorf(err.Error())
+        }
 }
