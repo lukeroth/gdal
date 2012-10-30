@@ -662,19 +662,24 @@ func (dataset Dataset) AddBand(dataType DataType, options []string) error {
 	return error(err)
 }
 
+type ResampleAlg int
+const (
+	GRA_NearestNeighbour = ResampleAlg(0)
+	GRA_Bilinear = ResampleAlg(1)
+	GRA_Cubic = ResampleAlg(2)
+	GRA_CubicSpline = ResampleAlg(3)
+	GRA_Lanczos = ResampleAlg(4)
+)
 
-func (dataset Dataset) AutoCreateWarpedVRT(srcWKT,dstWKT string) (Dataset,error) {
+func (dataset Dataset) AutoCreateWarpedVRT(srcWKT,dstWKT string,resampleAlg ResampleAlg) (Dataset,error) {
 	c_srcWKT := C.CString(srcWKT)
 	defer C.free(unsafe.Pointer(c_srcWKT))
 	c_dstWKT := C.CString(dstWKT)
 	defer C.free(unsafe.Pointer(c_dstWKT))
 	/*
-	GDALResampleAlg {
-	  	GRA_NearestNeighbour = 0, GRA_Bilinear = 1, GRA_Cubic = 2, GRA_CubicSpline = 3,
-  		GRA_Lanczos = 4
-	}
+
 	 */
-	h:=C.GDALAutoCreateWarpedVRT(dataset.cval,c_srcWKT,c_dstWKT,/*GRA_NearestNeighbour*/0,0.0,nil)
+	h:=C.GDALAutoCreateWarpedVRT(dataset.cval,c_srcWKT,c_dstWKT,C.GDALResampleAlg(resampleAlg),0.0,nil)
 	d:=Dataset{h}
 	if h==nil {
 		return d,fmt.Errorf("AutoCreateWarpedVRT failed")
