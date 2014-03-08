@@ -1,0 +1,13 @@
+name=gdal
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${exec_prefix}/include
+datadir=${prefix}/share/${name}
+
+Name: lib${name}
+Description: Geospatial Data Abstraction Library
+Version: 1.9.1
+Libs: -L${libdir} -l${name}
+Cflags: -I${includedir}/${name}
+
