@@ -720,6 +720,12 @@ func (dataset Dataset) IO(
 	case []uint32:
 		dataType = UInt32
 		dataPtr = unsafe.Pointer(&data[0])
+	case []float32:
+		dataType = Float32
+		dataPtr = unsafe.Pointer(&data[0])
+	case []float64:
+		dataType = Float64
+		dataPtr = unsafe.Pointer(&data[0])
 	default:
 		return fmt.Errorf("Error: buffer is not a valid data type (must be a valid numeric slice)")
 	}
@@ -967,6 +973,12 @@ func (rasterBand RasterBand) IO(
 		dataPtr = unsafe.Pointer(&data[0])
 	case []uint32:
 		dataType = UInt32
+		dataPtr = unsafe.Pointer(&data[0])
+	case []float32:
+		dataType = Float32
+		dataPtr = unsafe.Pointer(&data[0])
+	case []float64:
+		dataType = Float64
 		dataPtr = unsafe.Pointer(&data[0])
 	default:
 		return fmt.Errorf("Error: buffer is not a valid data type (must be a valid numeric slice)")
