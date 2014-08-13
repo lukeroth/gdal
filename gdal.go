@@ -287,13 +287,11 @@ type goGDALProgressFuncProxyArgs struct {
 }
 
 //export goGDALProgressFuncProxyA
-func goGDALProgressFuncProxyA(complete C.double, message *C.char, data *interface{}) int {
-	if arg, ok := (*data).(goGDALProgressFuncProxyArgs); ok {
-		return arg.progresssFunc(
+func goGDALProgressFuncProxyA(complete C.double, message *C.char, data unsafe.Pointer) int {
+	arg := (*goGDALProgressFuncProxyArgs)(data)
+	return arg.progresssFunc(
 			float64(complete), C.GoString(message), arg.data,
 		)
-	}
-	return 0
 }
 
 /* ==================================================================== */
