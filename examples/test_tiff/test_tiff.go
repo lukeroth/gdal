@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"flag"
+	"fmt"
 	"github.com/lukeroth/gdal"
 )
 
@@ -14,15 +14,15 @@ func main() {
 		return
 	}
 	fmt.Printf("Filename: %s\n", filename)
-	
+
 	fmt.Printf("Allocating buffer\n")
-	var buffer [256 * 256]uint8
-	//	buffer := make([]uint8, 256 * 256)
-	
+	// var buffer [256 * 256]uint8
+	buffer := make([]uint8, 256*256) // need to be slice type for the IO switch to recognize
+
 	fmt.Printf("Computing values\n")
 	for x := 0; x < 256; x++ {
 		for y := 0; y < 256; y++ {
-			loc := x + y * 256
+			loc := x + y*256
 			val := x + y
 			if val >= 256 {
 				val -= 256
@@ -42,7 +42,7 @@ func main() {
 	fmt.Printf("Creating dataset\n")
 	dataset := driver.Create(filename, 256, 256, 1, gdal.Byte, nil)
 	defer dataset.Close()
-	
+
 	fmt.Printf("Creating projection\n")
 	spatialRef := gdal.CreateSpatialReference("")
 
@@ -66,12 +66,12 @@ func main() {
 
 	fmt.Printf("Reading geotransform:")
 	geoTransform := dataset.GeoTransform()
-	fmt.Printf("%v, %v, %v, %v, %v, %v\n", 
+	fmt.Printf("%v, %v, %v, %v, %v, %v\n",
 		geoTransform[0], geoTransform[1], geoTransform[2], geoTransform[3], geoTransform[4], geoTransform[5])
 
 	fmt.Printf("Reading projection:")
 	wkt := dataset.Projection()
 	fmt.Printf("%s\n", wkt)
-		
-	fmt.Printf("End program\n")	
+
+	fmt.Printf("End program\n")
 }

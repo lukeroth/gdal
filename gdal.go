@@ -11,8 +11,8 @@ package gdal
 import "C"
 import (
 	"fmt"
-	"unsafe"
 	"reflect"
+	"unsafe"
 )
 
 var _ = fmt.Println
@@ -412,7 +412,7 @@ func Open(filename string, access Access) (Dataset,error) {
 	if dataset == nil {
 		return Dataset{nil}, fmt.Errorf("Error: dataset '%s' open error", filename)
 	}
-	return Dataset{dataset},nil
+	return Dataset{dataset}, nil
 }
 
 // Open a shared existing dataset
@@ -544,7 +544,6 @@ func (object MajorObject) SetMetadata(metadata []string, domain string) {
 	return
 }
 
-
 // Fetch a single metadata item
 func (object MajorObject) MetadataItem(name, domain string) string {
 	panic("not implemented!")
@@ -557,42 +556,41 @@ func (object MajorObject) SetMetadataItem(name, value, domain string) {
 	return
 }
 
-// TODO: Make korrekt class hirerarchy via interfaces 
+// TODO: Make korrekt class hirerarchy via interfaces
 
-func (object *RasterBand) SetMetadataItem(name, value, domain string) error {	
+func (object *RasterBand) SetMetadataItem(name, value, domain string) error {
 	c_name := C.CString(name)
 	defer C.free(unsafe.Pointer(c_name))
-	
+
 	c_value := C.CString(value)
 	defer C.free(unsafe.Pointer(c_value))
-	
+
 	c_domain := C.CString(domain)
 	defer C.free(unsafe.Pointer(c_domain))
-	
-	err:=C.GDALSetMetadataItem( (C.GDALMajorObjectH)(unsafe.Pointer(object.cval)),c_name,c_value,c_domain)
-		
-	if err==0 {
+
+	err := C.GDALSetMetadataItem((C.GDALMajorObjectH)(unsafe.Pointer(object.cval)), c_name, c_value, c_domain)
+
+	if err == 0 {
 		return nil
 	}
 	return error(err)
 }
 
+// TODO: Make korrekt class hirerarchy via interfaces
 
-// TODO: Make korrekt class hirerarchy via interfaces 
-
-func (object *Dataset) SetMetadataItem(name, value, domain string) error {	
+func (object *Dataset) SetMetadataItem(name, value, domain string) error {
 	c_name := C.CString(name)
 	defer C.free(unsafe.Pointer(c_name))
-	
+
 	c_value := C.CString(value)
 	defer C.free(unsafe.Pointer(c_value))
-	
+
 	c_domain := C.CString(domain)
 	defer C.free(unsafe.Pointer(c_domain))
-	
-	err:=C.GDALSetMetadataItem( (C.GDALMajorObjectH)(unsafe.Pointer(object.cval)),c_name,c_value,c_domain)
-		
-	if err==0 {
+
+	err := C.GDALSetMetadataItem((C.GDALMajorObjectH)(unsafe.Pointer(object.cval)), c_name, c_value, c_domain)
+
+	if err == 0 {
 		return nil
 	}
 	return error(err)
@@ -654,42 +652,43 @@ func (dataset Dataset) AddBand(dataType DataType, options []string) error {
 		dataset.cval,
 		C.GDALDataType(dataType),
 		(**C.char)(unsafe.Pointer(&cOptions[0])))
-	if err==0 {
+	if err == 0 {
 		return nil
 	}
 	return error(err)
 }
 
 type ResampleAlg int
+
 const (
 	GRA_NearestNeighbour = ResampleAlg(0)
-	GRA_Bilinear = ResampleAlg(1)
-	GRA_Cubic = ResampleAlg(2)
-	GRA_CubicSpline = ResampleAlg(3)
-	GRA_Lanczos = ResampleAlg(4)
+	GRA_Bilinear         = ResampleAlg(1)
+	GRA_Cubic            = ResampleAlg(2)
+	GRA_CubicSpline      = ResampleAlg(3)
+	GRA_Lanczos          = ResampleAlg(4)
 )
 
-func (dataset Dataset) AutoCreateWarpedVRT(srcWKT,dstWKT string,resampleAlg ResampleAlg) (Dataset,error) {
+func (dataset Dataset) AutoCreateWarpedVRT(srcWKT, dstWKT string, resampleAlg ResampleAlg) (Dataset, error) {
 	c_srcWKT := C.CString(srcWKT)
 	defer C.free(unsafe.Pointer(c_srcWKT))
 	c_dstWKT := C.CString(dstWKT)
 	defer C.free(unsafe.Pointer(c_dstWKT))
 	/*
 
-	 */
-	h:=C.GDALAutoCreateWarpedVRT(dataset.cval,c_srcWKT,c_dstWKT,C.GDALResampleAlg(resampleAlg),0.0,nil)
-	d:=Dataset{h}
-	if h==nil {
-		return d,fmt.Errorf("AutoCreateWarpedVRT failed")
+	*/
+	h := C.GDALAutoCreateWarpedVRT(dataset.cval, c_srcWKT, c_dstWKT, C.GDALResampleAlg(resampleAlg), 0.0, nil)
+	d := Dataset{h}
+	if h == nil {
+		return d, fmt.Errorf("AutoCreateWarpedVRT failed")
 	}
-	return d,nil
+	return d, nil
 
 }
 
 // Unimplemented: GDALBeginAsyncReader
 // Unimplemented: GDALEndAsyncReader
 
-// Read / write a region of image data from multiple bands	  
+// Read / write a region of image data from multiple bands
 func (dataset Dataset) IO(
 	rwFlag RWFlag,
 	xOff, yOff, xSize, ySize int,
@@ -1296,7 +1295,7 @@ func (rb RasterBand) DefaultHistogram(
 	sliceHeader.Cap = buckets
 	sliceHeader.Len = buckets
 	sliceHeader.Data = uintptr(unsafe.Pointer(cHistogram))
-	
+
 	return min, max, buckets, histogram, error(cErr)
 }
 
