@@ -207,7 +207,7 @@ func (sr SpatialReference) FromURL(url string) error {
 func (sr SpatialReference) ToPCI() (proj, units string, params []float64, errVal error) {
 	var p, u *C.char
 	err := C.OSRExportToPCI(sr.cval, &p, &u, (**C.double)(unsafe.Pointer(&params[0])))
-	header := (*reflect.SliceHeader)((unsafe.Pointer(&params)))
+	header := (*reflect.SliceHeader)(unsafe.Pointer(&params))
 	header.Cap = 17
 	header.Len = 17
 	defer C.free(unsafe.Pointer(p))
@@ -224,7 +224,7 @@ func (sr SpatialReference) ToUSGS() (proj, zone int, params []float64, datum int
 		(**C.double)(unsafe.Pointer(&params[0])),
 		(*C.long)(unsafe.Pointer(&datum)))
 
-	header := (*reflect.SliceHeader)((unsafe.Pointer(&params)))
+	header := (*reflect.SliceHeader)(unsafe.Pointer(&params))
 	header.Cap = 15
 	header.Len = 15
 

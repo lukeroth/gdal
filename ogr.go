@@ -87,7 +87,7 @@ func (env *Envelope) SetMaxY(val float64) {
 }
 
 func (env Envelope) IsInit() bool {
-	return (env.cval.MinX != 0 || env.cval.MinY != 0 || env.cval.MaxX != 0 || env.cval.MaxY != 0)
+	return env.cval.MinX != 0 || env.cval.MinY != 0 || env.cval.MaxX != 0 || env.cval.MaxY != 0
 }
 
 func min(a, b C.double) C.double {
@@ -143,18 +143,18 @@ func (env Envelope) Intersect(other Envelope) {
 
 // Test if one envelope intersects another
 func (env Envelope) Intersects(other Envelope) bool {
-	return (env.cval.MinX <= other.cval.MaxX &&
+	return env.cval.MinX <= other.cval.MaxX &&
 		env.cval.MaxX >= other.cval.MinX &&
 		env.cval.MinY <= other.cval.MaxY &&
-		env.cval.MaxY >= other.cval.MinY)
+		env.cval.MaxY >= other.cval.MinY
 }
 
 // Test if one envelope completely contains another
 func (env Envelope) Contains(other Envelope) bool {
-	return (env.cval.MinX <= other.cval.MinX &&
+	return env.cval.MinX <= other.cval.MinX &&
 		env.cval.MaxX >= other.cval.MaxX &&
 		env.cval.MinY <= other.cval.MinY &&
-		env.cval.MaxY >= other.cval.MaxY)
+		env.cval.MaxY >= other.cval.MaxY
 }
 
 /* -------------------------------------------------------------------- */
@@ -1083,7 +1083,7 @@ func (feature Feature) FieldAsIntegerList(index int) []int {
 	var count int
 	cArray := C.OGR_F_GetFieldAsIntegerList(feature.cval, C.int(index), (*C.int)(unsafe.Pointer(&count)))
 	var goSlice []int
-	header := (*reflect.SliceHeader)((unsafe.Pointer(&goSlice)))
+	header := (*reflect.SliceHeader)(unsafe.Pointer(&goSlice))
 	header.Cap = count
 	header.Len = count
 	header.Data = uintptr(unsafe.Pointer(cArray))
@@ -1095,7 +1095,7 @@ func (feature Feature) FieldAsFloat64List(index int) []float64 {
 	var count int
 	cArray := C.OGR_F_GetFieldAsDoubleList(feature.cval, C.int(index), (*C.int)(unsafe.Pointer(&count)))
 	var goSlice []float64
-	header := (*reflect.SliceHeader)((unsafe.Pointer(&goSlice)))
+	header := (*reflect.SliceHeader)(unsafe.Pointer(&goSlice))
 	header.Cap = count
 	header.Len = count
 	header.Data = uintptr(unsafe.Pointer(cArray))
@@ -1125,7 +1125,7 @@ func (feature Feature) FieldAsBinary(index int) []uint8 {
 	var count int
 	cArray := C.OGR_F_GetFieldAsBinary(feature.cval, C.int(index), (*C.int)(unsafe.Pointer(&count)))
 	var goSlice []uint8
-	header := (*reflect.SliceHeader)((unsafe.Pointer(&goSlice)))
+	header := (*reflect.SliceHeader)(unsafe.Pointer(&goSlice))
 	header.Cap = count
 	header.Len = count
 	header.Data = uintptr(unsafe.Pointer(cArray))
@@ -1308,7 +1308,7 @@ func (layer Layer) SetSpatialFilter(filter Geometry) {
 	C.OGR_L_SetSpatialFilter(layer.cval, filter.cval)
 }
 
-// Set a new rectangular spatial filter for this layer 
+// Set a new rectangular spatial filter for this layer
 func (layer Layer) SetSpatialFilterRect(minX, minY, maxX, maxY float64) {
 	C.OGR_L_SetSpatialFilterRect(
 		layer.cval,
