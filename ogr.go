@@ -578,19 +578,19 @@ func (geom Geometry) IsEmpty() bool {
 
 // Test if the geometry is valid
 func (geom Geometry) IsValid() bool {
-	val := C.OGR_G_IsEmpty(geom.cval)
+	val := C.OGR_G_IsValid(geom.cval)
 	return val != 0
 }
 
 // Test if the geometry is simple
 func (geom Geometry) IsSimple() bool {
-	val := C.OGR_G_IsEmpty(geom.cval)
+	val := C.OGR_G_IsSimple(geom.cval)
 	return val != 0
 }
 
 // Test if the geometry is a ring
 func (geom Geometry) IsRing() bool {
-	val := C.OGR_G_IsEmpty(geom.cval)
+	val := C.OGR_G_IsRing(geom.cval)
 	return val != 0
 }
 
