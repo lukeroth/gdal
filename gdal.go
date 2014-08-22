@@ -11,8 +11,8 @@ package gdal
 import "C"
 import (
 	"fmt"
-	"unsafe"
 	"reflect"
+	"unsafe"
 )
 
 var _ = fmt.Println
@@ -290,8 +290,8 @@ type goGDALProgressFuncProxyArgs struct {
 func goGDALProgressFuncProxyA(complete C.double, message *C.char, data unsafe.Pointer) int {
 	arg := (*goGDALProgressFuncProxyArgs)(data)
 	return arg.progresssFunc(
-			float64(complete), C.GoString(message), arg.data,
-		)
+		float64(complete), C.GoString(message), arg.data,
+	)
 }
 
 /* ==================================================================== */
@@ -404,7 +404,7 @@ func IdentifyDriver(filename string, filenameList []string) Driver {
 }
 
 // Open an existing dataset
-func Open(filename string, access Access) (Dataset,error) {
+func Open(filename string, access Access) (Dataset, error) {
 	cFilename := C.CString(filename)
 	defer C.free(unsafe.Pointer(cFilename))
 
@@ -412,7 +412,7 @@ func Open(filename string, access Access) (Dataset,error) {
 	if dataset == nil {
 		return Dataset{nil}, fmt.Errorf("Error: dataset '%s' open error", filename)
 	}
-	return Dataset{dataset},nil
+	return Dataset{dataset}, nil
 }
 
 // Open a shared existing dataset
@@ -544,7 +544,6 @@ func (object MajorObject) SetMetadata(metadata []string, domain string) {
 	return
 }
 
-
 // Fetch a single metadata item
 func (object MajorObject) MetadataItem(name, domain string) string {
 	panic("not implemented!")
@@ -557,42 +556,41 @@ func (object MajorObject) SetMetadataItem(name, value, domain string) {
 	return
 }
 
-// TODO: Make korrekt class hirerarchy via interfaces 
+// TODO: Make korrekt class hirerarchy via interfaces
 
-func (object *RasterBand) SetMetadataItem(name, value, domain string) error {	
+func (object *RasterBand) SetMetadataItem(name, value, domain string) error {
 	c_name := C.CString(name)
 	defer C.free(unsafe.Pointer(c_name))
-	
+
 	c_value := C.CString(value)
 	defer C.free(unsafe.Pointer(c_value))
-	
+
 	c_domain := C.CString(domain)
 	defer C.free(unsafe.Pointer(c_domain))
-	
-	err:=C.GDALSetMetadataItem( (C.GDALMajorObjectH)(unsafe.Pointer(object.cval)),c_name,c_value,c_domain)
-		
-	if err==0 {
+
+	err := C.GDALSetMetadataItem(C.GDALMajorObjectH(unsafe.Pointer(object.cval)), c_name, c_value, c_domain)
+
+	if err == 0 {
 		return nil
 	}
 	return error(err)
 }
 
+// TODO: Make korrekt class hirerarchy via interfaces
 
-// TODO: Make korrekt class hirerarchy via interfaces 
-
-func (object *Dataset) SetMetadataItem(name, value, domain string) error {	
+func (object *Dataset) SetMetadataItem(name, value, domain string) error {
 	c_name := C.CString(name)
 	defer C.free(unsafe.Pointer(c_name))
-	
+
 	c_value := C.CString(value)
 	defer C.free(unsafe.Pointer(c_value))
-	
+
 	c_domain := C.CString(domain)
 	defer C.free(unsafe.Pointer(c_domain))
-	
-	err:=C.GDALSetMetadataItem( (C.GDALMajorObjectH)(unsafe.Pointer(object.cval)),c_name,c_value,c_domain)
-		
-	if err==0 {
+
+	err := C.GDALSetMetadataItem(C.GDALMajorObjectH(unsafe.Pointer(object.cval)), c_name, c_value, c_domain)
+
+	if err == 0 {
 		return nil
 	}
 	return error(err)
@@ -654,42 +652,43 @@ func (dataset Dataset) AddBand(dataType DataType, options []string) error {
 		dataset.cval,
 		C.GDALDataType(dataType),
 		(**C.char)(unsafe.Pointer(&cOptions[0])))
-	if err==0 {
+	if err == 0 {
 		return nil
 	}
 	return error(err)
 }
 
 type ResampleAlg int
+
 const (
 	GRA_NearestNeighbour = ResampleAlg(0)
-	GRA_Bilinear = ResampleAlg(1)
-	GRA_Cubic = ResampleAlg(2)
-	GRA_CubicSpline = ResampleAlg(3)
-	GRA_Lanczos = ResampleAlg(4)
+	GRA_Bilinear         = ResampleAlg(1)
+	GRA_Cubic            = ResampleAlg(2)
+	GRA_CubicSpline      = ResampleAlg(3)
+	GRA_Lanczos          = ResampleAlg(4)
 )
 
-func (dataset Dataset) AutoCreateWarpedVRT(srcWKT,dstWKT string,resampleAlg ResampleAlg) (Dataset,error) {
+func (dataset Dataset) AutoCreateWarpedVRT(srcWKT, dstWKT string, resampleAlg ResampleAlg) (Dataset, error) {
 	c_srcWKT := C.CString(srcWKT)
 	defer C.free(unsafe.Pointer(c_srcWKT))
 	c_dstWKT := C.CString(dstWKT)
 	defer C.free(unsafe.Pointer(c_dstWKT))
 	/*
 
-	 */
-	h:=C.GDALAutoCreateWarpedVRT(dataset.cval,c_srcWKT,c_dstWKT,C.GDALResampleAlg(resampleAlg),0.0,nil)
-	d:=Dataset{h}
-	if h==nil {
-		return d,fmt.Errorf("AutoCreateWarpedVRT failed")
+	*/
+	h := C.GDALAutoCreateWarpedVRT(dataset.cval, c_srcWKT, c_dstWKT, C.GDALResampleAlg(resampleAlg), 0.0, nil)
+	d := Dataset{h}
+	if h == nil {
+		return d, fmt.Errorf("AutoCreateWarpedVRT failed")
 	}
-	return d,nil
+	return d, nil
 
 }
 
 // Unimplemented: GDALBeginAsyncReader
 // Unimplemented: GDALEndAsyncReader
 
-// Read / write a region of image data from multiple bands	  
+// Read / write a region of image data from multiple bands
 func (dataset Dataset) IO(
 	rwFlag RWFlag,
 	xOff, yOff, xSize, ySize int,
@@ -1083,7 +1082,7 @@ func (rasterBand RasterBand) Overview(level int) RasterBand {
 func (rasterBand RasterBand) NoDataValue() (val float64, valid bool) {
 	var success int
 	noDataVal := C.GDALGetRasterNoDataValue(rasterBand.cval, (*C.int)(unsafe.Pointer(&success)))
-	return float64(noDataVal), (success != 0)
+	return float64(noDataVal), success != 0
 }
 
 // Set the no data value for this band
@@ -1128,14 +1127,14 @@ func (rasterBand RasterBand) SetRasterCategoryNames(names []string) error {
 func (rasterBand RasterBand) GetMinimum() (val float64, valid bool) {
 	var success int
 	min := C.GDALGetRasterMinimum(rasterBand.cval, (*C.int)(unsafe.Pointer(&success)))
-	return float64(min), (success != 0)
+	return float64(min), success != 0
 }
 
 // Fetch the maximum value for this band
 func (rasterBand RasterBand) GetMaximum() (val float64, valid bool) {
 	var success int
 	max := C.GDALGetRasterMaximum(rasterBand.cval, (*C.int)(unsafe.Pointer(&success)))
-	return float64(max), (success != 0)
+	return float64(max), success != 0
 }
 
 // Fetch image statistics
@@ -1203,7 +1202,7 @@ func (rasterBand RasterBand) SetUnitType(unit string) error {
 func (rasterBand RasterBand) GetOffset() (float64, bool) {
 	var success int
 	val := C.GDALGetRasterOffset(rasterBand.cval, (*C.int)(unsafe.Pointer(&success)))
-	return float64(val), (success != 0)
+	return float64(val), success != 0
 }
 
 // Set scaling offset
@@ -1216,7 +1215,7 @@ func (rasterBand RasterBand) SetOffset(offset float64) error {
 func (rasterBand RasterBand) GetScale() (float64, bool) {
 	var success int
 	val := C.GDALGetRasterScale(rasterBand.cval, (*C.int)(unsafe.Pointer(&success)))
-	return float64(val), (success != 0)
+	return float64(val), success != 0
 }
 
 // Set scaling ratio
@@ -1296,7 +1295,7 @@ func (rb RasterBand) DefaultHistogram(
 	sliceHeader.Cap = buckets
 	sliceHeader.Len = buckets
 	sliceHeader.Data = uintptr(unsafe.Pointer(cHistogram))
-	
+
 	return min, max, buckets, histogram, error(cErr)
 }
 
@@ -1627,29 +1626,5 @@ func GetCacheUsed() int {
 // Try to flush one cached raster block
 func FlushCacheBlock() bool {
 	flushed := C.GDALFlushCacheBlock()
-	return (flushed != 0)
+	return flushed != 0
 }
-
-/* -------------------------------------------------------------------- */
-/*      Helper functions.                                               */
-/* -------------------------------------------------------------------- */
-
-// Unimplemented: GeneralCmdLineProcessor
-// Unimplemented: SwapWords
-// Unimplemented: CopyWords
-// Unimplemented: CopyBits
-// Unimplemented: LoadWorldFile
-// Unimplemented: ReadWorldFile
-// Unimplemented: WriteWorldFile
-// Unimplemented: LoadTabFile
-// Unimplemented: ReadTabFile
-// Unimplemented: LoadOziMapFile
-// Unimplemented: ReadOziMapFile
-// Unimplemented: LoadRPBFile
-// Unimplemented: LoadRPCFile
-// Unimplemented: WriteRPBFile
-// Unimplemented: LoadIMDFile
-// Unimplemented: WriteIMDFile
-// Unimplemented: DecToDMS
-// Unimplemented: PackedDMSToDec
-// Unimplemented: DecToPackedDMS

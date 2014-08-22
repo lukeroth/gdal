@@ -7,8 +7,8 @@ package gdal
 import "testing"
 
 func TestTiffDriver(t *testing.T) {
-	_,err := GetDriverByName("GTiff")
-        if err != nil {
-                t.Errorf(err.Error())
-        }
+	_, err := GetDriverByName("GTiff")
+	if err != nil {
+		t.Errorf(err.Error())
+	}
 }
