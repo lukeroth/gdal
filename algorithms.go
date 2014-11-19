@@ -93,14 +93,13 @@ func (src RasterBand) ComputeProximity(
 	}
 	opts[length] = (*C.char)(unsafe.Pointer(nil))
 
-	err := C.GDALComputeProximity(
+	return C.GDALComputeProximity(
 		src.cval,
 		dest.cval,
 		(**C.char)(unsafe.Pointer(&opts[0])),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	)
-	return err
+	).Err()
 }
 
 // Fill selected raster regions by interpolation from the edges
@@ -124,7 +123,7 @@ func (src RasterBand) FillNoData(
 	}
 	opts[length] = (*C.char)(unsafe.Pointer(nil))
 
-	err := C.GDALFillNodata(
+	return C.GDALFillNodata(
 		src.cval,
 		mask.cval,
 		C.double(distance),
@@ -133,8 +132,7 @@ func (src RasterBand) FillNoData(
 		(**C.char)(unsafe.Pointer(&opts[0])),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	)
-	return error(err)
+	).Err()
 }
 
 // Create polygon coverage from raster data using an integer buffer
@@ -158,7 +156,7 @@ func (src RasterBand) Polygonize(
 	}
 	opts[length] = (*C.char)(unsafe.Pointer(nil))
 
-	err := C.GDALPolygonize(
+	return C.GDALPolygonize(
 		src.cval,
 		mask.cval,
 		layer.cval,
@@ -166,8 +164,7 @@ func (src RasterBand) Polygonize(
 		(**C.char)(unsafe.Pointer(&opts[0])),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	)
-	return error(err)
+	).Err()
 }
 
 // Create polygon coverage from raster data using a floating point buffer
@@ -191,7 +188,7 @@ func (src RasterBand) FPolygonize(
 	}
 	opts[length] = (*C.char)(unsafe.Pointer(nil))
 
-	err := C.GDALFPolygonize(
+	return C.GDALFPolygonize(
 		src.cval,
 		mask.cval,
 		layer.cval,
@@ -199,8 +196,7 @@ func (src RasterBand) FPolygonize(
 		(**C.char)(unsafe.Pointer(&opts[0])),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	)
-	return error(err)
+	).Err()
 }
 
 // Removes small raster polygons
@@ -223,7 +219,7 @@ func (src RasterBand) SieveFilter(
 	}
 	opts[length] = (*C.char)(unsafe.Pointer(nil))
 
-	err := C.GDALSieveFilter(
+	return C.GDALSieveFilter(
 		src.cval,
 		mask.cval,
 		dest.cval,
@@ -232,8 +228,7 @@ func (src RasterBand) SieveFilter(
 		(**C.char)(unsafe.Pointer(&opts[0])),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	)
-	return error(err)
+	).Err()
 }
 
 /* --------------------------------------------- */

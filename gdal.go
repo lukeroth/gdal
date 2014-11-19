@@ -10,6 +10,7 @@ package gdal
 */
 import "C"
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"unsafe"
@@ -35,37 +36,45 @@ const (
 	RELEASE_NAME  = string(C.GDAL_RELEASE_NAME)
 )
 
+var (
+	ErrDebug   = errors.New("Debug Error")
+	ErrWarning = errors.New("Warning Error")
+	ErrFailure = errors.New("Failure Error")
+	ErrFatal   = errors.New("Fatal Error")
+	ErrIllegal = errors.New("Illegal Error")
+)
+
 // Error handling.  The following is bare-bones, and needs to be replaced with something more useful.
-func (err _Ctype_CPLErr) Error() string {
+func (err _Ctype_CPLErr) Err() error {
 	switch err {
 	case 0:
-		return "No Error"
+		return nil
 	case 1:
-		return "Debug Error"
+		return ErrDebug
 	case 2:
-		return "Warning Error"
+		return ErrWarning
 	case 3:
-		return "Failure Error"
+		return ErrFailure
 	case 4:
-		return "Fatal Error"
+		return ErrFailure
 	}
-	return "Illegal error"
+	return ErrIllegal
 }
 
-func (err _Ctype_OGRErr) Error() string {
+func (err _Ctype_OGRErr) Err() error {
 	switch err {
 	case 0:
-		return "No Error"
+		return nil
 	case 1:
-		return "Debug Error"
+		return ErrDebug
 	case 2:
-		return "Warning Error"
+		return ErrWarning
 	case 3:
-		return "Failure Error"
+		return ErrFailure
 	case 4:
-		return "Fatal Error"
+		return ErrFailure
 	}
-	return "Illegal error"
+	return ErrIllegal
 }
 
 // Pixel data types
@@ -476,11 +485,7 @@ func (driver Driver) DeleteDataset(name string) error {
 	cDriver := driver.cval
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
-	if err := C.GDALDeleteDataset(cDriver, cName); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+	return C.GDALDeleteDataset(cDriver, cName).Err()
 }
 
 // Rename named dataset
@@ -490,11 +495,7 @@ func (driver Driver) RenameDataset(newName, oldName string) error {
 	defer C.free(unsafe.Pointer(cNewName))
 	cOldName := C.CString(oldName)
 	defer C.free(unsafe.Pointer(cOldName))
-	if err := C.GDALRenameDataset(cDriver, cNewName, cOldName); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+	return C.GDALRenameDataset(cDriver, cNewName, cOldName).Err()
 }
 
 // Copy all files associated with the named dataset
@@ -504,11 +505,7 @@ func (driver Driver) CopyDatasetFiles(newName, oldName string) error {
 	defer C.free(unsafe.Pointer(cNewName))
 	cOldName := C.CString(oldName)
 	defer C.free(unsafe.Pointer(cOldName))
-	if err := C.GDALCopyDatasetFiles(cDriver, cNewName, cOldName); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+	return C.GDALCopyDatasetFiles(cDriver, cNewName, cOldName).Err()
 }
 
 /* ==================================================================== */
@@ -577,12 +574,10 @@ func (object *RasterBand) SetMetadataItem(name, value, domain string) error {
 	c_domain := C.CString(domain)
 	defer C.free(unsafe.Pointer(c_domain))
 
-	err := C.GDALSetMetadataItem(C.GDALMajorObjectH(unsafe.Pointer(object.cval)), c_name, c_value, c_domain)
-
-	if err == 0 {
-		return nil
-	}
-	return error(err)
+	return C.GDALSetMetadataItem(
+		C.GDALMajorObjectH(unsafe.Pointer(object.cval)),
+		c_name, c_value, c_domain,
+	).Err()
 }
 
 // TODO: Make korrekt class hirerarchy via interfaces
@@ -597,12 +592,10 @@ func (object *Dataset) SetMetadataItem(name, value, domain string) error {
 	c_domain := C.CString(domain)
 	defer C.free(unsafe.Pointer(c_domain))
 
-	err := C.GDALSetMetadataItem(C.GDALMajorObjectH(unsafe.Pointer(object.cval)), c_name, c_value, c_domain)
-
-	if err == 0 {
-		return nil
-	}
-	return error(err)
+	return C.GDALSetMetadataItem(
+		C.GDALMajorObjectH(unsafe.Pointer(object.cval)),
+		c_name, c_value, c_domain,
+	).Err()
 }
 
 /* ==================================================================== */
@@ -657,14 +650,11 @@ func (dataset Dataset) AddBand(dataType DataType, options []string) error {
 	}
 	cOptions[length] = (*C.char)(unsafe.Pointer(nil))
 
-	err := C.GDALAddBand(
+	return C.GDALAddBand(
 		dataset.cval,
 		C.GDALDataType(dataType),
-		(**C.char)(unsafe.Pointer(&cOptions[0])))
-	if err == 0 {
-		return nil
-	}
-	return error(err)
+		(**C.char)(unsafe.Pointer(&cOptions[0])),
+	).Err()
 }
 
 type ResampleAlg int
@@ -738,7 +728,7 @@ func (dataset Dataset) IO(
 		return fmt.Errorf("Error: buffer is not a valid data type (must be a valid numeric slice)")
 	}
 
-	if err := C.GDALDatasetRasterIO(
+	return C.GDALDatasetRasterIO(
 		dataset.cval,
 		C.GDALRWFlag(rwFlag),
 		C.int(xOff), C.int(yOff), C.int(xSize), C.int(ySize),
@@ -747,11 +737,8 @@ func (dataset Dataset) IO(
 		C.GDALDataType(dataType),
 		C.int(bandCount),
 		(*C.int)(unsafe.Pointer(&bandMap[0])),
-		C.int(pixelSpace), C.int(lineSpace), C.int(bandSpace)); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+		C.int(pixelSpace), C.int(lineSpace), C.int(bandSpace),
+	).Err()
 }
 
 // Advise driver of upcoming read requests
@@ -771,18 +758,15 @@ func (dataset Dataset) AdviseRead(
 	}
 	cOptions[length] = (*C.char)(unsafe.Pointer(nil))
 
-	if err := C.GDALDatasetAdviseRead(
+	return C.GDALDatasetAdviseRead(
 		dataset.cval,
 		C.int(xOff), C.int(yOff), C.int(xSize), C.int(ySize),
 		C.int(bufXSize), C.int(bufYSize),
 		C.GDALDataType(dataType),
 		C.int(bandCount),
 		(*C.int)(unsafe.Pointer(&bandMap[0])),
-		(**C.char)(unsafe.Pointer(&cOptions[0]))); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+		(**C.char)(unsafe.Pointer(&cOptions[0])),
+	).Err()
 }
 
 // Fetch the projection definition string for this dataset
@@ -796,11 +780,7 @@ func (dataset Dataset) SetProjection(proj string) error {
 	cProj := C.CString(proj)
 	defer C.free(unsafe.Pointer(cProj))
 
-	if err := C.GDALSetProjection(dataset.cval, cProj); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+	return C.GDALSetProjection(dataset.cval, cProj).Err()
 }
 
 // Get the affine transformation coefficients
@@ -812,11 +792,10 @@ func (dataset Dataset) GeoTransform() [6]float64 {
 
 // Set the affine transformation coefficients
 func (dataset Dataset) SetGeoTransform(transform [6]float64) error {
-	if err := C.GDALSetGeoTransform(dataset.cval, (*C.double)(unsafe.Pointer(&transform[0]))); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+	return C.GDALSetGeoTransform(
+		dataset.cval,
+		(*C.double)(unsafe.Pointer(&transform[0])),
+	).Err()
 }
 
 // Get number of GCPs
@@ -865,7 +844,7 @@ func (dataset Dataset) BuildOverviews(
 
 	arg := &goGDALProgressFuncProxyArgs{progress, data}
 
-	if err := C.GDALBuildOverviews(
+	return C.GDALBuildOverviews(
 		dataset.cval,
 		cResampling,
 		C.int(nOverviews),
@@ -874,11 +853,7 @@ func (dataset Dataset) BuildOverviews(
 		(*C.int)(unsafe.Pointer(&bandList[0])),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+	).Err()
 }
 
 // Unimplemented: GDALGetOpenDatasets
@@ -897,11 +872,7 @@ func (dataset Dataset) FlushCache() {
 
 // Adds a mask band to the dataset
 func (dataset Dataset) CreateMaskBand(flags int) error {
-	if err := C.GDALCreateDatasetMaskBand(dataset.cval, C.int(flags)); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+	return C.GDALCreateDatasetMaskBand(dataset.cval, C.int(flags)).Err()
 }
 
 // Copy all dataset raster data
@@ -921,17 +892,13 @@ func (sourceDataset Dataset) CopyWholeRaster(
 	}
 	cOptions[length] = (*C.char)(unsafe.Pointer(nil))
 
-	if err := C.GDALDatasetCopyWholeRaster(
+	return C.GDALDatasetCopyWholeRaster(
 		sourceDataset.cval,
 		destDataset.cval,
 		(**C.char)(unsafe.Pointer(&cOptions[0])),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+	).Err()
 }
 
 /* ==================================================================== */
@@ -965,16 +932,12 @@ func (rasterBand RasterBand) AdviseRead(
 	}
 	cOptions[length] = (*C.char)(unsafe.Pointer(nil))
 
-	if err := C.GDALRasterAdviseRead(
+	return C.GDALRasterAdviseRead(
 		rasterBand.cval,
 		C.int(xOff), C.int(yOff), C.int(xSize), C.int(ySize), C.int(bufXSize), C.int(bufYSize),
 		C.GDALDataType(dataType),
 		(**C.char)(unsafe.Pointer(&cOptions[0])),
-	); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+	).Err()
 }
 
 // Read / Write a region of image data for this band
@@ -1016,36 +979,25 @@ func (rasterBand RasterBand) IO(
 		return fmt.Errorf("Error: buffer is not a valid data type (must be a valid numeric slice)")
 	}
 
-	if err := C.GDALRasterIO(
+	return C.GDALRasterIO(
 		rasterBand.cval,
 		C.GDALRWFlag(rwFlag),
 		C.int(xOff), C.int(yOff), C.int(xSize), C.int(ySize),
 		dataPtr,
 		C.int(bufXSize), C.int(bufYSize),
 		C.GDALDataType(dataType),
-		C.int(pixelSpace), C.int(lineSpace)); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+		C.int(pixelSpace), C.int(lineSpace),
+	).Err()
 }
 
 // Read a block of image data efficiently
 func (rasterBand RasterBand) ReadBlock(xOff, yOff int, dataPtr unsafe.Pointer) error {
-	if err := C.GDALReadBlock(rasterBand.cval, C.int(xOff), C.int(yOff), dataPtr); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+	return C.GDALReadBlock(rasterBand.cval, C.int(xOff), C.int(yOff), dataPtr).Err()
 }
 
 // Write a block of image data efficiently
 func (rasterBand RasterBand) WriteBlock(xOff, yOff int, dataPtr unsafe.Pointer) error {
-	if err := C.GDALWriteBlock(rasterBand.cval, C.int(xOff), C.int(yOff), dataPtr); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+	return C.GDALWriteBlock(rasterBand.cval, C.int(xOff), C.int(yOff), dataPtr).Err()
 }
 
 // Fetch X size of raster
@@ -1086,11 +1038,7 @@ func (rasterBand RasterBand) ColorInterp() ColorInterp {
 
 // Set color interpretation of the raster band
 func (rasterBand RasterBand) SetColorInterp(colorInterp ColorInterp) error {
-	if err := C.GDALSetRasterColorInterpretation(rasterBand.cval, C.GDALColorInterp(colorInterp)); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+	return C.GDALSetRasterColorInterpretation(rasterBand.cval, C.GDALColorInterp(colorInterp)).Err()
 }
 
 // Fetch the color table associated with this raster band
@@ -1101,11 +1049,7 @@ func (rasterBand RasterBand) ColorTable() ColorTable {
 
 // Set the raster color table for this raster band
 func (rasterBand RasterBand) SetColorTable(colorTable ColorTable) error {
-	if err := C.GDALSetRasterColorTable(rasterBand.cval, colorTable.cval); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+	return C.GDALSetRasterColorTable(rasterBand.cval, colorTable.cval).Err()
 }
 
 // Check for arbitrary overviews
@@ -1135,11 +1079,7 @@ func (rasterBand RasterBand) NoDataValue() (val float64, valid bool) {
 
 // Set the no data value for this band
 func (rasterBand RasterBand) SetNoDataValue(val float64) error {
-	if err := C.GDALSetRasterNoDataValue(rasterBand.cval, C.double(val)); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+	return C.GDALSetRasterNoDataValue(rasterBand.cval, C.double(val)).Err()
 }
 
 // Fetch the list of category names for this raster
@@ -1169,11 +1109,7 @@ func (rasterBand RasterBand) SetRasterCategoryNames(names []string) error {
 	}
 	cStrings[length] = (*C.char)(unsafe.Pointer(nil))
 
-	if err := C.GDALSetRasterCategoryNames(rasterBand.cval, (**C.char)(unsafe.Pointer(&cStrings[0]))); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+	return C.GDALSetRasterCategoryNames(rasterBand.cval, (**C.char)(unsafe.Pointer(&cStrings[0]))).Err()
 }
 
 // Fetch the minimum value for this band
@@ -1227,16 +1163,13 @@ func (rasterBand RasterBand) ComputeStatistics(
 
 // Set statistics on raster band
 func (rasterBand RasterBand) SetStatistics(min, max, mean, stdDev float64) error {
-	if err := C.GDALSetRasterStatistics(
+	return C.GDALSetRasterStatistics(
 		rasterBand.cval,
 		C.double(min),
 		C.double(max),
 		C.double(mean),
-		C.double(stdDev)); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+		C.double(stdDev),
+	).Err()
 }
 
 // Return raster unit type
@@ -1250,11 +1183,7 @@ func (rasterBand RasterBand) SetUnitType(unit string) error {
 	cString := C.CString(unit)
 	defer C.free(unsafe.Pointer(cString))
 
-	if err := C.GDALSetRasterUnitType(rasterBand.cval, cString); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+	return C.GDALSetRasterUnitType(rasterBand.cval, cString).Err()
 }
 
 // Fetch the raster value offset
@@ -1266,11 +1195,7 @@ func (rasterBand RasterBand) GetOffset() (float64, bool) {
 
 // Set scaling offset
 func (rasterBand RasterBand) SetOffset(offset float64) error {
-	if err := C.GDALSetRasterOffset(rasterBand.cval, C.double(offset)); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+	return C.GDALSetRasterOffset(rasterBand.cval, C.double(offset)).Err()
 }
 
 // Fetch the raster value scale
@@ -1282,11 +1207,7 @@ func (rasterBand RasterBand) GetScale() (float64, bool) {
 
 // Set scaling ratio
 func (rasterBand RasterBand) SetScale(scale float64) error {
-	if err := C.GDALSetRasterScale(rasterBand.cval, C.double(scale)); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+	return C.GDALSetRasterScale(rasterBand.cval, C.double(scale)).Err()
 }
 
 // Compute the min / max values for a band
@@ -1328,8 +1249,8 @@ func (rb RasterBand) Histogram(
 		C.int(approxOK),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	); err > 0 {
-		return nil, error(err)
+	).Err(); err != nil {
+		return nil, err
 	} else {
 		return histogram, nil
 	}
@@ -1347,7 +1268,7 @@ func (rb RasterBand) DefaultHistogram(
 
 	var cHistogram *C.int
 
-	cErr := C.GDALGetDefaultHistogram(
+	err = C.GDALGetDefaultHistogram(
 		rb.cval,
 		(*C.double)(&min),
 		(*C.double)(&max),
@@ -1356,14 +1277,14 @@ func (rb RasterBand) DefaultHistogram(
 		C.int(force),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	)
+	).Err()
 
 	sliceHeader := (*reflect.SliceHeader)(unsafe.Pointer(&histogram))
 	sliceHeader.Cap = buckets
 	sliceHeader.Len = buckets
 	sliceHeader.Data = uintptr(unsafe.Pointer(cHistogram))
 
-	return min, max, buckets, histogram, error(cErr)
+	return min, max, buckets, histogram, err
 }
 
 // Set default raster histogram
@@ -1376,11 +1297,7 @@ func (rb RasterBand) DefaultHistogram(
 
 // Fill this band with a constant value
 func (rasterBand RasterBand) Fill(real, imaginary float64) error {
-	if err := C.GDALFillRaster(rasterBand.cval, C.double(real), C.double(imaginary)); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+	return C.GDALFillRaster(rasterBand.cval, C.double(real), C.double(imaginary)).Err()
 }
 
 // Unimplemented: ComputeBandStats
@@ -1395,11 +1312,7 @@ func (rasterBand RasterBand) GetDefaultRAT() RasterAttributeTable {
 
 // Set default Raster Attribute Table
 func (rasterBand RasterBand) SetDefaultRAT(rat RasterAttributeTable) error {
-	if err := C.GDALSetDefaultRAT(rasterBand.cval, rat.cval); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+	return C.GDALSetDefaultRAT(rasterBand.cval, rat.cval).Err()
 }
 
 // Unimplemented: AddDerivedBandPixelFunc
@@ -1418,11 +1331,7 @@ func (rasterBand RasterBand) GetMaskFlags() int {
 
 // Adds a mask band to the current band
 func (rasterBand RasterBand) CreateMaskBand(flags int) error {
-	if err := C.GDALCreateMaskBand(rasterBand.cval, C.int(flags)); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+	return C.GDALCreateMaskBand(rasterBand.cval, C.int(flags)).Err()
 }
 
 // Copy all raster band raster data
@@ -1442,17 +1351,13 @@ func (sourceRaster RasterBand) RasterBandCopyWholeRaster(
 	}
 	cOptions[length] = (*C.char)(unsafe.Pointer(nil))
 
-	if err := C.GDALRasterBandCopyWholeRaster(
+	return C.GDALRasterBandCopyWholeRaster(
 		sourceRaster.cval,
 		destRaster.cval,
 		(**C.char)(unsafe.Pointer(&cOptions[0])),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+	).Err()
 }
 
 // Generate downsampled overviews
@@ -1644,20 +1549,12 @@ func (rat RasterAttributeTable) SetRowCount(count int) {
 func (rat RasterAttributeTable) CreateColumn(name string, rft RATFieldType, rfu RATFieldUsage) error {
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
-	if err := C.GDALRATCreateColumn(rat.cval, cName, C.GDALRATFieldType(rft), C.GDALRATFieldUsage(rfu)); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+	return C.GDALRATCreateColumn(rat.cval, cName, C.GDALRATFieldType(rft), C.GDALRATFieldUsage(rfu)).Err()
 }
 
 // Set linear binning information
 func (rat RasterAttributeTable) SetLinearBinning(row0min, binsize float64) error {
-	if err := C.GDALRATSetLinearBinning(rat.cval, C.double(row0min), C.double(binsize)); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+	return C.GDALRATSetLinearBinning(rat.cval, C.double(row0min), C.double(binsize)).Err()
 }
 
 // Fetch linear binning information
@@ -1668,11 +1565,7 @@ func (rat RasterAttributeTable) LinearBinning() (row0min, binsize float64, exist
 
 // Initialize RAT from color table
 func (rat RasterAttributeTable) FromColorTable(ct ColorTable) error {
-	if err := C.GDALRATInitializeFromColorTable(rat.cval, ct.cval); err > 0 {
-		return error(err)
-	} else {
-		return nil
-	}
+	return C.GDALRATInitializeFromColorTable(rat.cval, ct.cval).Err()
 }
 
 // Translate RAT to a color table
