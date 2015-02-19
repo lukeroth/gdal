@@ -598,6 +598,22 @@ func (object *Dataset) SetMetadataItem(name, value, domain string) error {
 	).Err()
 }
 
+// Fetch single metadata item.
+func (object *Driver) MetadataItem(name, domain string) string {
+	c_name := C.CString(name)
+	defer C.free(unsafe.Pointer(c_name))
+
+	c_domain := C.CString(domain)
+	defer C.free(unsafe.Pointer(c_domain))
+
+	return C.GoString(
+		C.GDALGetMetadataItem(
+			C.GDALMajorObjectH(unsafe.Pointer(object.cval)),
+			c_name, c_domain,
+		),
+	)
+}
+
 /* ==================================================================== */
 /*      GDALDataset class ... normally this represents one file.        */
 /* ==================================================================== */
@@ -608,7 +624,22 @@ func (dataset Dataset) Driver() Driver {
 	return driver
 }
 
-// Unimplemented: GDALGetFileList
+// Fetch files forming the dataset.
+func (dataset Dataset) FileList() []string {
+	p := C.GDALGetFileList(dataset.cval)
+	var strings []string
+	q := uintptr(unsafe.Pointer(p))
+	for {
+		p = (**C.char)(unsafe.Pointer(q))
+		if *p == nil {
+			break
+		}
+		strings = append(strings, C.GoString(*p))
+		q += unsafe.Sizeof(q)
+	}
+
+	return strings
+}
 
 // Close the dataset
 func (dataset Dataset) Close() {
