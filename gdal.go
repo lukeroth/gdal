@@ -624,7 +624,22 @@ func (dataset Dataset) Driver() Driver {
 	return driver
 }
 
-// Unimplemented: GDALGetFileList
+// Fetch files forming the dataset.
+func (dataset Dataset) FileList() []string {
+	p := C.GDALGetFileList(dataset.cval)
+	var strings []string
+	q := uintptr(unsafe.Pointer(p))
+	for {
+		p = (**C.char)(unsafe.Pointer(q))
+		if *p == nil {
+			break
+		}
+		strings = append(strings, C.GoString(*p))
+		q += unsafe.Sizeof(q)
+	}
+
+	return strings
+}
 
 // Close the dataset
 func (dataset Dataset) Close() {
