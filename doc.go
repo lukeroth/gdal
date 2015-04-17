@@ -7,7 +7,7 @@ Some less oftenly used functions are not yet implemented.  The majoriry of these
 
 The documentation is fairly limited, but the functionality fairly closely matches that of the C++ api.
 
-This wrapper has only been tested on 64-bit Ubuntu Linux, with version 1.9.1 of the GDAL library.
+This wrapper has most recently been tested on Windows7, using the MinGW32_x64 compiler and GDAL version 1.11.
 
 Usage
 
