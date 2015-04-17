@@ -509,6 +509,18 @@ func (driver Driver) CopyDatasetFiles(newName, oldName string) error {
 	return C.GDALCopyDatasetFiles(cDriver, cNewName, cOldName).Err()
 }
 
+// Get the short name associated with this driver
+func (driver Driver) ShortName() string {
+	cDriver := driver.cval
+	return C.GoString(C.GDALGetDriverShortName(cDriver))
+}
+
+// Get the long name associated with this driver
+func (driver Driver) LongName() string {
+	cDriver := driver.cval
+	return C.GoString(C.GDALGetDriverLongName(cDriver))
+}
+
 /* ==================================================================== */
 /*      GDAL_GCP                                                        */
 /* ==================================================================== */
