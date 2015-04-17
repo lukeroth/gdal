@@ -2,26 +2,28 @@
 About
 -------------
 
-The gdal.go package provides a wrapper for GDAL, the Geospatial Data Abstraction Library. More information about GDAL can be found at http://www.gdal.org
+The gdal.go package provides a go wrapper for GDAL, the Geospatial Data Abstraction Library. More information about GDAL can be found at http://www.gdal.org
 
 -------------
 Installation
 -------------
 
-go get github.com/lukeroth/gdal
+1) go get github.com/lukeroth/gdal
+2) Set the GDAL library and include directories to the appropriate locations.
+3) go build
 
 -------------
 Compatibility
 -------------
 
-This software has been tested on Ubuntu Linux, using GDAL v.1.9.1.
+This software has been tested most recently on Windows 7, using MinGW32_x64, GDAL version 1.11.
 
 -------------
 Examples
 -------------
 
 -------------
-Status (10/3/2012)
+Status (4/17/2015)
 -------------
 
 The majority of GDAL functionality exposed by the C API is available, as well as much of the OGR API.
