@@ -204,6 +204,15 @@ func CreateFromWKT(wkt string, srs SpatialReference) (Geometry, error) {
 	).Err()
 }
 
+//Create a geometry object from its GeoJSON representation
+func CreateFromJson(_json string) Geometry {
+	cString := C.CString(_json)
+	defer C.free(unsafe.Pointer(cString))
+	var newGeom Geometry
+	newGeom.cval = C.OGR_G_CreateGeometryFromJson(cString)
+	return newGeom
+}
+
 // Destroy geometry object
 func (geometry Geometry) Destroy() {
 	C.OGR_G_DestroyGeometry(geometry.cval)
