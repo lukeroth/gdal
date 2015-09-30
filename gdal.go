@@ -529,7 +529,6 @@ func (driver Driver) LongName() string {
 // Unimplemented: DeinitGCPs
 // Unimplemented: DuplicateGCPs
 // Unimplemented: GCPsToGeoTransform
-// Unimplemented: InvGeoTransform
 // Unimplemented: ApplyGeoTransform
 
 /* ==================================================================== */
@@ -718,7 +717,7 @@ func (dataset Dataset) AutoCreateWarpedVRT(srcWKT, dstWKT string, resampleAlg Re
 	defer C.free(unsafe.Pointer(c_dstWKT))
 	/*
 
-	*/
+	 */
 	h := C.GDALAutoCreateWarpedVRT(dataset.cval, c_srcWKT, c_dstWKT, C.GDALResampleAlg(resampleAlg), 0.0, nil)
 	d := Dataset{h}
 	if h == nil {
@@ -840,6 +839,18 @@ func (dataset Dataset) SetGeoTransform(transform [6]float64) error {
 		dataset.cval,
 		(*C.double)(unsafe.Pointer(&transform[0])),
 	).Err()
+}
+
+// Return the inverted transform
+func (dataset Dataset) InvGeoTransform() [6]float64 {
+	return InvGeoTransform(dataset.GeoTransform())
+}
+
+// Invert the supplied transform
+func InvGeoTransform(transform [6]float64) [6]float64 {
+	var result [6]float64
+	C.GDALInvGeoTransform((*C.double)(unsafe.Pointer(&transform[0])), (*C.double)(unsafe.Pointer(&result[0])))
+	return result
 }
 
 // Get number of GCPs
