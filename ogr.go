@@ -204,6 +204,15 @@ func CreateFromWKT(wkt string, srs SpatialReference) (Geometry, error) {
 	).Err()
 }
 
+//Create a geometry object from its GeoJSON representation
+func CreateFromJson(_json string) Geometry {
+	cString := C.CString(_json)
+	defer C.free(unsafe.Pointer(cString))
+	var newGeom Geometry
+	newGeom.cval = C.OGR_G_CreateGeometryFromJson(cString)
+	return newGeom
+}
+
 // Destroy geometry object
 func (geometry Geometry) Destroy() {
 	C.OGR_G_DestroyGeometry(geometry.cval)
@@ -301,7 +310,12 @@ func (geom Geometry) FromWKB(wkb []uint8, bytes int) error {
 }
 
 // Convert a geometry to well known binary data
-// Unimplemented: ExportToWkb
+func (geom Geometry) ToWKB() ([]uint8, error) {
+	b := make([]uint8, geom.WKBSize())
+	cString := (*C.uchar)(unsafe.Pointer(&b[0]))
+	err := C.OGR_G_ExportToWkb(geom.cval, C.OGRwkbByteOrder(C.wkbNDR), cString).Err()
+	return b, err
+}
 
 // Returns size of related binary representation
 func (geom Geometry) WKBSize() int {
