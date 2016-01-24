@@ -115,6 +115,26 @@ func (dataType DataType) Union(dataTypeB DataType) DataType {
 	)
 }
 
+//Safe array conversion
+func IntSliceToCInt(data []int) []C.int {
+	sliceSz := len(data)
+	result := make([]C.int, sliceSz)
+	for i := 0; i < sliceSz; i++ {
+		result[i] = C.int(data[i])
+	}
+	return result
+}
+
+//Safe array conversion
+func CIntSliceToInt(data []C.int) []int {
+	sliceSz := len(data)
+	result := make([]int, sliceSz)
+	for i := 0; i < sliceSz; i++ {
+		result[i] = int(data[i])
+	}
+	return result
+}
+
 // status of the asynchronous stream
 type AsyncStatusType int
 
@@ -779,7 +799,7 @@ func (dataset Dataset) IO(
 		C.int(bufXSize), C.int(bufYSize),
 		C.GDALDataType(dataType),
 		C.int(bandCount),
-		(*C.int)(unsafe.Pointer(&bandMap[0])),
+		(*C.int)(unsafe.Pointer(&IntSliceToCInt(bandMap)[0])),
 		C.int(pixelSpace), C.int(lineSpace), C.int(bandSpace),
 	).Err()
 }
@@ -807,7 +827,7 @@ func (dataset Dataset) AdviseRead(
 		C.int(bufXSize), C.int(bufYSize),
 		C.GDALDataType(dataType),
 		C.int(bandCount),
-		(*C.int)(unsafe.Pointer(&bandMap[0])),
+		(*C.int)(unsafe.Pointer(&IntSliceToCInt(bandMap)[0])),
 		(**C.char)(unsafe.Pointer(&cOptions[0])),
 	).Err()
 }
@@ -903,9 +923,9 @@ func (dataset Dataset) BuildOverviews(
 		dataset.cval,
 		cResampling,
 		C.int(nOverviews),
-		(*C.int)(unsafe.Pointer(&overviewList[0])),
+		(*C.int)(unsafe.Pointer(&IntSliceToCInt(overviewList)[0])),
 		C.int(nBands),
-		(*C.int)(unsafe.Pointer(&bandList[0])),
+		(*C.int)(unsafe.Pointer(&IntSliceToCInt(bandList)[0])),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
 	).Err()
@@ -1292,7 +1312,7 @@ func (rb RasterBand) Histogram(
 		progress, data,
 	}
 
-	histogram := make([]int, buckets)
+	histogram := make([]C.int, buckets)
 
 	if err := C.GDALGetRasterHistogram(
 		rb.cval,
@@ -1307,7 +1327,7 @@ func (rb RasterBand) Histogram(
 	).Err(); err != nil {
 		return nil, err
 	} else {
-		return histogram, nil
+		return CIntSliceToInt(histogram), nil
 	}
 }
 
