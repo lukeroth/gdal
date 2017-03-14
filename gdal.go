@@ -1314,12 +1314,12 @@ func (rb RasterBand) Histogram(
 
 	histogram := make([]C.int, buckets)
 
-	if err := C.GDALGetRasterHistogram(
+	if err := C.GDALGetRasterHistogramEx(
 		rb.cval,
 		C.double(min),
 		C.double(max),
 		C.int(buckets),
-		(*C.int)(unsafe.Pointer(&histogram[0])),
+		(*C.GUIntBig)(unsafe.Pointer(&histogram[0])),
 		C.int(includeOutOfRange),
 		C.int(approxOK),
 		C.goGDALProgressFuncProxyB(),
@@ -1341,9 +1341,9 @@ func (rb RasterBand) DefaultHistogram(
 		progress, data,
 	}
 
-	var cHistogram *C.int
+	var cHistogram *C.GUIntBig
 
-	err = C.GDALGetDefaultHistogram(
+	err = C.GDALGetDefaultHistogramEx(
 		rb.cval,
 		(*C.double)(&min),
 		(*C.double)(&max),
