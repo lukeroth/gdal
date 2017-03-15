@@ -56,3 +56,32 @@ func Warp(dstDS string, sourceDS []Dataset, options []string) (Dataset, error) {
 	return Dataset{ds}, nil
 
 }
+
+func Translate(dstDS string, sourceDS Dataset, options []string) (Dataset, error) {
+	length := len(options)
+	opts := make([]*C.char, length+1)
+	for i := 0; i < length; i++ {
+		opts[i] = C.CString(options[i])
+		defer C.free(unsafe.Pointer(opts[i]))
+	}
+	opts[length] = (*C.char)(unsafe.Pointer(nil))
+	translateopts := C.GDALTranslateOptionsNew(
+		(**C.char)(unsafe.Pointer(&opts[0])),
+		(*C.GDALTranslateOptionsForBinary)(unsafe.Pointer(nil)))
+	defer C.GDALTranslateOptionsFree(translateopts)
+
+	var cerr C.int
+	if dstDS == "" {
+		dstDS = "MEM:::"
+	}
+	cdstDS := C.CString(dstDS)
+	defer C.free(unsafe.Pointer(cdstDS))
+	ds := C.GDALTranslate(cdstDS,
+		sourceDS.cval,
+		translateopts, &cerr)
+	if cerr != 0 {
+		return Dataset{}, fmt.Errorf("translate failed with code %d", cerr)
+	}
+	return Dataset{ds}, nil
+
+}
