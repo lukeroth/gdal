@@ -23,7 +23,22 @@ var _ = fmt.Println
 
 // gdalwarp
 
+func stringArrayContains(array []string, needle string) bool {
+	for _, s := range array {
+		if s == needle {
+			return true
+		}
+	}
+	return false
+}
+
 func Warp(dstDS string, sourceDS []Dataset, options []string) (Dataset, error) {
+	if dstDS == "" {
+		dstDS = "MEM:::"
+		if !stringArrayContains(options, "-of") {
+			options = append([]string{"-of", "MEM"}, options...)
+		}
+	}
 	length := len(options)
 	opts := make([]*C.char, length+1)
 	for i := 0; i < length; i++ {
@@ -41,9 +56,6 @@ func Warp(dstDS string, sourceDS []Dataset, options []string) (Dataset, error) {
 		srcDS[i] = ds.cval
 	}
 	var cerr C.int
-	if dstDS == "" {
-		dstDS = "MEM:::"
-	}
 	cdstDS := C.CString(dstDS)
 	defer C.free(unsafe.Pointer(cdstDS))
 	ds := C.GDALWarp(cdstDS, nil,
@@ -58,6 +70,12 @@ func Warp(dstDS string, sourceDS []Dataset, options []string) (Dataset, error) {
 }
 
 func Translate(dstDS string, sourceDS Dataset, options []string) (Dataset, error) {
+	if dstDS == "" {
+		dstDS = "MEM:::"
+		if !stringArrayContains(options, "-of") {
+			options = append([]string{"-of", "MEM"}, options...)
+		}
+	}
 	length := len(options)
 	opts := make([]*C.char, length+1)
 	for i := 0; i < length; i++ {
@@ -71,9 +89,6 @@ func Translate(dstDS string, sourceDS Dataset, options []string) (Dataset, error
 	defer C.GDALTranslateOptionsFree(translateopts)
 
 	var cerr C.int
-	if dstDS == "" {
-		dstDS = "MEM:::"
-	}
 	cdstDS := C.CString(dstDS)
 	defer C.free(unsafe.Pointer(cdstDS))
 	ds := C.GDALTranslate(cdstDS,
