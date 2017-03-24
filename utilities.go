@@ -100,3 +100,73 @@ func Translate(dstDS string, sourceDS Dataset, options []string) (Dataset, error
 	return Dataset{ds}, nil
 
 }
+
+func VectorTranslate(dstDS string, sourceDS []Dataset, options []string) (Dataset, error) {
+	if dstDS == "" {
+		dstDS = "MEM:::"
+		if !stringArrayContains(options, "-of") {
+			options = append([]string{"-of", "MEM"}, options...)
+		}
+	}
+	length := len(options)
+	opts := make([]*C.char, length+1)
+	for i := 0; i < length; i++ {
+		opts[i] = C.CString(options[i])
+		defer C.free(unsafe.Pointer(opts[i]))
+	}
+	opts[length] = (*C.char)(unsafe.Pointer(nil))
+	translateopts := C.GDALVectorTranslateOptionsNew(
+		(**C.char)(unsafe.Pointer(&opts[0])),
+		(*C.GDALVectorTranslateOptionsForBinary)(unsafe.Pointer(nil)))
+	defer C.GDALVectorTranslateOptionsFree(translateopts)
+
+	srcDS := make([]C.GDALDatasetH, len(sourceDS))
+	for i, ds := range sourceDS {
+		srcDS[i] = ds.cval
+	}
+
+	var cerr C.int
+	cdstDS := C.CString(dstDS)
+	defer C.free(unsafe.Pointer(cdstDS))
+	ds := C.GDALVectorTranslate(cdstDS, nil,
+		C.int(len(sourceDS)),
+		(*C.GDALDatasetH)(unsafe.Pointer(&srcDS[0])),
+		translateopts, &cerr)
+	if cerr != 0 {
+		return Dataset{}, fmt.Errorf("vector translate failed with code %d", cerr)
+	}
+	return Dataset{ds}, nil
+
+}
+
+func Rasterize(dstDS string, sourceDS Dataset, options []string) (Dataset, error) {
+	if dstDS == "" {
+		dstDS = "MEM:::"
+		if !stringArrayContains(options, "-of") {
+			options = append([]string{"-of", "MEM"}, options...)
+		}
+	}
+	length := len(options)
+	opts := make([]*C.char, length+1)
+	for i := 0; i < length; i++ {
+		opts[i] = C.CString(options[i])
+		defer C.free(unsafe.Pointer(opts[i]))
+	}
+	opts[length] = (*C.char)(unsafe.Pointer(nil))
+	rasterizeopts := C.GDALRasterizeOptionsNew(
+		(**C.char)(unsafe.Pointer(&opts[0])),
+		(*C.GDALRasterizeOptionsForBinary)(unsafe.Pointer(nil)))
+	defer C.GDALRasterizeOptionsFree(rasterizeopts)
+
+	var cerr C.int
+	cdstDS := C.CString(dstDS)
+	defer C.free(unsafe.Pointer(cdstDS))
+	ds := C.GDALRasterize(cdstDS, nil,
+		sourceDS.cval,
+		rasterizeopts, &cerr)
+	if cerr != 0 {
+		return Dataset{}, fmt.Errorf("rasterize failed with code %d", cerr)
+	}
+	return Dataset{ds}, nil
+
+}
