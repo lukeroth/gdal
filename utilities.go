@@ -104,8 +104,8 @@ func Translate(dstDS string, sourceDS Dataset, options []string) (Dataset, error
 func VectorTranslate(dstDS string, sourceDS []Dataset, options []string) (Dataset, error) {
 	if dstDS == "" {
 		dstDS = "MEM:::"
-		if !stringArrayContains(options, "-of") {
-			options = append([]string{"-of", "MEM"}, options...)
+		if !stringArrayContains(options, "-f") {
+			options = append([]string{"-f", "MEM"}, options...)
 		}
 	}
 	length := len(options)
@@ -142,7 +142,7 @@ func VectorTranslate(dstDS string, sourceDS []Dataset, options []string) (Datase
 func Rasterize(dstDS string, sourceDS Dataset, options []string) (Dataset, error) {
 	if dstDS == "" {
 		dstDS = "MEM:::"
-		if !stringArrayContains(options, "-of") {
+		if !stringArrayContains(options, "-f") {
 			options = append([]string{"-of", "MEM"}, options...)
 		}
 	}
