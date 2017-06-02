@@ -278,7 +278,14 @@ type AsyncReader struct {
 }
 
 type ColorEntry struct {
-	cval *C.GDALColorEntry
+	cval C.GDALColorEntry
+}
+
+func (ce *ColorEntry) Set(c1, c2, c3, c4 uint) {
+	ce.cval.c1 = C.short(c1)
+	ce.cval.c2 = C.short(c2)
+	ce.cval.c3 = C.short(c3)
+	ce.cval.c4 = C.short(c4)
 }
 
 /* -------------------------------------------------------------------- */
@@ -1538,19 +1545,19 @@ func (ct ColorTable) EntryCount() int {
 // Fetch a color entry from table
 func (ct ColorTable) Entry(index int) ColorEntry {
 	entry := C.GDALGetColorEntry(ct.cval, C.int(index))
-	return ColorEntry{entry}
+	return ColorEntry{*entry}
 }
 
 // Unimplemented: EntryAsRGB
 
 // Set entry in color table
 func (ct ColorTable) SetEntry(index int, entry ColorEntry) {
-	C.GDALSetColorEntry(ct.cval, C.int(index), entry.cval)
+	C.GDALSetColorEntry(ct.cval, C.int(index), &entry.cval)
 }
 
 // Create color ramp
 func (ct ColorTable) CreateColorRamp(start, end int, startColor, endColor ColorEntry) {
-	C.GDALCreateColorRamp(ct.cval, C.int(start), startColor.cval, C.int(end), endColor.cval)
+	C.GDALCreateColorRamp(ct.cval, C.int(start), &startColor.cval, C.int(end), &endColor.cval)
 }
 
 /* ==================================================================== */
