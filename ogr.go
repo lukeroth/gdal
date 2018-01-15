@@ -532,7 +532,10 @@ func (geom Geometry) Union(other Geometry) Geometry {
 	return Geometry{newGeom}
 }
 
-// Unimplemented: UnionCascaded
+func (geom Geometry) UnionCascaded() Geometry {
+	newGeom := C.OGR_G_UnionCascaded(geom.cval)
+	return Geometry{newGeom}
+}
 
 // Unimplemented: PointOn Surface (until 2.0)
 // Return a point guaranteed to lie on the surface
