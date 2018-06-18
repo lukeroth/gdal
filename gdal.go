@@ -596,7 +596,7 @@ func (object MajorObject) SetMetadataItem(name, value, domain string) {
 
 // TODO: Make korrekt class hirerarchy via interfaces
 
-func (object *RasterBand) SetMetadataItem(name, value, domain string) error {
+func (rasterBand *RasterBand) SetMetadataItem(name, value, domain string) error {
 	c_name := C.CString(name)
 	defer C.free(unsafe.Pointer(c_name))
 
@@ -607,7 +607,7 @@ func (object *RasterBand) SetMetadataItem(name, value, domain string) error {
 	defer C.free(unsafe.Pointer(c_domain))
 
 	return C.GDALSetMetadataItem(
-		C.GDALMajorObjectH(unsafe.Pointer(object.cval)),
+		C.GDALMajorObjectH(unsafe.Pointer(rasterBand.cval)),
 		c_name, c_value, c_domain,
 	).Err()
 }
@@ -1300,8 +1300,8 @@ func (rasterBand RasterBand) FlushCache() {
 	C.GDALFlushRasterCache(rasterBand.cval)
 }
 
-// Compute raster histogram
-func (rb RasterBand) Histogram(
+// Histogram Compute raster
+func (rasterBand RasterBand) Histogram(
 	min, max float64,
 	buckets int,
 	includeOutOfRange, approxOK int,
@@ -1314,12 +1314,12 @@ func (rb RasterBand) Histogram(
 
 	histogram := make([]C.int, buckets)
 
-	if err := C.GDALGetRasterHistogram(
-		rb.cval,
+	if err := C.GDALGetRasterHistogramEx(
+		rasterBand.cval,
 		C.double(min),
 		C.double(max),
 		C.int(buckets),
-		(*C.int)(unsafe.Pointer(&histogram[0])),
+		(*C.GUIntBig)(unsafe.Pointer(&histogram[0])),
 		C.int(includeOutOfRange),
 		C.int(approxOK),
 		C.goGDALProgressFuncProxyB(),
@@ -1332,7 +1332,7 @@ func (rb RasterBand) Histogram(
 }
 
 // Fetch default raster histogram
-func (rb RasterBand) DefaultHistogram(
+func (rasterBand RasterBand) DefaultHistogram(
 	force int,
 	progress ProgressFunc,
 	data interface{},
@@ -1341,10 +1341,10 @@ func (rb RasterBand) DefaultHistogram(
 		progress, data,
 	}
 
-	var cHistogram *C.int
+	var cHistogram *C.GUIntBig
 
-	err = C.GDALGetDefaultHistogram(
-		rb.cval,
+	err = C.GDALGetDefaultHistogramEx(
+		rasterBand.cval,
 		(*C.double)(&min),
 		(*C.double)(&max),
 		(*C.int)(unsafe.Pointer(&buckets)),
