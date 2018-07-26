@@ -134,6 +134,14 @@ func CIntSliceToInt(data []C.int) []int {
 	}
 	return result
 }
+func CUIntBigSliceToInt(data []C.GUIntBig) []int {
+	sliceSz := len(data)
+	result := make([]int, sliceSz)
+	for i := 0; i < sliceSz; i++ {
+		result[i] = int(data[i])
+	}
+	return result
+}
 
 // status of the asynchronous stream
 type AsyncStatusType int
@@ -1312,14 +1320,14 @@ func (rb RasterBand) Histogram(
 		progress, data,
 	}
 
-	histogram := make([]C.int, buckets)
+	histogram := make([]C.GUIntBig, buckets)
 
-	if err := C.GDALGetRasterHistogram(
+	if err := C.GDALGetRasterHistogramEx(
 		rb.cval,
 		C.double(min),
 		C.double(max),
 		C.int(buckets),
-		(*C.int)(unsafe.Pointer(&histogram[0])),
+		(*C.GUIntBig)(unsafe.Pointer(&histogram[0])),
 		C.int(includeOutOfRange),
 		C.int(approxOK),
 		C.goGDALProgressFuncProxyB(),
@@ -1327,7 +1335,7 @@ func (rb RasterBand) Histogram(
 	).Err(); err != nil {
 		return nil, err
 	} else {
-		return CIntSliceToInt(histogram), nil
+		return CUIntBigSliceToInt(histogram), nil
 	}
 }
 
@@ -1341,9 +1349,9 @@ func (rb RasterBand) DefaultHistogram(
 		progress, data,
 	}
 
-	var cHistogram *C.int
+	var cHistogram *C.GUIntBig
 
-	err = C.GDALGetDefaultHistogram(
+	err = C.GDALGetDefaultHistogramEx(
 		rb.cval,
 		(*C.double)(&min),
 		(*C.double)(&max),
