@@ -58,31 +58,6 @@ func GDALTranslate(
 
 }
 
-// func GDALWarpCreateOutput(
-// 	nSrcCount int,
-// 	srcDS []Dataset,
-// 	pszFilename string,
-// 	pszFormat string,
-// 	papszTO []string,
-// 	ppapszCreateOptions *[]string,
-// 	eDT DataType,
-// 	phTransformArg unsafe.Pointer,
-// 	bSetColorInterpretation bool,
-// 	psOptions GDALWarpAppOptions,
-
-// ) GDALWarpAppOptions {
-
-// 	pahSrcDs := make([]C.GDALDatasetH, len(srcDs)+1)
-// 	for i := 0; i < len(srcDs); i++ {
-// 		pahSrcDs[i] = srcDs[i].cval
-// 	}
-// 	pahSrcDs[len(srcDs)] = (C.GDALDatasetH)(unsafe.Pointer(nil))
-
-// 	hDstDS := C.GDALWarpCreateOutput(
-// 		C.int(nSrcCount),
-// 	)
-// }
-
 func GDALWarp(
 	destName string,
 	dstDs Dataset,
@@ -105,7 +80,6 @@ func GDALWarp(
 	pahSrcDs := make([]C.GDALDatasetH, len(srcDs)+1)
 	for i := 0; i < len(srcDs); i++ {
 		pahSrcDs[i] = srcDs[i].cval
-		// defer C.free(unsafe.Pointer(pahSrcDs[i]))
 	}
 	pahSrcDs[len(srcDs)] = (C.GDALDatasetH)(unsafe.Pointer(nil))
 

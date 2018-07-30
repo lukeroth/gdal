@@ -583,6 +583,27 @@ func (object MajorObject) Metadata(domain string) []string {
 	panic("not implemented!")
 	return nil
 }
+func (dataset *Dataset) Metadata(domain string) []string {
+	cDomain := C.CString(domain)
+	defer C.free(unsafe.Pointer(cDomain))
+
+	p := C.GDALGetMetadata(
+		C.GDALMajorObjectH(unsafe.Pointer(dataset.cval)),
+		cDomain,
+	)
+	var strings []string
+	q := uintptr(unsafe.Pointer(p))
+	for {
+		p = (**C.char)(unsafe.Pointer(q))
+		if *p == nil {
+			break
+		}
+		strings = append(strings, C.GoString(*p))
+		q += unsafe.Sizeof(q)
+	}
+
+	return strings
+}
 
 // Set metadata
 func (object MajorObject) SetMetadata(metadata []string, domain string) {
@@ -640,6 +661,20 @@ func (object *Dataset) SetMetadataItem(name, value, domain string) error {
 
 // Fetch single metadata item.
 func (object *Driver) MetadataItem(name, domain string) string {
+	c_name := C.CString(name)
+	defer C.free(unsafe.Pointer(c_name))
+
+	c_domain := C.CString(domain)
+	defer C.free(unsafe.Pointer(c_domain))
+
+	return C.GoString(
+		C.GDALGetMetadataItem(
+			C.GDALMajorObjectH(unsafe.Pointer(object.cval)),
+			c_name, c_domain,
+		),
+	)
+}
+func (object *Dataset) MetadataItem(name, domain string) string {
 	c_name := C.CString(name)
 	defer C.free(unsafe.Pointer(c_name))
 
