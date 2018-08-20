@@ -134,6 +134,14 @@ func CIntSliceToInt(data []C.int) []int {
 	}
 	return result
 }
+func CUIntBigSliceToInt(data []C.GUIntBig) []int {
+	sliceSz := len(data)
+	result := make([]int, sliceSz)
+	for i := 0; i < sliceSz; i++ {
+		result[i] = int(data[i])
+	}
+	return result
+}
 
 // status of the asynchronous stream
 type AsyncStatusType int
@@ -575,6 +583,27 @@ func (object MajorObject) Metadata(domain string) []string {
 	panic("not implemented!")
 	return nil
 }
+func (dataset *Dataset) Metadata(domain string) []string {
+	cDomain := C.CString(domain)
+	defer C.free(unsafe.Pointer(cDomain))
+
+	p := C.GDALGetMetadata(
+		C.GDALMajorObjectH(unsafe.Pointer(dataset.cval)),
+		cDomain,
+	)
+	var strings []string
+	q := uintptr(unsafe.Pointer(p))
+	for {
+		p = (**C.char)(unsafe.Pointer(q))
+		if *p == nil {
+			break
+		}
+		strings = append(strings, C.GoString(*p))
+		q += unsafe.Sizeof(q)
+	}
+
+	return strings
+}
 
 // Set metadata
 func (object MajorObject) SetMetadata(metadata []string, domain string) {
@@ -632,6 +661,20 @@ func (object *Dataset) SetMetadataItem(name, value, domain string) error {
 
 // Fetch single metadata item.
 func (object *Driver) MetadataItem(name, domain string) string {
+	c_name := C.CString(name)
+	defer C.free(unsafe.Pointer(c_name))
+
+	c_domain := C.CString(domain)
+	defer C.free(unsafe.Pointer(c_domain))
+
+	return C.GoString(
+		C.GDALGetMetadataItem(
+			C.GDALMajorObjectH(unsafe.Pointer(object.cval)),
+			c_name, c_domain,
+		),
+	)
+}
+func (object *Dataset) MetadataItem(name, domain string) string {
 	c_name := C.CString(name)
 	defer C.free(unsafe.Pointer(c_name))
 
@@ -1312,14 +1355,14 @@ func (rb RasterBand) Histogram(
 		progress, data,
 	}
 
-	histogram := make([]C.int, buckets)
+	histogram := make([]C.GUIntBig, buckets)
 
-	if err := C.GDALGetRasterHistogram(
+	if err := C.GDALGetRasterHistogramEx(
 		rb.cval,
 		C.double(min),
 		C.double(max),
 		C.int(buckets),
-		(*C.int)(unsafe.Pointer(&histogram[0])),
+		(*C.GUIntBig)(unsafe.Pointer(&histogram[0])),
 		C.int(includeOutOfRange),
 		C.int(approxOK),
 		C.goGDALProgressFuncProxyB(),
@@ -1327,7 +1370,7 @@ func (rb RasterBand) Histogram(
 	).Err(); err != nil {
 		return nil, err
 	} else {
-		return CIntSliceToInt(histogram), nil
+		return CUIntBigSliceToInt(histogram), nil
 	}
 }
 
@@ -1341,9 +1384,9 @@ func (rb RasterBand) DefaultHistogram(
 		progress, data,
 	}
 
-	var cHistogram *C.int
+	var cHistogram *C.GUIntBig
 
-	err = C.GDALGetDefaultHistogram(
+	err = C.GDALGetDefaultHistogramEx(
 		rb.cval,
 		(*C.double)(&min),
 		(*C.double)(&max),
