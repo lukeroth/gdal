@@ -278,6 +278,10 @@ type ColorEntry struct {
 	cval *C.GDALColorEntry
 }
 
+type VSILFILE struct {
+	cval *C.VSILFILE
+}
+
 /* -------------------------------------------------------------------- */
 /*      Callback "progress" function.                                   */
 /* -------------------------------------------------------------------- */
@@ -1726,4 +1730,57 @@ func GetCacheUsed() int {
 func FlushCacheBlock() bool {
 	flushed := C.GDALFlushCacheBlock()
 	return flushed != 0
+}
+
+/* ==================================================================== */
+/*      GDAL VSI Virtual File System                                    */
+/* ==================================================================== */
+
+// Read names in a directory recursively.
+func VSIReadDirRecursive(fileName string) []string {
+	name := C.CString(fileName)
+	defer C.free(unsafe.Pointer(name))
+
+	p := C.VSIReadDirRecursive(name)
+	var strings []string
+	q := uintptr(unsafe.Pointer(p))
+	for {
+		p = (**C.char)(unsafe.Pointer(q))
+		if *p == nil {
+			break
+		}
+		strings = append(strings, C.GoString(*p))
+		q += unsafe.Sizeof(q)
+	}
+
+	return strings
+}
+
+// Open file.
+func VSIFOpenL(fileName string, fileAccess string) (VSILFILE, error) {
+	cFileName := C.CString(fileName)
+	defer C.free(unsafe.Pointer(cFileName))
+	cFileAccess := C.CString(fileAccess)
+	defer C.free(unsafe.Pointer(cFileAccess))
+	file := C.VSIFOpenL(cFileName, cFileAccess)
+
+	if file == nil {
+		return VSILFILE{nil}, fmt.Errorf("Error: VSILFILE '%s' open error", fileName)
+	}
+	return VSILFILE{file}, nil
+}
+
+// Close file.
+func VSIFCloseL(file VSILFILE) {
+	C.VSIFCloseL(file.cval)
+	return
+}
+
+// Read bytes from file.
+func VSIFReadL(nSize, nCount int, file VSILFILE) []byte {
+	data := make([]byte, nSize*nCount)
+	p := unsafe.Pointer(&data[0])
+	C.VSIFReadL(p, C.ulong(nSize), C.ulong(nCount), file.cval)
+
+	return data
 }
