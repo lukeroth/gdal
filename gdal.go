@@ -278,6 +278,7 @@ type ColorEntry struct {
 	cval *C.GDALColorEntry
 }
 
+
 type VSILFILE struct {
 	cval *C.VSILFILE
 }
@@ -1736,9 +1737,9 @@ func FlushCacheBlock() bool {
 /*      GDAL VSI Virtual File System                                    */
 /* ==================================================================== */
 
-// Read names in a directory recursively.
-func VSIReadDirRecursive(fileName string) []string {
-	name := C.CString(fileName)
+// List VSI files
+func VSIReadDirRecursive(filename string) []string {
+	name := C.CString(filename)
 	defer C.free(unsafe.Pointer(name))
 
 	p := C.VSIReadDirRecursive(name)
@@ -1755,6 +1756,7 @@ func VSIReadDirRecursive(fileName string) []string {
 
 	return strings
 }
+
 
 // Open file.
 func VSIFOpenL(fileName string, fileAccess string) (VSILFILE, error) {
@@ -1780,7 +1782,7 @@ func VSIFCloseL(file VSILFILE) {
 func VSIFReadL(nSize, nCount int, file VSILFILE) []byte {
 	data := make([]byte, nSize*nCount)
 	p := unsafe.Pointer(&data[0])
-	C.VSIFReadL(p, C.ulong(nSize), C.ulong(nCount), file.cval)
+	C.VSIFReadL(p, C.size_t(nSize), C.size_t(nCount), file.cval)
 
 	return data
 }
