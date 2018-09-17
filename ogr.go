@@ -399,7 +399,9 @@ func (geom Geometry) ToKML() string {
 // Convert a geometry to JSON format
 func (geom Geometry) ToJSON() string {
 	val := C.OGR_G_ExportToJson(geom.cval)
-	return C.GoString(val)
+	result := C.GoString(val)
+	C.CPLFree(unsafe.Pointer(val))
+	return result
 }
 
 // Convert a geometry to JSON format with options
@@ -592,6 +594,10 @@ func (geom Geometry) IsEmpty() bool {
 	return val != 0
 }
 
+func (geom Geometry) IsNull() bool {
+	return geom.cval == nil
+}
+
 // Test if the geometry is valid
 func (geom Geometry) IsValid() bool {
 	val := C.OGR_G_IsValid(geom.cval)
@@ -736,6 +742,8 @@ const (
 	FT_Date        = FieldType(C.OFTDate)
 	FT_Time        = FieldType(C.OFTTime)
 	FT_DateTime    = FieldType(C.OFTDateTime)
+	FT_Integer64   = FieldType(C.OFTInteger64)
+	FT_Integer64List = FieldType(C.OFTInteger64List)
 )
 
 type Justification int
@@ -1076,6 +1084,12 @@ func (feature Feature) FieldAsInteger(index int) int {
 	return int(val)
 }
 
+// Fetch field value as integer
+func (feature Feature) FieldAsInteger64(index int) int64 {
+	val := C.OGR_F_GetFieldAsInteger64(feature.cval, C.int(index))
+	return int64(val)
+}
+
 // Fetch field value as float64
 func (feature Feature) FieldAsFloat64(index int) float64 {
 	val := C.OGR_F_GetFieldAsDouble(feature.cval, C.int(index))
@@ -1093,6 +1107,18 @@ func (feature Feature) FieldAsIntegerList(index int) []int {
 	var count int
 	cArray := C.OGR_F_GetFieldAsIntegerList(feature.cval, C.int(index), (*C.int)(unsafe.Pointer(&count)))
 	var goSlice []int
+	header := (*reflect.SliceHeader)(unsafe.Pointer(&goSlice))
+	header.Cap = count
+	header.Len = count
+	header.Data = uintptr(unsafe.Pointer(cArray))
+	return goSlice
+}
+
+// Fetch field as list of integers
+func (feature Feature) FieldAsInteger64List(index int) []int64 {
+	var count int
+	cArray := C.OGR_F_GetFieldAsInteger64List(feature.cval, C.int(index), (*C.int)(unsafe.Pointer(&count)))
+	var goSlice []int64
 	header := (*reflect.SliceHeader)(unsafe.Pointer(&goSlice))
 	header.Cap = count
 	header.Len = count
@@ -1165,6 +1191,11 @@ func (feature Feature) SetFieldInteger(index, value int) {
 	C.OGR_F_SetFieldInteger(feature.cval, C.int(index), C.int(value))
 }
 
+// Set field to integer 64 value
+func (feature Feature) SetFieldInteger64(index int, value int64) {
+	C.OGR_F_SetFieldInteger64(feature.cval, C.int(index), C.GIntBig(value))
+}
+
 // Set field to float64 value
 func (feature Feature) SetFieldFloat64(index int, value float64) {
 	C.OGR_F_SetFieldDouble(feature.cval, C.int(index), C.double(value))
@@ -1179,6 +1210,16 @@ func (feature Feature) SetFieldString(index int, value string) {
 
 // Set field to list of integers
 func (feature Feature) SetFieldIntegerList(index int, value []int) {
+	C.OGR_F_SetFieldIntegerList(
+		feature.cval,
+		C.int(index),
+		C.int(len(value)),
+		(*C.int)(unsafe.Pointer(&value[0])),
+	)
+}
+
+// Set field to list of integers
+func (feature Feature) SetFieldInteger64List(index int, value []int64) {
 	C.OGR_F_SetFieldIntegerList(
 		feature.cval,
 		C.int(index),
@@ -1282,6 +1323,11 @@ func (feature Feature) StlyeString() string {
 func (feature Feature) SetStyleString(style string) {
 	cStyle := C.CString(style)
 	C.OGR_F_SetStyleStringDirectly(feature.cval, cStyle)
+}
+
+// Returns true if this contains a null pointer
+func (feature Feature) IsNull() bool {
+	return feature.cval == nil
 }
 
 /* -------------------------------------------------------------------- */
