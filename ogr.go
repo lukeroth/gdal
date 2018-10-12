@@ -335,6 +335,7 @@ func (geom Geometry) ToWKT() (string, error) {
 	var p *C.char
 	err := C.OGR_G_ExportToWkt(geom.cval, &p).Err()
 	wkt := C.GoString(p)
+	defer C.free(unsafe.Pointer(p))
 	return wkt, err
 }
 
@@ -732,17 +733,17 @@ func (geom Geometry) BuildPolygonFromEdges(autoClose bool, tolerance float64) (G
 type FieldType int
 
 const (
-	FT_Integer     = FieldType(C.OFTInteger)
-	FT_IntegerList = FieldType(C.OFTIntegerList)
-	FT_Real        = FieldType(C.OFTReal)
-	FT_RealList    = FieldType(C.OFTRealList)
-	FT_String      = FieldType(C.OFTString)
-	FT_StringList  = FieldType(C.OFTStringList)
-	FT_Binary      = FieldType(C.OFTBinary)
-	FT_Date        = FieldType(C.OFTDate)
-	FT_Time        = FieldType(C.OFTTime)
-	FT_DateTime    = FieldType(C.OFTDateTime)
-	FT_Integer64   = FieldType(C.OFTInteger64)
+	FT_Integer       = FieldType(C.OFTInteger)
+	FT_IntegerList   = FieldType(C.OFTIntegerList)
+	FT_Real          = FieldType(C.OFTReal)
+	FT_RealList      = FieldType(C.OFTRealList)
+	FT_String        = FieldType(C.OFTString)
+	FT_StringList    = FieldType(C.OFTStringList)
+	FT_Binary        = FieldType(C.OFTBinary)
+	FT_Date          = FieldType(C.OFTDate)
+	FT_Time          = FieldType(C.OFTTime)
+	FT_DateTime      = FieldType(C.OFTDateTime)
+	FT_Integer64     = FieldType(C.OFTInteger64)
 	FT_Integer64List = FieldType(C.OFTInteger64List)
 )
 
