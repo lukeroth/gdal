@@ -335,6 +335,7 @@ func (geom Geometry) ToWKT() (string, error) {
 	var p *C.char
 	err := C.OGR_G_ExportToWkt(geom.cval, &p).Err()
 	wkt := C.GoString(p)
+	defer C.free(unsafe.Pointer(p))
 	return wkt, err
 }
 
