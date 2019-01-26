@@ -2,6 +2,7 @@ package gdal
 
 /*
 #include "go_gdal.h"
+#include "go_ogr_wkb.h"
 #include "gdal_version.h"
 
 #cgo linux  pkg-config: gdal
@@ -187,9 +188,9 @@ type Geometry struct {
 
 //Create a geometry object from its well known binary representation
 func CreateFromWKB(wkb []uint8, srs SpatialReference, bytes int) (Geometry, error) {
-	cString := (*C.uchar)(unsafe.Pointer(&wkb[0]))
+	cString := unsafe.Pointer(&wkb[0])
 	var newGeom Geometry
-	return newGeom, C.OGR_G_CreateFromWkb(
+	return newGeom, C.go_CreateFromWkb(
 		cString, srs.cval, &newGeom.cval, C.int(bytes),
 	).Err()
 }
@@ -305,15 +306,15 @@ func (geom Geometry) Envelope() Envelope {
 
 // Assign a geometry from well known binary data
 func (geom Geometry) FromWKB(wkb []uint8, bytes int) error {
-	cString := (*C.uchar)(unsafe.Pointer(&wkb[0]))
-	return C.OGR_G_ImportFromWkb(geom.cval, cString, C.int(bytes)).Err()
+	cString := unsafe.Pointer(&wkb[0])
+	return C.go_ImportFromWkb(geom.cval, cString, C.int(bytes)).Err()
 }
 
 // Convert a geometry to well known binary data
 func (geom Geometry) ToWKB() ([]uint8, error) {
 	b := make([]uint8, geom.WKBSize())
 	cString := (*C.uchar)(unsafe.Pointer(&b[0]))
-	err := C.OGR_G_ExportToWkb(geom.cval, C.OGRwkbByteOrder(C.wkbNDR), cString).Err()
+	err := C.go_ExportToWkb(geom.cval, C.OGRwkbByteOrder(C.wkbNDR), cString).Err()
 	return b, err
 }
 
