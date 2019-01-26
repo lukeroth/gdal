@@ -1,3 +1,6 @@
+// Copyright 2019 AirMap Inc. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
 #ifndef GO_OGR_WKB_H_
 #define GO_OGR_WKB_H_
 
