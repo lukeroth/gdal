@@ -17,7 +17,7 @@ A simple program to create a georeferenced blank 256x256 GeoTIFF:
 	import (
 		"fmt"
 		"flag"
-		gdal "github.com/lukeroth/gdal_go"
+		gdal "github.com/airmap/gdal"
 	)
 
 	func main() {

@@ -46,7 +46,7 @@ var (
 )
 
 // Error handling.  The following is bare-bones, and needs to be replaced with something more useful.
-func (err _Ctype_CPLErr) Err() error {
+func (err C.CPLErr) Err() error {
 	switch err {
 	case 0:
 		return nil
@@ -62,7 +62,7 @@ func (err _Ctype_CPLErr) Err() error {
 	return ErrIllegal
 }
 
-func (err _Ctype_OGRErr) Err() error {
+func (err C.OGRErr) Err() error {
 	switch err {
 	case 0:
 		return nil
