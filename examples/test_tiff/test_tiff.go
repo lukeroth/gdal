@@ -1,9 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"flag"
-	"github.com/lukeroth/gdal"
+	"fmt"
+
+	"github.com/airmap/gdal"
 )
 
 func main() {
