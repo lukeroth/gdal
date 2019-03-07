@@ -1334,9 +1334,12 @@ func (layer Layer) ResetReading() {
 }
 
 // Fetch the next available feature from this layer
-func (layer Layer) NextFeature() Feature {
+func (layer Layer) NextFeature() *Feature {
 	feature := C.OGR_L_GetNextFeature(layer.cval)
-	return Feature{feature}
+	if feature == nil {
+		return nil
+	}
+	return &Feature{feature}
 }
 
 // Move read cursor to the provided index
