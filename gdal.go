@@ -183,6 +183,17 @@ const (
 	Write = RWFlag(C.GF_Write)
 )
 
+type OpenFlag uint
+
+const (
+	OFReadOnly      = OpenFlag(C.GDAL_OF_READONLY)
+	OFUpdate        = OpenFlag(C.GDAL_OF_UPDATE)
+	OFShared        = OpenFlag(C.GDAL_OF_SHARED)
+	OFVector        = OpenFlag(C.GDAL_OF_VECTOR)
+	OFRaster        = OpenFlag(C.GDAL_OF_RASTER)
+	OFVerbose_Error = OpenFlag(C.GDAL_OF_VERBOSE_ERROR)
+)
+
 // Types of color interpretation for raster bands.
 type ColorInterp int
 
@@ -275,7 +286,14 @@ type AsyncReader struct {
 }
 
 type ColorEntry struct {
-	cval *C.GDALColorEntry
+	cval C.GDALColorEntry
+}
+
+func (ce *ColorEntry) Set(c1, c2, c3, c4 uint) {
+	ce.cval.c1 = C.short(c1)
+	ce.cval.c2 = C.short(c2)
+	ce.cval.c3 = C.short(c3)
+	ce.cval.c4 = C.short(c4)
 }
 
 
@@ -454,6 +472,51 @@ func Open(filename string, access Access) (Dataset, error) {
 	dataset := C.GDALOpen(cFilename, C.GDALAccess(access))
 	if dataset == nil {
 		return Dataset{nil}, fmt.Errorf("Error: dataset '%s' open error", filename)
+	}
+	return Dataset{dataset}, nil
+}
+
+// Open an existing dataset
+func OpenEx(filename string, flags OpenFlag, allowedDrivers []string,
+	openOptions []string, siblingFiles []string) (Dataset, error) {
+	cFilename := C.CString(filename)
+	defer C.free(unsafe.Pointer(cFilename))
+
+	var driversA, ooptionsA, siblingsA **C.char
+	if allowedDrivers != nil {
+		length := len(allowedDrivers)
+		drivers := make([]*C.char, length+1)
+		for i := 0; i < length; i++ {
+			drivers[i] = C.CString(allowedDrivers[i])
+			defer C.free(unsafe.Pointer(drivers[i]))
+		}
+		drivers[length] = (*C.char)(unsafe.Pointer(nil))
+		driversA = (**C.char)(unsafe.Pointer(&drivers[0]))
+	}
+	if openOptions != nil {
+		length := len(openOptions)
+		ooptions := make([]*C.char, length+1)
+		for i := 0; i < length; i++ {
+			ooptions[i] = C.CString(openOptions[i])
+			defer C.free(unsafe.Pointer(ooptions[i]))
+		}
+		ooptions[length] = (*C.char)(unsafe.Pointer(nil))
+		ooptionsA = (**C.char)(unsafe.Pointer(&ooptions[0]))
+	}
+	if siblingFiles != nil {
+		length := len(siblingFiles)
+		siblings := make([]*C.char, length+1)
+		for i := 0; i < length; i++ {
+			siblings[i] = C.CString(siblingFiles[i])
+			defer C.free(unsafe.Pointer(siblings[i]))
+		}
+		siblings[length] = (*C.char)(unsafe.Pointer(nil))
+		siblingsA = (**C.char)(unsafe.Pointer(&siblings[0]))
+	}
+
+	dataset := C.GDALOpenEx(cFilename, C.uint(flags), driversA, ooptionsA, siblingsA)
+	if dataset == nil {
+		return Dataset{nil}, fmt.Errorf("Error: dataset '%s' openEx error", filename)
 	}
 	return Dataset{dataset}, nil
 }
@@ -1530,19 +1593,19 @@ func (ct ColorTable) EntryCount() int {
 // Fetch a color entry from table
 func (ct ColorTable) Entry(index int) ColorEntry {
 	entry := C.GDALGetColorEntry(ct.cval, C.int(index))
-	return ColorEntry{entry}
+	return ColorEntry{*entry}
 }
 
 // Unimplemented: EntryAsRGB
 
 // Set entry in color table
 func (ct ColorTable) SetEntry(index int, entry ColorEntry) {
-	C.GDALSetColorEntry(ct.cval, C.int(index), entry.cval)
+	C.GDALSetColorEntry(ct.cval, C.int(index), &entry.cval)
 }
 
 // Create color ramp
 func (ct ColorTable) CreateColorRamp(start, end int, startColor, endColor ColorEntry) {
-	C.GDALCreateColorRamp(ct.cval, C.int(start), startColor.cval, C.int(end), endColor.cval)
+	C.GDALCreateColorRamp(ct.cval, C.int(start), &startColor.cval, C.int(end), &endColor.cval)
 }
 
 /* ==================================================================== */
