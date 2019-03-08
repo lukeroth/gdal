@@ -46,7 +46,7 @@ var (
 )
 
 // Error handling.  The following is bare-bones, and needs to be replaced with something more useful.
-func (err _Ctype_CPLErr) Err() error {
+func (err CPLErr) Err() error {
 	switch err {
 	case 0:
 		return nil
@@ -62,7 +62,7 @@ func (err _Ctype_CPLErr) Err() error {
 	return ErrIllegal
 }
 
-func (err _Ctype_OGRErr) Err() error {
+func (err OGRErr) Err() error {
 	switch err {
 	case 0:
 		return nil
@@ -691,9 +691,9 @@ func (object MajorObject) SetMetadataItem(name, value, domain string) {
 	return
 }
 
-// TODO: Make korrekt class hirerarchy via interfaces
+// TODO: Make correct class hirerarchy via interfaces
 
-func (object *RasterBand) SetMetadataItem(name, value, domain string) error {
+func (rasterBand *RasterBand) SetMetadataItem(name, value, domain string) error {
 	c_name := C.CString(name)
 	defer C.free(unsafe.Pointer(c_name))
 
@@ -704,7 +704,7 @@ func (object *RasterBand) SetMetadataItem(name, value, domain string) error {
 	defer C.free(unsafe.Pointer(c_domain))
 
 	return C.GDALSetMetadataItem(
-		C.GDALMajorObjectH(unsafe.Pointer(object.cval)),
+		C.GDALMajorObjectH(unsafe.Pointer(rasterBand.cval)),
 		c_name, c_value, c_domain,
 	).Err()
 }
@@ -1412,7 +1412,7 @@ func (rasterBand RasterBand) FlushCache() {
 }
 
 // Compute raster histogram
-func (rb RasterBand) Histogram(
+func (rasterBand RasterBand) Histogram(
 	min, max float64,
 	buckets int,
 	includeOutOfRange, approxOK int,
@@ -1426,7 +1426,7 @@ func (rb RasterBand) Histogram(
 	histogram := make([]C.GUIntBig, buckets)
 
 	if err := C.GDALGetRasterHistogramEx(
-		rb.cval,
+		rasterBand.cval,
 		C.double(min),
 		C.double(max),
 		C.int(buckets),
@@ -1443,7 +1443,7 @@ func (rb RasterBand) Histogram(
 }
 
 // Fetch default raster histogram
-func (rb RasterBand) DefaultHistogram(
+func (rasterBand RasterBand) DefaultHistogram(
 	force int,
 	progress ProgressFunc,
 	data interface{},
@@ -1455,7 +1455,7 @@ func (rb RasterBand) DefaultHistogram(
 	var cHistogram *C.GUIntBig
 
 	err = C.GDALGetDefaultHistogramEx(
-		rb.cval,
+		rasterBand.cval,
 		(*C.double)(&min),
 		(*C.double)(&max),
 		(*C.int)(unsafe.Pointer(&buckets)),

@@ -2,6 +2,7 @@ package gdal
 
 /*
 #include "go_gdal.h"
+#include "go_ogr_wkb.h"
 #include "gdal_version.h"
 
 #cgo linux  pkg-config: gdal
@@ -187,10 +188,10 @@ type Geometry struct {
 
 //Create a geometry object from its well known binary representation
 func CreateFromWKB(wkb []uint8, srs SpatialReference, bytes int) (Geometry, error) {
-	pabyData := (unsafe.Pointer(&wkb[0]))
+	cString := unsafe.Pointer(&wkb[0])
 	var newGeom Geometry
-	return newGeom, C.OGR_G_CreateFromWkb(
-		pabyData, srs.cval, &newGeom.cval, C.int(bytes),
+	return newGeom, C.go_CreateFromWkb(
+		cString, srs.cval, &newGeom.cval, C.int(bytes),
 	).Err()
 }
 
@@ -305,15 +306,15 @@ func (geom Geometry) Envelope() Envelope {
 
 // Assign a geometry from well known binary data
 func (geom Geometry) FromWKB(wkb []uint8, bytes int) error {
-	pabyData := (unsafe.Pointer(&wkb[0]))
-	return C.OGR_G_ImportFromWkb(geom.cval, pabyData, C.int(bytes)).Err()
+	cString := unsafe.Pointer(&wkb[0])
+	return C.go_ImportFromWkb(geom.cval, cString, C.int(bytes)).Err()
 }
 
 // Convert a geometry to well known binary data
 func (geom Geometry) ToWKB() ([]uint8, error) {
 	b := make([]uint8, geom.WKBSize())
 	cString := (*C.uchar)(unsafe.Pointer(&b[0]))
-	err := C.OGR_G_ExportToWkb(geom.cval, C.OGRwkbByteOrder(C.wkbNDR), cString).Err()
+	err := C.go_ExportToWkb(geom.cval, C.OGRwkbByteOrder(C.wkbNDR), cString).Err()
 	return b, err
 }
 
@@ -394,7 +395,9 @@ func (geom Geometry) ToGML_Ex(options []string) string {
 // Convert a geometry to KML format
 func (geom Geometry) ToKML() string {
 	val := C.OGR_G_ExportToKML(geom.cval, nil)
-	return C.GoString(val)
+	result = C.GoString(val)
+	C.CPL_Free(unsafe.Pointer(val))
+	return result
 }
 
 // Convert a geometry to JSON format
@@ -533,7 +536,10 @@ func (geom Geometry) Union(other Geometry) Geometry {
 	return Geometry{newGeom}
 }
 
-// Unimplemented: UnionCascaded
+func (geom Geometry) UnionCascaded() Geometry {
+	newGeom := C.OGR_G_UnionCascaded(geom.cval)
+	return Geometry{newGeom}
+}
 
 // Unimplemented: PointOn Surface (until 2.0)
 // Return a point guaranteed to lie on the surface
@@ -588,6 +594,11 @@ func (geom Geometry) Empty() {
 func (geom Geometry) IsEmpty() bool {
 	val := C.OGR_G_IsEmpty(geom.cval)
 	return val != 0
+}
+
+// Test if the geometry is null
+func (geom Geometry) IsNull() bool {
+	return geom.cval == nil
 }
 
 // Test if the geometry is valid
@@ -724,16 +735,18 @@ func (geom Geometry) BuildPolygonFromEdges(autoClose bool, tolerance float64) (G
 type FieldType int
 
 const (
-	FT_Integer     = FieldType(C.OFTInteger)
-	FT_IntegerList = FieldType(C.OFTIntegerList)
-	FT_Real        = FieldType(C.OFTReal)
-	FT_RealList    = FieldType(C.OFTRealList)
-	FT_String      = FieldType(C.OFTString)
-	FT_StringList  = FieldType(C.OFTStringList)
-	FT_Binary      = FieldType(C.OFTBinary)
-	FT_Date        = FieldType(C.OFTDate)
-	FT_Time        = FieldType(C.OFTTime)
-	FT_DateTime    = FieldType(C.OFTDateTime)
+	FT_Integer       = FieldType(C.OFTInteger)
+	FT_IntegerList   = FieldType(C.OFTIntegerList)
+	FT_Real          = FieldType(C.OFTReal)
+	FT_RealList      = FieldType(C.OFTRealList)
+	FT_String        = FieldType(C.OFTString)
+	FT_StringList    = FieldType(C.OFTStringList)
+	FT_Binary        = FieldType(C.OFTBinary)
+	FT_Date          = FieldType(C.OFTDate)
+	FT_Time          = FieldType(C.OFTTime)
+	FT_DateTime      = FieldType(C.OFTDateTime)
+	FT_Integer64     = FieldType(C.OFTInteger64)
+	FT_Integer64List = FieldType(C.OFTInteger64List)
 )
 
 type Justification int
@@ -1074,6 +1087,12 @@ func (feature Feature) FieldAsInteger(index int) int {
 	return int(val)
 }
 
+// Fetch field value as 64-bit integer
+func (feature Feature) FieldAsInteger64(index int) int {
+	val := C.OGR_F_GetFieldAsInteger64(feature.cval, C.int(index))
+	return int64(val)
+}
+
 // Fetch field value as float64
 func (feature Feature) FieldAsFloat64(index int) float64 {
 	val := C.OGR_F_GetFieldAsDouble(feature.cval, C.int(index))
@@ -1091,6 +1110,18 @@ func (feature Feature) FieldAsIntegerList(index int) []int {
 	var count int
 	cArray := C.OGR_F_GetFieldAsIntegerList(feature.cval, C.int(index), (*C.int)(unsafe.Pointer(&count)))
 	var goSlice []int
+	header := (*reflect.SliceHeader)(unsafe.Pointer(&goSlice))
+	header.Cap = count
+	header.Len = count
+	header.Data = uintptr(unsafe.Pointer(cArray))
+	return goSlice
+}
+
+// Fetch field as list of 64-bit integers
+func (feature Feature) FieldAsInteger64List(index int) []int64 {
+	var count int
+	cArray := C.OGR_F_GetFieldAsInteger64List(feature.cval, C.int(index), (*C.int)(unsafe.Pointer(&count)))
+	var goSlice []int64
 	header := (*reflect.SliceHeader)(unsafe.Pointer(&goSlice))
 	header.Cap = count
 	header.Len = count
@@ -1163,6 +1194,11 @@ func (feature Feature) SetFieldInteger(index, value int) {
 	C.OGR_F_SetFieldInteger(feature.cval, C.int(index), C.int(value))
 }
 
+// Set field to 64-bit integer value
+func (feature Feature) SetFieldInteger64(index int, value int64) {
+	C.OGR_F_SetFieldInteger64(feature.cval, C.int(index), C.GIntBig(value))
+}
+
 // Set field to float64 value
 func (feature Feature) SetFieldFloat64(index int, value float64) {
 	C.OGR_F_SetFieldDouble(feature.cval, C.int(index), C.double(value))
@@ -1177,6 +1213,16 @@ func (feature Feature) SetFieldString(index int, value string) {
 
 // Set field to list of integers
 func (feature Feature) SetFieldIntegerList(index int, value []int) {
+	C.OGR_F_SetFieldIntegerList(
+		feature.cval,
+		C.int(index),
+		C.int(len(value)),
+		(*C.int)(unsafe.Pointer(&value[0])),
+	)
+}
+
+// Set field to list of 64-bit integers
+func (feature Feature) SetFieldInteger64List(index int, value []int64) {
 	C.OGR_F_SetFieldIntegerList(
 		feature.cval,
 		C.int(index),
@@ -1280,6 +1326,11 @@ func (feature Feature) StlyeString() string {
 func (feature Feature) SetStyleString(style string) {
 	cStyle := C.CString(style)
 	C.OGR_F_SetStyleStringDirectly(feature.cval, cStyle)
+}
+
+// Returns true if this contains a null pointer
+func (feature Feature) IsNull() bool {
+	return feature.cval == nil
 }
 
 /* -------------------------------------------------------------------- */
