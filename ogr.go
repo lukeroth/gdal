@@ -1289,13 +1289,13 @@ func (feature Feature) SetFieldDateTime(index int, dt time.Time) {
 }
 
 // Fetch feature indentifier
-func (feature Feature) FID() int {
+func (feature Feature) FID() int64 {
     fid := C.OGR_F_GetFID(feature.cval)
-    return int(fid)
+    return int64(fid)
 }
 
 // Set feature identifier
-func (feature Feature) SetFID(fid int) error {
+func (feature Feature) SetFID(fid int64) error {
     return C.OGR_F_SetFID(feature.cval, C.GIntBig(fid)).Err()
 }
 
@@ -1394,12 +1394,12 @@ func (layer Layer) NextFeature() *Feature {
 }
 
 // Move read cursor to the provided index
-func (layer Layer) SetNextByIndex(index int) error {
+func (layer Layer) SetNextByIndex(index int64) error {
     return C.OGR_L_SetNextByIndex(layer.cval, C.GIntBig(index)).Err()
 }
 
 // Fetch a feature by its index
-func (layer Layer) Feature(index int) Feature {
+func (layer Layer) Feature(index int64) Feature {
     feature := C.OGR_L_GetFeature(layer.cval, C.GIntBig(index))
     return Feature{feature}
 }
@@ -1415,7 +1415,7 @@ func (layer Layer) Create(feature Feature) error {
 }
 
 // Delete indicated feature from layer
-func (layer Layer) Delete(index int) error {
+func (layer Layer) Delete(index int64) error {
     return C.OGR_L_DeleteFeature(layer.cval, C.GIntBig(index)).Err()
 }
 
