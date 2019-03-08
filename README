@@ -16,15 +16,15 @@ Installation
 Compatibility
 -------------
 
-This software has been tested most recently on Windows 7, using MinGW32_x64, GDAL version 1.11.
+This software has been tested most recently on Ubuntu 18.10, GDAL version 2.3.2.
 
 -------------
 Examples
 -------------
 
 -------------
-Status (4/17/2015)
+Status (3/08/2019)
 -------------
 
 The majority of GDAL functionality exposed by the C API is available, as well as much of the OGR API.
-Most functionality is not yet covered by tests or benchmarks.
+Most functionality is not covered by tests or benchmarks.
