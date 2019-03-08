@@ -119,6 +119,7 @@ func (env Envelope) Union(other Envelope) {
         env.cval.MaxX = other.cval.MaxX
         env.cval.MaxY = other.cval.MaxY
     }
+    return env
 }
 
 // Return the intersection of this envelope with another
@@ -141,6 +142,7 @@ func (env Envelope) Intersect(other Envelope) {
         env.cval.MaxX = 0
         env.cval.MaxY = 0
     }
+    return env
 }
 
 // Test if one envelope intersects another
