@@ -296,6 +296,11 @@ func (ce *ColorEntry) Set(c1, c2, c3, c4 uint) {
 	ce.cval.c4 = C.short(c4)
 }
 
+func (ce *ColorEntry) Get() (c1, c2, c3, c4 uint8) {
+	 
+	return *(*uint8)(unsafe.Pointer(&ce.cval.c1)), *(*uint8)(unsafe.Pointer(&ce.cval.c2)), *(*uint8)(unsafe.Pointer(&ce.cval.c3)), *(*uint8)(unsafe.Pointer(&ce.cval.c4))
+}
+
 
 type VSILFILE struct {
 	cval *C.VSILFILE
