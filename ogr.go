@@ -570,6 +570,15 @@ func (geom Geometry) Distance(other Geometry) float64 {
     return float64(dist)
 }
 
+// Compute 3D distance between thie geometry and the other.
+// This method is built on the SFCGAL library,
+// check it for the definition of the geometry operation.
+// If OGR is built without the SFCGAL library, this method will always return -1.0
+func (geom Geometry) Distance3D(other Geometry) float64 {
+    dist := C.OGR_G_Distance3D(geom.cval, other.cval)
+    return float64(dist)
+}
+
 // Compute length of geometry
 func (geom Geometry) Length() float64 {
     length := C.OGR_G_Length(geom.cval)
