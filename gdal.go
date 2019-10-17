@@ -297,10 +297,9 @@ func (ce *ColorEntry) Set(c1, c2, c3, c4 uint) {
 }
 
 func (ce *ColorEntry) Get() (c1, c2, c3, c4 uint8) {
-	 
+
 	return *(*uint8)(unsafe.Pointer(&ce.cval.c1)), *(*uint8)(unsafe.Pointer(&ce.cval.c2)), *(*uint8)(unsafe.Pointer(&ce.cval.c3)), *(*uint8)(unsafe.Pointer(&ce.cval.c4))
 }
-
 
 type VSILFILE struct {
 	cval *C.VSILFILE
@@ -748,6 +747,21 @@ func (object *Driver) MetadataItem(name, domain string) string {
 	)
 }
 func (object *Dataset) MetadataItem(name, domain string) string {
+	c_name := C.CString(name)
+	defer C.free(unsafe.Pointer(c_name))
+
+	c_domain := C.CString(domain)
+	defer C.free(unsafe.Pointer(c_domain))
+
+	return C.GoString(
+		C.GDALGetMetadataItem(
+			C.GDALMajorObjectH(unsafe.Pointer(object.cval)),
+			c_name, c_domain,
+		),
+	)
+}
+
+func (object *RasterBand) MetadataItem(name, domain string) string {
 	c_name := C.CString(name)
 	defer C.free(unsafe.Pointer(c_name))
 
@@ -1824,7 +1838,6 @@ func VSIReadDirRecursive(filename string) []string {
 
 	return strings
 }
-
 
 // Open file.
 func VSIFOpenL(fileName string, fileAccess string) (VSILFILE, error) {
