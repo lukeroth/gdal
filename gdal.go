@@ -667,7 +667,7 @@ func (dataset *Dataset) Metadata(domain string) []string {
 	q := uintptr(unsafe.Pointer(p))
 	for {
 		p = (**C.char)(unsafe.Pointer(q))
-		if *p == nil {
+		if p == nil {
 			break
 		}
 		strings = append(strings, C.GoString(*p))
