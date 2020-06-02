@@ -62,14 +62,14 @@ func main() {
 		return
 	}
 	//var nX, nY uint = 420, 470
-	var nX, nY uint = 420, 470
+	var nX, nY uint = 42, 47
 
 	fmt.Printf("Allocating buffer\n")
 	buffer := make([]float64, nX*nY)
 	fmt.Printf("Calling gdal.CreateGrid\n")
 	if err := gdal.CreateGrid(
 		gdal.GGA_Linear,
-		[]string{"0", "0.0"},
+		//[]string{"0", "0.0"},
 		x, y, z,
 		nX, nY,
 		buffer,

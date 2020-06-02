@@ -340,22 +340,13 @@ const (
 // )
 func CreateGrid(
 	algo GDALGridAlgorithm,
-	options []string,
+	//options []string,
 	x, y, z []float64,
 	nX, nY uint,
 	buffer interface{}, // should be pre-initialized slice!
 	progress ProgressFunc,
 	data interface{},
 ) error {
-	// options
-	length := len(options)
-	ooptions := make([]*C.char, length+1)
-	for i := 0; i < length; i++ {
-		ooptions[i] = C.CString(options[i])
-		defer C.free(unsafe.Pointer(ooptions[i]))
-	}
-	ooptions[length] = (*C.char)(unsafe.Pointer(nil))
-
 	if len(x) != len(y) || len(x) != len(z) {
 		return errors.New("lengths of x, y, z should equal")
 	}
@@ -383,11 +374,17 @@ func CreateGrid(
 
 	arg := &goGDALProgressFuncProxyArgs{progress, data}
 
+	options := &C.GDALGridLinearOptions{dfRadius: C.double(-1.0), dfNoDataValue: C.double(0.0)}
+	//options := (*C.GDALGridLinearOptions)(C.malloc(C.size_t(C.sizeof_GDALGridLinearOptions)))
+	//defer C.free(unsafe.Pointer(options))
+	//(*options).dfRadius = C.double(-1.0)
+	//(*options).dfNoDataValue = C.double(0.0)
+
 	fmt.Println(">> calling C.GDALGridCreate")
 	fmt.Printf("lx=%.5f, hx=%.5f, ly=%.5f, hy=%.5f, nx=%d, ny=%d\n", lx, hx, ly, hy, nX, nY)
 	return C.GDALGridCreate(
 		C.GDALGridAlgorithm(algo),
-		unsafe.Pointer(&ooptions[0]),
+		unsafe.Pointer(options),
 		C.uint(uint(len(x))),
 		(*C.double)(unsafe.Pointer(&x[0])),
 		(*C.double)(unsafe.Pointer(&y[0])),
