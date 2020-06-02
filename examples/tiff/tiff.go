@@ -3,7 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/lukeroth/gdal"
+
+	"github.com/mtfelian/gdal"
 )
 
 func main() {

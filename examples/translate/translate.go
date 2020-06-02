@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	"../.."
+	"github.com/mtfelian/gdal"
 )
 
 func main() {
