@@ -11,7 +11,7 @@ func main() {
 	flag.Parse()
 	filename := flag.Arg(0)
 	if filename == "" {
-		fmt.Printf("Usage: test_tiff [filename]\n")
+		fmt.Printf("Usage: tiff [filename]\n")
 		return
 	}
 	fmt.Printf("Filename: %s\n", filename)

@@ -14,17 +14,17 @@ func main() {
 	inputFile := flag.Arg(0)
 	outputFile := flag.Arg(1)
 	if len(flag.Args()) < 3 {
-		fmt.Printf("Usage: test_warp inputFile outputFile options\n")
+		fmt.Printf("Usage: warp inputFile outputFile options\n")
 		return
 	}
 	options := flag.Args()[2:]
 	if inputFile == "" {
-		fmt.Printf("Usage: test_warp inputFile outputFile options\n")
+		fmt.Printf("Usage: warp inputFile outputFile options\n")
 		return
 	}
 	fmt.Printf("Input filename: %s\n", inputFile)
 	if outputFile == "" {
-		fmt.Printf("Usage: test_warp inputFile outputFile options\n")
+		fmt.Printf("Usage: warp inputFile outputFile options\n")
 		return
 	}
 	fmt.Printf("Output filename: %s\n", outputFile)

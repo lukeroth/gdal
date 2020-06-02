@@ -24,7 +24,7 @@ A simple program to create a georeferenced blank 256x256 GeoTIFF:
 		flag.Parse()
 		filename := flag.Arg(0)
 		if filename == "" {
-			fmt.Printf("Usage: test_tiff [filename]\n")
+			fmt.Printf("Usage: tiff [filename]\n")
 			return
 		}
 		buffer := make([]uint8, 256 * 256)

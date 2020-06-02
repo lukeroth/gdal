@@ -383,6 +383,8 @@ func CreateGrid(
 
 	arg := &goGDALProgressFuncProxyArgs{progress, data}
 
+	fmt.Println(">> calling C.GDALGridCreate")
+	fmt.Printf("lx=%.5f, hx=%.5f, ly=%.5f, hy=%.5f, nx=%d, ny=%d\n", lx, hx, ly, hy, nX, nY)
 	return C.GDALGridCreate(
 		C.GDALGridAlgorithm(algo),
 		unsafe.Pointer(&ooptions[0]),
@@ -398,6 +400,8 @@ func CreateGrid(
 		C.uint(nY),
 		C.GDALDataType(dataType),
 		dataPtr,
+		//unsafe.Pointer(nil),
+		//unsafe.Pointer(nil),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
 	).Err()
