@@ -11,7 +11,9 @@ package gdal
 */
 import "C"
 import (
+	"errors"
 	"fmt"
+	"math"
 	"unsafe"
 )
 
@@ -320,11 +322,11 @@ const (
 
 // CPLErr GDALGridCreate(
 // - GDALGridAlgorithm eAlgorithm,
-// const void *poOptions,
-// GUInt32nPoints,
-// const double *padfX,
-// const double *padfY,
-// const double *padfZ,
+// - const void *poOptions,
+// - GUInt32 nPoints,
+// - const double *padfX,
+// - const double *padfY,
+// - const double *padfZ,
 // double dfXMin,
 // double dfXMax,
 // double dfYMin,
@@ -336,7 +338,7 @@ const (
 // GDALProgressFunc pfnProgress,
 // void *pProgressArg
 // )
-func CreateGrid(algo GDALGridAlgorithm, options []string) error {
+func CreateGrid(algo GDALGridAlgorithm, options []string, x, y, z []float64) error {
 	// options
 	length := len(options)
 	ooptions := make([]*C.char, length+1)
@@ -345,10 +347,40 @@ func CreateGrid(algo GDALGridAlgorithm, options []string) error {
 		defer C.free(unsafe.Pointer(ooptions[i]))
 	}
 	ooptions[length] = (*C.char)(unsafe.Pointer(nil))
-	_ = (**C.char)(unsafe.Pointer(&ooptions[0])) // 2nd param to pass
+
+	if len(x) != len(y) || len(x) != len(z) {
+		return errors.New("lengths of x, y, z should equal")
+	}
+
+	var lx, hx, ly, hy = math.MaxFloat64, -math.MaxFloat64, math.MaxFloat64, -math.MaxFloat64
+	for i := range x {
+		if x[i] < lx {
+			lx = x[i]
+		}
+		if x[i] > hx {
+			hx = x[i]
+		}
+		if y[i] < ly {
+			ly = y[i]
+		}
+		if y[i] > hy {
+			hy = y[i]
+		}
+	}
 
 	return nil
-	//return C.GDALGridCreate(algo, ooptionsA).Err()
+	//return C.GDALGridCreate(
+	//	C.GDALGridAlgorithm(algo),
+	//	(**C.char)(unsafe.Pointer(&ooptions[0])),
+	//	C.Int(len(x)),
+	//	(*C.double)(unsafe.Pointer(&x[0])),
+	//	(*C.double)(unsafe.Pointer(&y[0])),
+	//	(*C.double)(unsafe.Pointer(&z[0])),
+	//	C.double(lx),
+	//	C.double(hx),
+	//	C.double(ly),
+	//	C.double(hy),
+	//).Err()
 }
 
 //Unimplemented: ComputeMatchingPoints
