@@ -302,5 +302,53 @@ func (src RasterBand) SieveFilter(
 /* Gridding functions                            */
 /* --------------------------------------------- */
 
-//Unimplemented: CreateGrid
+type GDALGridAlgorithm int
+
+const (
+	GGA_InverseDistancetoAPower                = GDALGridAlgorithm(C.GGA_InverseDistanceToAPower)
+	GGA_MovingAverage                          = GDALGridAlgorithm(C.GGA_MovingAverage)
+	GGA_NearestNeighbor                        = GDALGridAlgorithm(C.GGA_NearestNeighbor)
+	GGA_MetricMinimum                          = GDALGridAlgorithm(C.GGA_MetricMinimum)
+	GGA_MetricMaximum                          = GDALGridAlgorithm(C.GGA_MetricMaximum)
+	GGA_MetricRange                            = GDALGridAlgorithm(C.GGA_MetricRange)
+	GGA_MetricCount                            = GDALGridAlgorithm(C.GGA_MetricCount)
+	GGA_MetricAverageDistance                  = GDALGridAlgorithm(C.GGA_MetricAverageDistance)
+	GGA_MetricAverageDistancePts               = GDALGridAlgorithm(C.GGA_MetricAverageDistancePts)
+	GGA_Linear                                 = GDALGridAlgorithm(C.GGA_Linear)
+	GGA_InverseDistanceToAPowerNearestNeighbor = GDALGridAlgorithm(C.GGA_InverseDistanceToAPowerNearestNeighbor)
+)
+
+// CPLErr GDALGridCreate(
+// - GDALGridAlgorithm eAlgorithm,
+// const void *poOptions,
+// GUInt32nPoints,
+// const double *padfX,
+// const double *padfY,
+// const double *padfZ,
+// double dfXMin,
+// double dfXMax,
+// double dfYMin,
+// double dfYMax,
+// GUInt32 nXSize,
+// GUInt32 nYSize,
+// GDALDataType eType,
+// void *pData,
+// GDALProgressFunc pfnProgress,
+// void *pProgressArg
+// )
+func CreateGrid(algo GDALGridAlgorithm, options []string) error {
+	// options
+	length := len(options)
+	ooptions := make([]*C.char, length+1)
+	for i := 0; i < length; i++ {
+		ooptions[i] = C.CString(options[i])
+		defer C.free(unsafe.Pointer(ooptions[i]))
+	}
+	ooptions[length] = (*C.char)(unsafe.Pointer(nil))
+	_ = (**C.char)(unsafe.Pointer(&ooptions[0])) // 2nd param to pass
+
+	return nil
+	//return C.GDALGridCreate(algo, ooptionsA).Err()
+}
+
 //Unimplemented: ComputeMatchingPoints
