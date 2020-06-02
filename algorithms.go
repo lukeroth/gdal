@@ -327,18 +327,26 @@ const (
 // - const double *padfX,
 // - const double *padfY,
 // - const double *padfZ,
-// double dfXMin,
-// double dfXMax,
-// double dfYMin,
-// double dfYMax,
-// GUInt32 nXSize,
-// GUInt32 nYSize,
-// GDALDataType eType,
-// void *pData,
-// GDALProgressFunc pfnProgress,
-// void *pProgressArg
+// - double dfXMin,
+// - double dfXMax,
+// - double dfYMin,
+// - double dfYMax,
+// - GUInt32 nXSize,
+// - GUInt32 nYSize,
+// - GDALDataType eType,
+// - void *pData,
+// - GDALProgressFunc pfnProgress,
+// - void *pProgressArg
 // )
-func CreateGrid(algo GDALGridAlgorithm, options []string, x, y, z []float64) error {
+func CreateGrid(
+	algo GDALGridAlgorithm,
+	options []string,
+	x, y, z []float64,
+	nX, nY uint,
+	buffer interface{}, // should be pre-initialized slice!
+	progress ProgressFunc,
+	data interface{},
+) error {
 	// options
 	length := len(options)
 	ooptions := make([]*C.char, length+1)
@@ -368,19 +376,31 @@ func CreateGrid(algo GDALGridAlgorithm, options []string, x, y, z []float64) err
 		}
 	}
 
-	return nil
-	//return C.GDALGridCreate(
-	//	C.GDALGridAlgorithm(algo),
-	//	(**C.char)(unsafe.Pointer(&ooptions[0])),
-	//	C.Int(len(x)),
-	//	(*C.double)(unsafe.Pointer(&x[0])),
-	//	(*C.double)(unsafe.Pointer(&y[0])),
-	//	(*C.double)(unsafe.Pointer(&z[0])),
-	//	C.double(lx),
-	//	C.double(hx),
-	//	C.double(ly),
-	//	C.double(hy),
-	//).Err()
+	dataType, dataPtr, err := determineBufferType(buffer)
+	if err != nil {
+		return err
+	}
+
+	arg := &goGDALProgressFuncProxyArgs{progress, data}
+
+	return C.GDALGridCreate(
+		C.GDALGridAlgorithm(algo),
+		unsafe.Pointer(&ooptions[0]),
+		C.uint(uint(len(x))),
+		(*C.double)(unsafe.Pointer(&x[0])),
+		(*C.double)(unsafe.Pointer(&y[0])),
+		(*C.double)(unsafe.Pointer(&z[0])),
+		C.double(lx),
+		C.double(hx),
+		C.double(ly),
+		C.double(hy),
+		C.uint(nX),
+		C.uint(nY),
+		C.GDALDataType(dataType),
+		dataPtr,
+		C.goGDALProgressFuncProxyB(),
+		unsafe.Pointer(arg),
+	).Err()
 }
 
 //Unimplemented: ComputeMatchingPoints

@@ -880,18 +880,7 @@ func (dataset Dataset) AutoCreateWarpedVRT(srcWKT, dstWKT string, resampleAlg Re
 // Unimplemented: GDALBeginAsyncReader
 // Unimplemented: GDALEndAsyncReader
 
-// Read / write a region of image data from multiple bands
-func (dataset Dataset) IO(
-	rwFlag RWFlag,
-	xOff, yOff, xSize, ySize int,
-	buffer interface{},
-	bufXSize, bufYSize int,
-	bandCount int,
-	bandMap []int,
-	pixelSpace, lineSpace, bandSpace int,
-) error {
-	var dataType DataType
-	var dataPtr unsafe.Pointer
+func determineBufferType(buffer interface{}) (dataType DataType, dataPtr unsafe.Pointer, err error) {
 	switch data := buffer.(type) {
 	case []int8:
 		dataType = Byte
@@ -918,7 +907,24 @@ func (dataset Dataset) IO(
 		dataType = Float64
 		dataPtr = unsafe.Pointer(&data[0])
 	default:
-		return fmt.Errorf("Error: buffer is not a valid data type (must be a valid numeric slice)")
+		err = fmt.Errorf("Error: buffer is not a valid data type (must be a valid numeric slice)")
+	}
+	return
+}
+
+// Read / write a region of image data from multiple bands
+func (dataset Dataset) IO(
+	rwFlag RWFlag,
+	xOff, yOff, xSize, ySize int,
+	buffer interface{},
+	bufXSize, bufYSize int,
+	bandCount int,
+	bandMap []int,
+	pixelSpace, lineSpace, bandSpace int,
+) error {
+	dataType, dataPtr, err := determineBufferType(buffer)
+	if err != nil {
+		return err
 	}
 
 	return C.GDALDatasetRasterIO(
@@ -1153,35 +1159,9 @@ func (rasterBand RasterBand) IO(
 	bufXSize, bufYSize int,
 	pixelSpace, lineSpace int,
 ) error {
-	var dataType DataType
-	var dataPtr unsafe.Pointer
-	switch data := buffer.(type) {
-	case []int8:
-		dataType = Byte
-		dataPtr = unsafe.Pointer(&data[0])
-	case []uint8:
-		dataType = Byte
-		dataPtr = unsafe.Pointer(&data[0])
-	case []int16:
-		dataType = Int16
-		dataPtr = unsafe.Pointer(&data[0])
-	case []uint16:
-		dataType = UInt16
-		dataPtr = unsafe.Pointer(&data[0])
-	case []int32:
-		dataType = Int32
-		dataPtr = unsafe.Pointer(&data[0])
-	case []uint32:
-		dataType = UInt32
-		dataPtr = unsafe.Pointer(&data[0])
-	case []float32:
-		dataType = Float32
-		dataPtr = unsafe.Pointer(&data[0])
-	case []float64:
-		dataType = Float64
-		dataPtr = unsafe.Pointer(&data[0])
-	default:
-		return fmt.Errorf("Error: buffer is not a valid data type (must be a valid numeric slice)")
+	dataType, dataPtr, err := determineBufferType(buffer)
+	if err != nil {
+		return err
 	}
 
 	return C.GDALRasterIO(
