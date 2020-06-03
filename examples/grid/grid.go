@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"strconv"
 	"strings"
 
@@ -16,8 +18,7 @@ func readFile(filename string) (x, y, z []float64, err error) {
 	if b, err = ioutil.ReadFile(filename); err != nil {
 		return
 	}
-	s := string(b)
-	arr := strings.Split(s, "\n")
+	arr := strings.Split(string(b), "\n")
 	x, y, z = make([]float64, len(arr)), make([]float64, len(arr)), make([]float64, len(arr))
 	for i, el := range arr {
 		xyz := strings.Split(el, ",")
@@ -38,53 +39,71 @@ func readFile(filename string) (x, y, z []float64, err error) {
 	return
 }
 
-func writeFile(filename string, z []float64) error {
-	var s string
+func writeFile(filename string, z []float64) (err error) {
+	var b bytes.Buffer
 	for i := range z {
-		s += fmt.Sprintf("%.5f\n", z[i])
+		if _, err = b.WriteString(fmt.Sprintf("%.5f\n", z[i])); err != nil {
+			return
+		}
 	}
-	return ioutil.WriteFile(filename, []byte(s), 0644)
+	return ioutil.WriteFile(filename, b.Bytes(), 0644)
 }
 
 func main() {
 	flag.Parse()
 	filename := flag.Arg(0)
 	if filename == "" {
-		fmt.Printf("Usage: grid [filename]\n")
+		fmt.Println("Usage: grid [filename]")
+		fmt.Println("Should be a CSV with columns y,x,z")
 		return
 	}
 	fmt.Printf("Filename: %s\n", filename)
 
-	fmt.Printf("Reading file\n")
+	fmt.Println("Reading file")
 	x, y, z, err := readFile(filename)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
-	//var nX, nY uint = 420, 470
-	var nX, nY uint = 42, 47
+	var nX, nY uint = 420, 470
 
-	fmt.Printf("Allocating buffer\n")
-	buffer := make([]float64, nX*nY)
-	fmt.Printf("Calling gdal.CreateGrid\n")
-	if err := gdal.CreateGrid(
-		gdal.GGA_Linear,
-		//[]string{"0", "0.0"},
+	// finding max and min values
+	var xMin, xMax, yMin, yMax = math.MaxFloat64, -math.MaxFloat64, math.MaxFloat64, -math.MaxFloat64
+	for i := range x {
+		if x[i] < xMin {
+			xMin = x[i]
+		}
+		if x[i] > xMax {
+			xMax = x[i]
+		}
+		if y[i] < yMin {
+			yMin = y[i]
+		}
+		if y[i] > yMax {
+			yMax = y[i]
+		}
+	}
+
+	fmt.Println("Calling gdal.GridCreate")
+	data, err := gdal.GridCreate(
+		gdal.GA_InverseDistancetoAPower,
+		gdal.GridInverseDistanceToAPowerOptions{Power: 2},
 		x, y, z,
+		xMin, xMax, yMin, yMax,
 		nX, nY,
-		buffer,
 		gdal.DummyProgress,
 		nil,
-	); err != nil {
-		fmt.Println("gdal.CreateGrid error: ", err.Error())
+	)
+	if err != nil {
+		fmt.Println("gdal.GridCreate error: ", err.Error())
 		return
 	}
 
-	fmt.Printf("Writing file\n")
-	if err := writeFile(filename+".out", buffer); err != nil {
+	fmt.Println("Writing file")
+	if err := writeFile(filename+".out", data); err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 
-	fmt.Printf("End program\n")
+	fmt.Println("End program")
 }
