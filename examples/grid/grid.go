@@ -39,10 +39,20 @@ func readFile(filename string) (x, y, z []float64, err error) {
 	return
 }
 
-func writeFile(filename string, z []float64) (err error) {
+func step(xMin, xMax, yMin, yMax float64, nX, nY uint) (stepX float64, stepY float64) {
+	return (xMax - xMin) / float64(nX), (yMax - yMin) / float64(nY)
+}
+
+func coordsForIndex(i int, xMin, xStep, yMin, yStep float64, nX uint) (x float64, y float64) {
+	return xStep*float64(i%int(nX)) + xMin + xStep/2, yStep*float64(i/int(nX)) + yMin + yStep/2
+}
+
+func writeFile(filename string, z []float64, xMin, xMax, yMin, yMax float64, nX, nY uint) (err error) {
 	var b bytes.Buffer
+	xStep, yStep := step(xMin, xMax, yMin, yMax, nX, nY)
 	for i := range z {
-		if _, err = b.WriteString(fmt.Sprintf("%.5f\n", z[i])); err != nil {
+		x, y := coordsForIndex(i, xMin, xStep, yMin, yStep, nX)
+		if _, err = b.WriteString(fmt.Sprintf("%f %f %f\n", x, y, z[i])); err != nil {
 			return
 		}
 	}
@@ -100,7 +110,7 @@ func main() {
 	}
 
 	fmt.Println("Writing file")
-	if err := writeFile(filename+".out", data); err != nil {
+	if err := writeFile(filename+".out", data, xMin, xMax, yMin, yMax, nX, nY); err != nil {
 		fmt.Println(err.Error())
 		return
 	}
