@@ -1,5 +1,7 @@
-module github.com/mtfelian/gdal/examples/tiff
+module github.com/lukeroth/gdal/examples/tiff
 
 go 1.13
 
-require github.com/mtfelian/gdal v0.0.0-20200531173823-ccd159bab379
+replace github.com/lukeroth/gdal => ../..
+
+require github.com/lukeroth/gdal v0.0.0-00010101000000-000000000000

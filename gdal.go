@@ -907,7 +907,7 @@ func determineBufferType(buffer interface{}) (dataType DataType, dataPtr unsafe.
 		dataType = Float64
 		dataPtr = unsafe.Pointer(&data[0])
 	default:
-		err = fmt.Errorf("Error: buffer is not a valid data type (must be a valid numeric slice)")
+		err = fmt.Errorf("error: buffer is not a valid data type (must be a valid numeric slice)")
 	}
 	return
 }

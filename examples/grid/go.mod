@@ -1,4 +1,4 @@
-module github.com/lukeroth/gdal/examples/warp
+module github.com/lukeroth/gdal/examples/grid
 
 go 1.13
 
