@@ -2,10 +2,7 @@
 
 package gdal
 
-// #cgo linux pkg-config: gdal
-
 /*
-#cgo LDFLAGS: -lgdal
-#cgo CFLAGS: -I/usr/include/gdal
+#cgo pkg-config: gdal
 */
 import "C"
