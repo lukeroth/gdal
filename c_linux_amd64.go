@@ -2,7 +2,10 @@
 
 package gdal
 
+// #cgo linux pkg-config: gdal
+
 /*
-#cgo LDFLAGS: -lgdal -leccodes -leccodes_memfs -lpng -laec -ljasper -lopenjp2 -lpthread -fopenmp -lz -lm
+#cgo LDFLAGS: -lgdal
+#cgo CFLAGS: -I/usr/include/gdal
 */
 import "C"
