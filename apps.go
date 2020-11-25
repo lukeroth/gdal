@@ -29,11 +29,12 @@ type GDALWarpAppOptions struct {
 	cval *C.GDALWarpAppOptions
 }
 
+// GDALTranslate converts raster data between different formats.
 func GDALTranslate(
 	destName string,
 	srcDS Dataset,
 	options []string,
-) Dataset {
+) (Dataset, int32) {
 
 	var err C.int
 
@@ -54,7 +55,7 @@ func GDALTranslate(
 		&err,
 	)
 
-	return Dataset{outputDs}
+	return Dataset{outputDs}, int32(err)
 
 }
 

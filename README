@@ -8,7 +8,7 @@ The gdal.go package provides a go wrapper for GDAL, the Geospatial Data Abstract
 Installation
 -------------
 
-1) go get github.com/lukeroth/gdal
+1) go get github.com/fkmatsuda/gdal
 2) Set the GDAL library and include directories to the appropriate locations.
 3) go build
 
