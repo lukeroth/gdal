@@ -359,6 +359,28 @@ func goGDALProgressFuncProxyA(complete C.double, message *C.char, data unsafe.Po
 	)
 }
 
+// CPLSetConfigOption
+func CPLSetConfigOption(key, val string) {
+
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+	cVal := C.CString(val)
+	defer C.free(unsafe.Pointer(cVal))
+	C.CPLSetConfigOption(cKey, cVal)
+}
+
+// CPLGetConfigOption
+func CPLGetConfigOption(key, val string) string {
+
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+
+	cVal := C.CString(val)
+	defer C.free(unsafe.Pointer(cVal))
+	return C.GoString(C.CPLGetConfigOption(cKey, cVal))
+
+}
+
 /* ==================================================================== */
 /*      Registration/driver related.                                    */
 /* ==================================================================== */
