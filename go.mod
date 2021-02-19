@@ -1,3 +1,3 @@
-module github.com/mtfelian/gdal
+module github.com/mtfelian/gdal/v2
 
-go 1.13
+go 1.15
