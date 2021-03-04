@@ -1,7 +1,7 @@
-module github.com/mtfelian/gdal/examples/warp
+module github.com/lukeroth/gdal/examples/warp
 
 go 1.13
 
-replace github.com/mtfelian/gdal => ../..
+replace github.com/lukeroth/gdal => ../..
 
-require github.com/mtfelian/gdal v0.0.0-00010101000000-000000000000
+require github.com/lukeroth/gdal v0.0.0-00010101000000-000000000000

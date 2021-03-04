@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mtfelian/gdal"
+	"github.com/lukeroth/gdal"
 )
 
 func readFile(filename string) (x, y, z []float64, err error) {
