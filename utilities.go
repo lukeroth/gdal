@@ -53,7 +53,7 @@ func Warp(dstDS string, destDS *Dataset, sourceDS []Dataset, options []string) (
 	var cerr C.int
 	cdstDS := C.CString(dstDS)
 	defer C.free(unsafe.Pointer(cdstDS))
-	var destDScval C.GDALDatasetH = nil
+	var destDScval C.GDALDatasetH
 	if destDS != nil {
 		destDScval = destDS.cval
 	}
