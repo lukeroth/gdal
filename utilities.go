@@ -27,8 +27,8 @@ func stringArrayContains(array []string, needle string) bool {
 	return false
 }
 
-func Warp(dstDS string, sourceDS []Dataset, options []string) (Dataset, error) {
-	if dstDS == "" {
+func Warp(dstDS string, destDS *Dataset, sourceDS []Dataset, options []string) (Dataset, error) {
+	if dstDS == "" && destDS == nil {
 		dstDS = "MEM:::"
 		if !stringArrayContains(options, "-of") {
 			options = append([]string{"-of", "MEM"}, options...)
@@ -53,7 +53,11 @@ func Warp(dstDS string, sourceDS []Dataset, options []string) (Dataset, error) {
 	var cerr C.int
 	cdstDS := C.CString(dstDS)
 	defer C.free(unsafe.Pointer(cdstDS))
-	ds := C.GDALWarp(cdstDS, nil,
+	var destDScval C.GDALDatasetH = nil
+	if destDS != nil {
+		destDScval = destDS.cval
+	}
+	ds := C.GDALWarp(cdstDS, destDScval,
 		C.int(len(sourceDS)),
 		(*C.GDALDatasetH)(unsafe.Pointer(&srcDS[0])),
 		warpopts, &cerr)
