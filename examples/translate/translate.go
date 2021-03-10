@@ -32,7 +32,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	outputDs := gdal.GDALTranslate(outputFile, ds, options)
+	outputDs, err := gdal.Translate(outputFile, ds, options)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	defer outputDs.Close()
 

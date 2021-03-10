@@ -37,7 +37,10 @@ func main() {
 	}
 	defer ds.Close()
 
-	outputDs := gdal.GDALWarp(outputFile, gdal.Dataset{}, []gdal.Dataset{ds}, options)
+	outputDs, err := gdal.Warp(outputFile, nil, []gdal.Dataset{ds}, options)
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer outputDs.Close()
 
 	fmt.Printf("End program\n")

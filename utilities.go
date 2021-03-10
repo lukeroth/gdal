@@ -3,11 +3,6 @@ package gdal
 /*
 #include "go_gdal.h"
 #include "gdal_version.h"
-
-#cgo linux  pkg-config: gdal
-#cgo darwin pkg-config: gdal
-#cgo windows LDFLAGS: -Lc:/gdal/release-1600-x64/lib -lgdal_i
-#cgo windows CFLAGS: -IC:/gdal/release-1600-x64/include
 */
 import "C"
 import (
@@ -32,8 +27,8 @@ func stringArrayContains(array []string, needle string) bool {
 	return false
 }
 
-func Warp(dstDS string, sourceDS []Dataset, options []string) (Dataset, error) {
-	if dstDS == "" {
+func Warp(dstDS string, destDS *Dataset, sourceDS []Dataset, options []string) (Dataset, error) {
+	if dstDS == "" && destDS == nil {
 		dstDS = "MEM:::"
 		if !stringArrayContains(options, "-of") {
 			options = append([]string{"-of", "MEM"}, options...)
@@ -58,7 +53,11 @@ func Warp(dstDS string, sourceDS []Dataset, options []string) (Dataset, error) {
 	var cerr C.int
 	cdstDS := C.CString(dstDS)
 	defer C.free(unsafe.Pointer(cdstDS))
-	ds := C.GDALWarp(cdstDS, nil,
+	var destDScval C.GDALDatasetH
+	if destDS != nil {
+		destDScval = destDS.cval
+	}
+	ds := C.GDALWarp(cdstDS, destDScval,
 		C.int(len(sourceDS)),
 		(*C.GDALDatasetH)(unsafe.Pointer(&srcDS[0])),
 		warpopts, &cerr)
@@ -168,5 +167,43 @@ func Rasterize(dstDS string, sourceDS Dataset, options []string) (Dataset, error
 		return Dataset{}, fmt.Errorf("rasterize failed with code %d", cerr)
 	}
 	return Dataset{ds}, nil
+}
 
+func DEMProcessing(dstDS string, sourceDS Dataset, processing string, colorFileName string, options []string) (Dataset, error) {
+	if dstDS == "" {
+		dstDS = "MEM:::"
+		if !stringArrayContains(options, "-f") {
+			options = append([]string{"-of", "MEM"}, options...)
+		}
+	}
+	length := len(options)
+	opts := make([]*C.char, length+1)
+	for i := 0; i < length; i++ {
+		opts[i] = C.CString(options[i])
+		defer C.free(unsafe.Pointer(opts[i]))
+	}
+	opts[length] = (*C.char)(unsafe.Pointer(nil))
+	demprocessingopts := C.GDALDEMProcessingOptionsNew(
+		(**C.char)(unsafe.Pointer(&opts[0])),
+		(*C.GDALDEMProcessingOptionsForBinary)(unsafe.Pointer(nil)))
+	defer C.GDALDEMProcessingOptionsFree(demprocessingopts)
+
+	var cerr C.int
+	cdstDS := C.CString(dstDS)
+	defer C.free(unsafe.Pointer(cdstDS))
+
+	cprocessing := C.CString(processing)
+	defer C.free(unsafe.Pointer(cprocessing))
+	ccolorFileName := C.CString(colorFileName)
+	defer C.free(unsafe.Pointer(ccolorFileName))
+	ds := C.GDALDEMProcessing(cdstDS,
+		sourceDS.cval,
+		cprocessing,
+		ccolorFileName,
+		demprocessingopts,
+		&cerr)
+	if cerr != 0 {
+		return Dataset{}, fmt.Errorf("demprocessing failed with code %d", cerr)
+	}
+	return Dataset{ds}, nil
 }

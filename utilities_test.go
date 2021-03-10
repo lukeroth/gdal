@@ -53,7 +53,7 @@ func TestWarp(t *testing.T) {
 
 	opts := []string{"-t_srs", "epsg:3857", "-of", "GPKG"}
 
-	dstDS, err := Warp("/tmp/tiles-3857.gpkg", []Dataset{srcDS}, opts)
+	dstDS, err := Warp("/tmp/tiles-3857.gpkg", nil, []Dataset{srcDS}, opts)
 	if err != nil {
 		t.Errorf("Warp: %v", err)
 	}
@@ -80,6 +80,27 @@ func TestTranslate(t *testing.T) {
 	dstDS, err = Open("/tmp/tiles.tif", ReadOnly)
 	if err != nil {
 		t.Errorf("Open after raster translate: %v", err)
+	}
+	dstDS.Close()
+}
+
+func TestDEMProcessing(t *testing.T) {
+	srcDS, err := Open("testdata/demproc.tif", ReadOnly)
+	if err != nil {
+		t.Errorf("Open: %v", err)
+	}
+
+	opts := []string{"-of", "GTiff"}
+
+	dstDS, err := DEMProcessing("/tmp/demproc_output.tif", srcDS, "color-relief", "testdata/demproc_colors.txt", opts)
+	if err != nil {
+		t.Errorf("DEMProcessing: %v", err)
+	}
+	dstDS.Close()
+
+	dstDS, err = Open("/tmp/demproc_output.tif", ReadOnly)
+	if err != nil {
+		t.Errorf("Open after raster DEM Processing: %v", err)
 	}
 	dstDS.Close()
 }

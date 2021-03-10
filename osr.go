@@ -3,11 +3,6 @@ package gdal
 /*
 #include "go_gdal.h"
 #include "gdal_version.h"
-
-#cgo linux  pkg-config: gdal
-#cgo darwin pkg-config: gdal
-#cgo windows LDFLAGS: -Lc:/gdal/release-1600-x64/lib -lgdal_i
-#cgo windows CFLAGS: -IC:/gdal/release-1600-x64/include
 */
 import "C"
 import (
@@ -1177,7 +1172,3 @@ func (ct CoordinateTransform) Transform(numPoints int, xPoints []float64, yPoint
 	val := C.OCTTransform(ct.cval, C.int(numPoints), (*C.double)(unsafe.Pointer(&xPoints[0])), (*C.double)(unsafe.Pointer(&yPoints[0])), (*C.double)(unsafe.Pointer(&zPoints[0])))
 	return int(val) != 0
 }
-
-
-
-

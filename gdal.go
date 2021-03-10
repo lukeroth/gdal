@@ -3,11 +3,6 @@ package gdal
 /*
 #include "go_gdal.h"
 #include "gdal_version.h"
-
-#cgo linux  pkg-config: gdal
-#cgo darwin pkg-config: gdal
-#cgo windows LDFLAGS: -Lc:/gdal/release-1600-x64/lib -lgdal_i
-#cgo windows CFLAGS: -IC:/gdal/release-1600-x64/include
 */
 import "C"
 import (
@@ -361,7 +356,6 @@ func goGDALProgressFuncProxyA(complete C.double, message *C.char, data unsafe.Po
 
 // CPLSetConfigOption
 func CPLSetConfigOption(key, val string) {
-
 	cKey := C.CString(key)
 	defer C.free(unsafe.Pointer(cKey))
 	cVal := C.CString(val)
@@ -371,14 +365,12 @@ func CPLSetConfigOption(key, val string) {
 
 // CPLGetConfigOption
 func CPLGetConfigOption(key, val string) string {
-
 	cKey := C.CString(key)
 	defer C.free(unsafe.Pointer(cKey))
 
 	cVal := C.CString(val)
 	defer C.free(unsafe.Pointer(cVal))
 	return C.GoString(C.CPLGetConfigOption(cKey, cVal))
-
 }
 
 /* ==================================================================== */
