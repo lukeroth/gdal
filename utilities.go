@@ -27,7 +27,7 @@ func stringArrayContains(array []string, needle string) bool {
 	return false
 }
 
-func BuildVRT(dstDS string, sourceDS []Dataset, srcDSNames, options []string) (Dataset, error) {
+func BuildVRT(dstDS string, sourceDS []Dataset, srcDSFilePath, options []string) (Dataset, error) {
 	if dstDS == "" {
 		dstDS = "MEM:::"
 		if !stringArrayContains(options, "-of") {
@@ -35,10 +35,10 @@ func BuildVRT(dstDS string, sourceDS []Dataset, srcDSNames, options []string) (D
 		}
 	}
 
-	lengthSrc := len(srcDSNames)
+	lengthSrc := len(srcDSFilePath)
 	cOptionsrc := make([]*C.char, lengthSrc+1)
 	for i := 0; i < lengthSrc; i++ {
-		cOptionsrc[i] = C.CString(srcDSNames[i])
+		cOptionsrc[i] = C.CString(srcDSFilePath[i])
 		defer C.free(unsafe.Pointer(cOptionsrc[i]))
 	}
 	cOptionsrc[lengthSrc] = (*C.char)(unsafe.Pointer(nil))
