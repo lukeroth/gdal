@@ -27,6 +27,58 @@ func stringArrayContains(array []string, needle string) bool {
 	return false
 }
 
+func BuildVRT(dstDS string, sourceDS []Dataset, srcDSFilePath, options []string) (Dataset, error) {
+	if dstDS == "" {
+		dstDS = "MEM:::"
+		if !stringArrayContains(options, "-of") {
+			options = append([]string{"-of", "MEM"}, options...)
+		}
+	}
+
+	lengthSrc := len(srcDSFilePath)
+	cOptionsrc := make([]*C.char, lengthSrc+1)
+	for i := 0; i < lengthSrc; i++ {
+		cOptionsrc[i] = C.CString(srcDSFilePath[i])
+		defer C.free(unsafe.Pointer(cOptionsrc[i]))
+	}
+	cOptionsrc[lengthSrc] = (*C.char)(unsafe.Pointer(nil))
+
+	length := len(options)
+	opts := make([]*C.char, length+1)
+	for i := 0; i < length; i++ {
+		opts[i] = C.CString(options[i])
+		defer C.free(unsafe.Pointer(opts[i]))
+	}
+	opts[length] = (*C.char)(unsafe.Pointer(nil))
+	buildVrtopts := C.GDALBuildVRTOptionsNew(
+		(**C.char)(unsafe.Pointer(&opts[0])),
+		(*C.GDALBuildVRTOptionsForBinary)(unsafe.Pointer(nil)))
+	defer C.GDALBuildVRTOptionsFree(buildVrtopts)
+
+	srcDS := make([]C.GDALDatasetH, len(sourceDS))
+	for i, ds := range sourceDS {
+		srcDS[i] = ds.cval
+	}
+	var cerr C.int
+	cdstDS := C.CString(dstDS)
+	defer C.free(unsafe.Pointer(cdstDS))
+
+	ds := C.GDALBuildVRT(
+		cdstDS,
+		C.int(len(srcDS)),
+		(*C.GDALDatasetH)(unsafe.Pointer(&srcDS[0])),
+		(**C.char)(unsafe.Pointer(&cOptionsrc[0])),
+		buildVrtopts,
+		&cerr,
+	)
+
+	if cerr != 0 {
+		return Dataset{}, fmt.Errorf("BuildVRT failed with code %d", cerr)
+	}
+	return Dataset{ds}, nil
+
+}
+
 func Warp(dstDS string, destDS *Dataset, sourceDS []Dataset, options []string) (Dataset, error) {
 	if dstDS == "" && destDS == nil {
 		dstDS = "MEM:::"
