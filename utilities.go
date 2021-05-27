@@ -27,6 +27,29 @@ func stringArrayContains(array []string, needle string) bool {
 	return false
 }
 
+func Info(sourceDS Dataset, options []string) string {
+
+	length := len(options)
+	opts := make([]*C.char, length+1)
+	for i := 0; i < length; i++ {
+		opts[i] = C.CString(options[i])
+		defer C.free(unsafe.Pointer(opts[i]))
+	}
+	opts[length] = (*C.char)(unsafe.Pointer(nil))
+	infoOpts := C.GDALInfoOptionsNew(
+		(**C.char)(unsafe.Pointer(&opts[0])),
+		(*C.GDALInfoOptionsForBinary)(unsafe.Pointer(nil)))
+	defer C.GDALInfoOptionsFree(infoOpts)
+
+	infoText := C.GDALInfo(
+		sourceDS.cval,
+		infoOpts,
+	)
+
+	return C.GoString(infoText)
+
+}
+
 func BuildVRT(dstDS string, sourceDS []Dataset, srcDSFilePath, options []string) (Dataset, error) {
 	if dstDS == "" {
 		dstDS = "MEM:::"
