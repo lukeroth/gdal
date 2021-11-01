@@ -3,11 +3,20 @@ package gdal
 /*
 #include "go_gdal.h"
 #include "gdal_version.h"
+#include "ogr_srs_api.h"
 */
 import "C"
 import (
 	"reflect"
 	"unsafe"
+)
+
+type AxisMappingStrategy uint32
+
+const (
+	OAMS_TraditionalGisOrder = AxisMappingStrategy(C.OAMS_TRADITIONAL_GIS_ORDER)
+	OAMS_AuthorityCompliant  = AxisMappingStrategy(C.OAMS_AUTHORITY_COMPLIANT)
+	OAMS_Custom              = AxisMappingStrategy(C.OAMS_CUSTOM)
 )
 
 /* -------------------------------------------------------------------- */
@@ -24,6 +33,10 @@ func CreateSpatialReference(wkt string) SpatialReference {
 	defer C.free(unsafe.Pointer(cString))
 	sr := C.OSRNewSpatialReference(cString)
 	return SpatialReference{sr}
+}
+
+func (sr SpatialReference) SetAxisMappingStrategy(strategy AxisMappingStrategy) {
+	C.OSRSetAxisMappingStrategy(sr.cval, C.OSRAxisMappingStrategy(strategy))
 }
 
 // Initialize SRS based on WKT string
