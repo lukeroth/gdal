@@ -1000,9 +1000,9 @@ type Feature struct {
 }
 
 // Create a feature from this feature definition
-func (fd FeatureDefinition) Create() Feature {
+func (fd FeatureDefinition) Create() (Feature, bool) {
 	feature := C.OGR_F_Create(fd.cval)
-	return Feature{feature}
+	return Feature{feature}, feature != nil
 }
 
 // Destroy this feature
@@ -1564,19 +1564,19 @@ type DataSource struct {
 }
 
 // Open a file / data source with one of the registered drivers
-func OpenDataSource(name string, update int) DataSource {
+func OpenDataSource(name string, update int) (DataSource, bool) {
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
 	ds := C.OGROpen(cName, C.int(update), nil)
-	return DataSource{ds}
+	return DataSource{ds}, ds != nil
 }
 
 // Open a shared file / data source with one of the registered drivers
-func OpenSharedDataSource(name string, update int) DataSource {
+func OpenSharedDataSource(name string, update int) (DataSource, bool) {
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
 	ds := C.OGROpenShared(cName, C.int(update), nil)
-	return DataSource{ds}
+	return DataSource{ds}, ds != nil
 }
 
 // Drop a reference to this datasource and destroy if reference is zero
