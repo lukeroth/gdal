@@ -33,11 +33,20 @@ const (
 )
 
 var (
-	ErrDebug   = errors.New("Debug Error")
-	ErrWarning = errors.New("Warning Error")
-	ErrFailure = errors.New("Failure Error")
-	ErrFatal   = errors.New("Fatal Error")
-	ErrIllegal = errors.New("Illegal Error")
+	ErrDebug                   = errors.New("Debug Error")
+	ErrWarning                 = errors.New("Warning Error")
+	ErrFailure                 = errors.New("Failure Error")
+	ErrFatal                   = errors.New("Fatal Error")
+	ErrIllegal                 = errors.New("Illegal Error")
+	ErrNotEnoughData           = errors.New("Not Enough Data Error")
+	ErrNotEnoughMemory         = errors.New("Not Enough Memory Error")
+	ErrUnsupportedGeometryType = errors.New("Unsupported Geometry Type Error")
+	ErrUnsupportedOperation    = errors.New("Unsupported Operation Error")
+	ErrCorruptData             = errors.New("Corrupt Data Error")
+	ErrUnsupportedSRS          = errors.New("Unsupported SRS Error")
+	ErrInvalidHandle           = errors.New("Invalid Handle Error")
+	ErrNonExistingFeature      = errors.New("Non Existing Feature Error")
+	ErrUndefined               = errors.New("Undefined Error")
 )
 
 // Error handling.  The following is bare-bones, and needs to be replaced with something more useful.
@@ -62,15 +71,25 @@ func (err C.OGRErr) Err() error {
 	case 0:
 		return nil
 	case 1:
-		return ErrDebug
+		return ErrNotEnoughData
 	case 2:
-		return ErrWarning
+		return ErrNotEnoughMemory
 	case 3:
-		return ErrFailure
+		return ErrUnsupportedGeometryType
 	case 4:
+		return ErrUnsupportedOperation
+	case 5:
+		return ErrCorruptData
+	case 6:
 		return ErrFailure
+	case 7:
+		return ErrUnsupportedSRS
+	case 8:
+		return ErrInvalidHandle
+	case 9:
+		return ErrNonExistingFeature
 	}
-	return ErrIllegal
+	return ErrUndefined
 }
 
 // Pixel data types
