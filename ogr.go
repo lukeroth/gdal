@@ -734,6 +734,83 @@ func (geom Geometry) BuildPolygonFromEdges(autoClose bool, tolerance float64) (G
 }
 
 /* -------------------------------------------------------------------- */
+/*      Geometry Field definition functions                             */
+/* -------------------------------------------------------------------- */
+type GeomFieldDefinition struct {
+	cval C.OGRGeomFieldDefnH
+}
+
+//OGRGeomFieldDefn(const char *pszNameIn, OGRwkbGeometryTypeeGeomTypeIn)
+func CreateGeomFieldDefinition(name string, geomType GeometryType) GeomFieldDefinition {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	geomFieldDef := C.OGR_GFld_Create(cName, C.OGRwkbGeometryType(geomType))
+	return GeomFieldDefinition{geomFieldDef}
+}
+
+// Destroy the geom field definition
+func (gfd GeomFieldDefinition) Destroy() {
+	C.OGR_GFld_Destroy(gfd.cval)
+}
+
+// Fetch the name of the geom field
+func (gfd GeomFieldDefinition) Name() string {
+	name := C.OGR_GFld_GetNameRef(gfd.cval)
+	return C.GoString(name)
+}
+
+// Set the name of the geom field
+func (gfd GeomFieldDefinition) SetName(name string) {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	C.OGR_GFld_SetName(gfd.cval, cName)
+}
+
+// Fetch the type of this geom field
+func (gfd GeomFieldDefinition) Type() GeometryType {
+	gfType := C.OGR_GFld_GetType(gfd.cval)
+	return GeometryType(gfType)
+}
+
+// Set the type of this geom field
+func (gfd GeomFieldDefinition) SetType(geomType GeometryType) {
+	C.OGR_GFld_SetType(gfd.cval, C.OGRwkbGeometryType(geomType))
+}
+
+// Fetch spatial reference system of this field.
+func (gfd GeomFieldDefinition) SpatialReference() SpatialReference {
+	sr := C.OGR_GFld_GetSpatialRef(gfd.cval)
+	return SpatialReference{sr}
+}
+
+// Set the spatial reference of this field.
+func (gfd GeomFieldDefinition) SetSpatialReference(sr SpatialReference) {
+	C.OGR_GFld_SetSpatialRef(gfd.cval, sr.cval)
+}
+
+// Return whether this geometry field can receive null values.
+func (gfd GeomFieldDefinition) IsNullable() bool {
+	isNullable := C.OGR_GFld_IsNullable(gfd.cval)
+	return int(isNullable) == 1
+}
+
+// Set whether this geometry field can receive null values.
+func (gfd GeomFieldDefinition) SetNullable(isNullable bool) {
+	C.OGR_GFld_SetNullable(gfd.cval, BoolToCInt(isNullable))
+}
+
+// Return whether this field should be omitted when fetching features.
+func (gfd GeomFieldDefinition) FieldIsIngored() bool {
+	isIgnored := C.OGR_GFld_IsIgnored(gfd.cval)
+	return int(isIgnored) == 1
+}
+
+// Set whether this field should be omitted when fetching features.
+func (gfd GeomFieldDefinition) SetFieldIgnored(isIgnored bool) {
+	C.OGR_GFld_SetIgnored(gfd.cval, BoolToCInt(isIgnored))
+}
+
+/* -------------------------------------------------------------------- */
 /*      Field definition functions                                      */
 /* -------------------------------------------------------------------- */
 
@@ -940,6 +1017,12 @@ func (fd FeatureDefinition) DeleteFieldDefinition(index int) error {
 	return C.OGR_FD_DeleteFieldDefn(fd.cval, C.int(index)).Err()
 }
 
+//OGRErrOGR_FD_ReorderFieldDefns(OGRFeatureDefnHhDefn, int *panMap)
+func (fd FeatureDefinition) ReorderFieldDefinitions(panmap []int) error {
+	cmap := IntSliceToCInt(panmap)
+	return C.OGR_FD_ReorderFieldDefns(fd.cval, &cmap[0]).Err()
+}
+
 // Fetch the geometry base type of this feature definition
 func (fd FeatureDefinition) GeometryType() GeometryType {
 	gt := C.OGR_FD_GetGeomType(fd.cval)
@@ -989,6 +1072,42 @@ func (fd FeatureDefinition) Dereference() int {
 func (fd FeatureDefinition) ReferenceCount() int {
 	count := C.OGR_FD_GetReferenceCount(fd.cval)
 	return int(count)
+}
+
+// Fetch number of geometry fields on the passed feature definition.
+func (fd FeatureDefinition) GeomFieldCount() int {
+	count := C.OGR_FD_GetGeomFieldCount(fd.cval)
+	return int(count)
+}
+
+// Fetch geometry field definition of the passed feature definition.
+func (fd FeatureDefinition) GetGeomFieldDefinition(index int) GeomFieldDefinition {
+	gfd := C.OGR_FD_GetGeomFieldDefn(fd.cval, C.int(index))
+	return GeomFieldDefinition{gfd}
+}
+
+// Find geometry field by name.
+func (fd FeatureDefinition) GeomFieldIndex(name string) int {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	index := C.OGR_FD_GetGeomFieldIndex(fd.cval, cName)
+	return int(index)
+}
+
+// Add a new field definition to the passed feature definition.
+func (fd FeatureDefinition) AddGeomFieldDefinition(gdf GeomFieldDefinition) {
+	C.OGR_FD_AddGeomFieldDefn(fd.cval, gdf.cval)
+}
+
+// Delete an existing geometry field definition.
+func (fd FeatureDefinition) DeleteGeomFieldDefinition(index int) error {
+	return C.OGR_FD_DeleteGeomFieldDefn(fd.cval, C.int(index)).Err()
+}
+
+// Test if the feature definition is identical to the other one.
+func (fd FeatureDefinition) IsSame(fd2 FeatureDefinition) bool {
+	isSame := C.OGR_FD_IsSame(fd.cval, fd2.cval)
+	return int(isSame) == 1
 }
 
 /* -------------------------------------------------------------------- */
@@ -1081,11 +1200,35 @@ func (feature Feature) UnnsetField(index int) {
 	C.OGR_F_UnsetField(feature.cval, C.int(index))
 }
 
+// Test if a field is null.
+func (feature Feature) IsFieldNull(index int) bool {
+	isnull := C.OGR_F_IsFieldNull(feature.cval, C.int(index))
+	return int(isnull) == 1
+}
+
+// Test if a field is set and not null.
+func (feature Feature) IsFieldSetAndNotNull(index int) bool {
+	i := C.OGR_F_IsFieldSetAndNotNull(feature.cval, C.int(index))
+	return int(i) == 1
+}
+
+// Clear a field, marking it as null.
+func (feature Feature) SetFieldNull(index int) {
+	C.OGR_F_SetFieldNull(feature.cval, C.int(index))
+}
+
 // Fetch a reference to the internal field value
 func (feature Feature) RawField(index int) Field {
 	field := C.OGR_F_GetRawFieldRef(feature.cval, C.int(index))
 	return Field{field}
 }
+
+// since the functions below are not recommended for client code
+// they are not being implemented
+// int OGR_RawField_IsUnset(constOGRField*)
+// int OGR_RawField_IsNull(constOGRField*)
+// void OGR_RawField_SetUnset(OGRField*)
+// void OGR_RawField_SetNull(OGRField*)
 
 // Fetch field value as integer
 func (feature Feature) FieldAsInteger(index int) int {
@@ -1294,6 +1437,62 @@ func (feature Feature) SetFieldDateTime(index int, dt time.Time) {
 	)
 }
 
+// Set field as date / time
+func (feature Feature) SetFieldDateTimeEx(index int, dt time.Time) {
+	C.OGR_F_SetFieldDateTimeEx(
+		feature.cval,
+		C.int(index),
+		C.int(dt.Year()),
+		C.int(dt.Month()),
+		C.int(dt.Day()),
+		C.int(dt.Hour()),
+		C.int(dt.Minute()),
+		C.float(float32(dt.Second())+(float32(dt.Nanosecond())/1000000000.0)),
+		C.int(1),
+	)
+}
+
+// Fetch number of geometry fields on this feature This will always be the same as the geometry field count for the OGRFeatureDefn.
+func (feature Feature) GeometryFieldCount() int {
+	count := C.OGR_F_GetGeomFieldCount(feature.cval)
+	return int(count)
+}
+
+// Fetch definition for this geometry field.
+// index: the field to fetch, from 0 to GetGeomFieldCount()-1.
+func (feature Feature) GeometryFieldDefition(index int) GeomFieldDefinition {
+	gfd := C.OGR_F_GetGeomFieldDefnRef(feature.cval, C.int(index))
+	return GeomFieldDefinition{gfd}
+}
+
+// Fetch the geometry field index given geometry field name.
+func (feature Feature) GeometryFieldIndex(name string) int {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	index := C.OGR_F_GetGeomFieldIndex(feature.cval, cName)
+	return int(index)
+}
+
+// Fetch a handle to feature geometry.
+func (feature Feature) GeometryField(index int) Geometry {
+	geom := C.OGR_F_GetGeomFieldRef(feature.cval, C.int(index))
+	return Geometry{geom}
+}
+
+// Set feature geometry of a specified geometry field.
+// This function updates the features geometry, and operate exactly as SetGeomField(),
+//  except that this function assumes ownership of the passed geometry (even in case of failure of that function).
+func (feature Feature) SetGeometryFieldDirectly(index int, geom Geometry) error {
+	return C.OGR_F_SetGeomFieldDirectly(feature.cval, C.int(index), geom.cval).Err()
+}
+
+// Set feature geometry of a specified geometry field.
+// This function updates the features geometry, and operate exactly as SetGeometryDirectly(),
+//  except that this function does not assume ownership of the passed geometry, but instead makes a copy of it.
+func (feature Feature) SetGeometryField(index int, geom Geometry) error {
+	return C.OGR_F_SetGeomField(feature.cval, C.int(index), geom.cval).Err()
+}
+
 // Fetch feature indentifier
 func (feature Feature) FID() int64 {
 	fid := C.OGR_F_GetFID(feature.cval)
@@ -1334,6 +1533,41 @@ func (feature Feature) SetStyleString(style string) {
 	C.OGR_F_SetStyleStringDirectly(feature.cval, cStyle)
 }
 
+// Returns the native data for the feature.
+func (feature Feature) NativeData() string {
+	nd := C.OGR_F_GetNativeData(feature.cval)
+	return C.GoString(nd)
+}
+
+func (feature Feature) SetNativeData(nativeData string) {
+	nd := C.CString(nativeData)
+	defer C.free(unsafe.Pointer(nd))
+	C.OGR_F_SetNativeData(feature.cval, nd)
+}
+
+func (feature Feature) NativeMediaType() string {
+	mt := C.OGR_F_GetNativeMediaType(feature.cval)
+	return C.GoString(mt)
+}
+
+func (feature Feature) SetNativeMediaType(mediatype string) {
+	mt := C.CString(mediatype)
+	defer C.free(unsafe.Pointer(mt))
+	C.OGR_F_SetNativeMediaType(feature.cval, mt)
+}
+
+// Fill unset fields with default values that might be defined.
+// note: papszOptions: unused currently. Must be set to NULL.
+func (feature Feature) FillUnsetWithDefault(notNullableOnly bool) {
+	var papszOptions **C.char = nil
+	C.OGR_F_FillUnsetWithDefault(feature.cval, BoolToCInt(notNullableOnly), papszOptions)
+}
+
+func (feature Feature) Validate(validateFlags int, emitError int) int {
+	v := C.OGR_F_Validate(feature.cval, C.int(validateFlags), C.int(emitError))
+	return int(v)
+}
+
 // Returns true if this contains a null pointer
 func (feature Feature) IsNull() bool {
 	return feature.cval == nil
@@ -1345,6 +1579,11 @@ func (feature Feature) IsNull() bool {
 
 type Layer struct {
 	cval C.OGRLayerH
+}
+
+// test for null geometry
+func (layer Layer) IsNull() bool {
+	return layer.cval == nil
 }
 
 // Return the layer name
@@ -1374,6 +1613,20 @@ func (layer Layer) SetSpatialFilter(filter Geometry) {
 func (layer Layer) SetSpatialFilterRect(minX, minY, maxX, maxY float64) {
 	C.OGR_L_SetSpatialFilterRect(
 		layer.cval,
+		C.double(minX), C.double(minY), C.double(maxX), C.double(maxY),
+	)
+}
+
+// Set a new spatial filter for this layer and field
+func (layer Layer) SetSpatialFilterEx(index int, filter Geometry) {
+	C.OGR_L_SetSpatialFilterEx(layer.cval, C.int(index), filter.cval)
+}
+
+// Set a new rectangular spatial filter for this layer
+func (layer Layer) SetSpatialFilterRectEx(index int, minX, minY, maxX, maxY float64) {
+	C.OGR_L_SetSpatialFilterRectEx(
+		layer.cval,
+		C.int(index),
 		C.double(minX), C.double(minY), C.double(maxX), C.double(maxY),
 	)
 }
@@ -1437,6 +1690,14 @@ func (layer Layer) SpatialReference() SpatialReference {
 	return SpatialReference{sr}
 }
 
+// Gets the index for a field name
+func (layer Layer) FindFieldIndex(field string, exactMatch bool) int {
+	cString := C.CString(field)
+	defer C.free(unsafe.Pointer(cString))
+	index := C.OGR_L_FindFieldIndex(layer.cval, cString, BoolToCInt(exactMatch))
+	return int(index)
+}
+
 // Fetch the feature count for this layer
 func (layer Layer) FeatureCount(force bool) (count int, ok bool) {
 	count = int(C.OGR_L_GetFeatureCount(layer.cval, BoolToCInt(force)))
@@ -1446,6 +1707,12 @@ func (layer Layer) FeatureCount(force bool) (count int, ok bool) {
 // Fetch the extent of this layer
 func (layer Layer) Extent(force bool) (env Envelope, err error) {
 	err = C.OGR_L_GetExtent(layer.cval, &env.cval, BoolToCInt(force)).Err()
+	return
+}
+
+// Fetch the extent of this layer on the spacified geometry field
+func (layer Layer) ExtentEx(index int, force bool) (env Envelope, err error) {
+	err = C.OGR_L_GetExtentEx(layer.cval, C.int(index), &env.cval, BoolToCInt(force)).Err()
 	return
 }
 
@@ -1459,6 +1726,11 @@ func (layer Layer) TestCapability(capability string) bool {
 
 // Create a new field on a layer
 func (layer Layer) CreateField(fd FieldDefinition, approxOK bool) error {
+	return C.OGR_L_CreateField(layer.cval, fd.cval, BoolToCInt(approxOK)).Err()
+}
+
+// Create a new geometry field on a layer
+func (layer Layer) CreateGeomField(fd FieldDefinition, approxOK bool) error {
 	return C.OGR_L_CreateField(layer.cval, fd.cval, BoolToCInt(approxOK)).Err()
 }
 

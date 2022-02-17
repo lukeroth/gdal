@@ -35,6 +35,10 @@ func CreateSpatialReference(wkt string) SpatialReference {
 	return SpatialReference{sr}
 }
 
+func (sr SpatialReference) GetAxisMappingStrategy() AxisMappingStrategy {
+	return AxisMappingStrategy(C.OSRGetAxisMappingStrategy(sr.cval))
+}
+
 func (sr SpatialReference) SetAxisMappingStrategy(strategy AxisMappingStrategy) {
 	C.OSRSetAxisMappingStrategy(sr.cval, C.OSRAxisMappingStrategy(strategy))
 }

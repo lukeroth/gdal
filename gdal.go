@@ -1880,3 +1880,66 @@ func VSIFReadL(nSize, nCount int, file VSILFILE) []byte {
 
 	return data
 }
+
+// Delete a file. This method goes through the VSIFileHandler virtualization and may work on
+// unusual filesystems such as in memory.
+func VSIUnlink(fileName string) error {
+	cFileName := C.CString(fileName)
+	defer C.free(unsafe.Pointer(cFileName))
+	deleted := C.VSIUnlink(cFileName)
+	if deleted != 0 {
+		return fmt.Errorf("Error: VSILFILE '%s' unlink error", fileName)
+	}
+	return nil
+}
+
+// Create a new directory with the indicated mode.
+// The mode is ignored on some platforms.
+// A reasonable default mode value would be 0666.
+// This method goes through the VSIFileHandler virtualization
+// and may work on unusual filesystems such as in memory.
+func VSIMkdir(dir string) error {
+	cDir := C.CString(dir)
+	defer C.free(unsafe.Pointer(cDir))
+	made := C.VSIMkdir(cDir, C.long(uint32(0666)))
+	if int(made) != 0 {
+		return fmt.Errorf("Error: VSILFILE '%s' mkdir error", dir)
+	}
+	return nil
+}
+
+// Create a directory and all its ancestors.
+func VSIMkdirRecursive(dir string) error {
+	cDir := C.CString(dir)
+	defer C.free(unsafe.Pointer(cDir))
+	made := C.VSIMkdirRecursive(cDir, C.long(uint32(0666)))
+	if int(made) != 0 {
+		return fmt.Errorf("Error: VSILFILE '%s' mkdir resursive error", dir)
+	}
+	return nil
+}
+
+// Deletes a directory object from the file system. On some systems the directory must be empty before it can be deleted.
+// This method goes through the VSIFileHandler virtualization and may work on unusual filesystems such as in memory.
+func VSIRmdir(dir string) error {
+	cDir := C.CString(dir)
+	defer C.free(unsafe.Pointer(cDir))
+	deleted := C.VSIRmdir(cDir)
+	if deleted != 0 {
+		return fmt.Errorf("Error: VSILFILE '%s' unlink error", dir)
+	}
+	return nil
+}
+
+// Delete a directory recursively.
+// Deletes a directory object and its content from the file system.
+// Starting with GDAL 3.1, /vsis3/ has an efficient implementation of this function.
+func VSIRmdirRecursive(dir string) error {
+	cDir := C.CString(dir)
+	defer C.free(unsafe.Pointer(cDir))
+	deleted := C.VSIRmdirRecursive(cDir)
+	if deleted != 0 {
+		return fmt.Errorf("Error: VSILFILE '%s' unlink error", dir)
+	}
+	return nil
+}
