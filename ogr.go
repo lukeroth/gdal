@@ -157,6 +157,137 @@ func (env Envelope) Contains(other Envelope) bool {
 }
 
 /* -------------------------------------------------------------------- */
+/*      Envelope3D functions                                              */
+/* -------------------------------------------------------------------- */
+
+type Envelope3D struct {
+	cval C.OGREnvelope3D
+}
+
+func (env Envelope3D) MinX() float64 {
+	return float64(env.cval.MinX)
+}
+
+func (env Envelope3D) MaxX() float64 {
+	return float64(env.cval.MaxX)
+}
+
+func (env Envelope3D) MinY() float64 {
+	return float64(env.cval.MinY)
+}
+
+func (env Envelope3D) MaxY() float64 {
+	return float64(env.cval.MaxY)
+}
+
+func (env Envelope3D) MinZ() float64 {
+	return float64(env.cval.MinZ)
+}
+
+func (env Envelope3D) MaxZ() float64 {
+	return float64(env.cval.MaxZ)
+}
+
+func (env *Envelope3D) SetMinX(val float64) {
+	env.cval.MinX = C.double(val)
+}
+
+func (env *Envelope3D) SetMaxX(val float64) {
+	env.cval.MaxX = C.double(val)
+}
+
+func (env *Envelope3D) SetMinY(val float64) {
+	env.cval.MinY = C.double(val)
+}
+
+func (env *Envelope3D) SetMaxY(val float64) {
+	env.cval.MaxY = C.double(val)
+}
+
+func (env *Envelope3D) SetMinZ(val float64) {
+	env.cval.MinZ = C.double(val)
+}
+
+func (env *Envelope3D) SetMaxZ(val float64) {
+	env.cval.MaxZ = C.double(val)
+}
+
+func (env Envelope3D) IsInit() bool {
+	return env.cval.MinX != 0 || env.cval.MinY != 0 || env.cval.MinZ != 0 || env.cval.MaxX != 0 || env.cval.MaxY != 0 || env.cval.MaxZ != 0
+}
+
+// Return the union of this envelope3D with another one
+func (env Envelope3D) Union(other Envelope3D) Envelope3D {
+	if env.IsInit() {
+		env.cval.MinX = min(env.cval.MinX, other.cval.MinX)
+		env.cval.MinY = min(env.cval.MinY, other.cval.MinY)
+		env.cval.MinZ = min(env.cval.MinZ, other.cval.MinZ)
+		env.cval.MaxX = max(env.cval.MaxX, other.cval.MaxX)
+		env.cval.MaxY = max(env.cval.MaxY, other.cval.MaxY)
+		env.cval.MaxZ = max(env.cval.MaxZ, other.cval.MaxZ)
+	} else {
+		env.cval.MinX = other.cval.MinX
+		env.cval.MinY = other.cval.MinY
+		env.cval.MinZ = other.cval.MinY
+		env.cval.MaxX = other.cval.MaxX
+		env.cval.MaxY = other.cval.MaxY
+		env.cval.MaxZ = other.cval.MaxZ
+	}
+	return env
+}
+
+// Return the intersection of this envelope3D with another
+func (env Envelope3D) Intersect(other Envelope3D) Envelope3D {
+	if env.Intersects(other) {
+		if env.IsInit() {
+			env.cval.MinX = max(env.cval.MinX, other.cval.MinX)
+			env.cval.MinY = max(env.cval.MinY, other.cval.MinY)
+			env.cval.MinZ = max(env.cval.MinZ, other.cval.MinZ)
+			env.cval.MaxX = min(env.cval.MaxX, other.cval.MaxX)
+			env.cval.MaxY = min(env.cval.MaxY, other.cval.MaxY)
+			env.cval.MaxZ = min(env.cval.MaxZ, other.cval.MaxZ)
+		} else {
+			env.cval.MinX = other.cval.MinX
+			env.cval.MinY = other.cval.MinY
+			env.cval.MinZ = other.cval.MinZ
+			env.cval.MaxX = other.cval.MaxX
+			env.cval.MaxY = other.cval.MaxY
+			env.cval.MaxZ = other.cval.MaxZ
+		}
+	} else {
+		env.cval.MinX = 0
+		env.cval.MinY = 0
+		env.cval.MinZ = 0
+		env.cval.MaxX = 0
+		env.cval.MaxY = 0
+		env.cval.MaxZ = 0
+	}
+	return env
+}
+
+// Test if one envelope3D intersects another
+func (env Envelope3D) Intersects(other Envelope3D) bool {
+	return env.cval.MinX <= other.cval.MaxX &&
+		env.cval.MaxX >= other.cval.MinX &&
+		env.cval.MinY <= other.cval.MaxY &&
+		env.cval.MaxY >= other.cval.MinY &&
+		env.cval.MinZ <= other.cval.MaxZ &&
+		env.cval.MaxZ >= other.cval.MinZ
+
+}
+
+// Test if one envelope3D completely contains another
+func (env Envelope3D) Contains(other Envelope3D) bool {
+	return env.cval.MinX <= other.cval.MinX &&
+		env.cval.MaxX >= other.cval.MaxX &&
+		env.cval.MinY <= other.cval.MinY &&
+		env.cval.MaxY >= other.cval.MaxY &&
+		env.cval.MinZ <= other.cval.MinZ &&
+		env.cval.MaxZ >= other.cval.MaxZ
+
+}
+
+/* -------------------------------------------------------------------- */
 /*      Misc functions                                                  */
 /* -------------------------------------------------------------------- */
 
@@ -299,7 +430,12 @@ func (geom Geometry) Envelope() Envelope {
 	return env
 }
 
-// Unimplemented: GetEnvelope3D
+// Compute and return the 3D bounding envelope for this geometry
+func (geom Geometry) Envelope3D() Envelope3D {
+	var env Envelope3D
+	C.OGR_G_GetEnvelope3D(geom.cval, &env.cval)
+	return env
+}
 
 // Assign a geometry from well known binary data
 func (geom Geometry) FromWKB(wkb []uint8, bytes int) error {
