@@ -110,7 +110,7 @@ func (dataType DataType) Union(dataTypeB DataType) DataType {
 	)
 }
 
-//Safe array conversion
+// Safe array conversion
 func IntSliceToCInt(data []int) []C.int {
 	sliceSz := len(data)
 	result := make([]C.int, sliceSz)
@@ -120,7 +120,7 @@ func IntSliceToCInt(data []int) []C.int {
 	return result
 }
 
-//Safe array conversion
+// Safe array conversion
 func CIntSliceToInt(data []C.int) []int {
 	sliceSz := len(data)
 	result := make([]int, sliceSz)
@@ -1560,7 +1560,25 @@ func (sourceRaster RasterBand) RasterBandCopyWholeRaster(
 }
 
 // Generate downsampled overviews
-// Unimplemented: RegenerateOverviews
+func (sourceRaster RasterBand) RegenerateOverviews(
+	overviewCount int,
+	destRasterBands *RasterBand,
+	resampling string,
+	progress ProgressFunc,
+	data interface{},
+) error {
+	arg := &goGDALProgressFuncProxyArgs{progress, data}
+	cVal := C.CString(resampling)
+	defer C.free(unsafe.Pointer(cVal))
+	return C.GDALRegenerateOverviews(
+		sourceRaster.cval,
+		C.int(overviewCount),
+		&destRasterBands.cval,
+		cVal,
+		C.goGDALProgressFuncProxyB(),
+		unsafe.Pointer(arg),
+	).Err()
+}
 
 /* ==================================================================== */
 /*     GDALAsyncReader                                                  */
