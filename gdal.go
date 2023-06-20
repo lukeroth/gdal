@@ -129,7 +129,7 @@ func (dataType DataType) Union(dataTypeB DataType) DataType {
 	)
 }
 
-//Safe array conversion
+// Safe array conversion
 func IntSliceToCInt(data []int) []C.int {
 	sliceSz := len(data)
 	result := make([]C.int, sliceSz)
@@ -139,7 +139,7 @@ func IntSliceToCInt(data []int) []C.int {
 	return result
 }
 
-//Safe array conversion
+// Safe array conversion
 func CIntSliceToInt(data []C.int) []int {
 	sliceSz := len(data)
 	result := make([]int, sliceSz)
@@ -1182,6 +1182,18 @@ func (rasterBand RasterBand) AdviseRead(
 		C.GDALDataType(dataType),
 		(**C.char)(unsafe.Pointer(&cOptions[0])),
 	).Err()
+}
+
+type GdalNumber interface {
+	int64 | int32 | float64 | float32
+}
+
+func ReadRasterBandData[T GdalNumber](rb *RasterBand) ([]T, error) {
+	px := rb.XSize()
+	py := rb.YSize()
+	data := make([]T, px*py)
+	err := rb.IO(Read, 0, 0, px, py, data, px, py, 0, 0)
+	return data, err
 }
 
 // Read / Write a region of image data for this band
