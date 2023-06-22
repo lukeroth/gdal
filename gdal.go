@@ -1690,6 +1690,25 @@ func (sourceRaster RasterBand) RegenerateOverviews(
 	).Err()
 }
 
+func (sourceRaster RasterBand) RegenerateOverview(
+	destRasterBand RasterBand,
+	resampling string,
+	progress ProgressFunc,
+	data interface{},
+) error {
+	arg := &goGDALProgressFuncProxyArgs{progress, data}
+	cVal := C.CString(resampling)
+	defer C.free(unsafe.Pointer(cVal))
+	return C.GDALRegenerateOverviews(
+		sourceRaster.cval,
+		C.int(1),
+		&destRasterBand.cval,
+		cVal,
+		C.goGDALProgressFuncProxyB(),
+		unsafe.Pointer(arg),
+	).Err()
+}
+
 /* ==================================================================== */
 /*     GDALAsyncReader                                                  */
 /* ==================================================================== */
@@ -1988,4 +2007,33 @@ func VSIFReadL(nSize, nCount int, file VSILFILE) []byte {
 	C.VSIFReadL(p, C.size_t(nSize), C.size_t(nCount), file.cval)
 
 	return data
+}
+
+func ReprojectImage(
+	srcDs, destDs Dataset,
+	srcWkt, destWkt string,
+	alg ResampleAlg,
+	memoryLimit, maxerror float64,
+	progress ProgressFunc,
+	data unsafe.Pointer,
+	options []string,
+) error {
+	length := len(options)
+	cOptions := make([]*C.char, length+1)
+	for i := 0; i < length; i++ {
+		cOptions[i] = C.CString(options[i])
+		defer C.free(unsafe.Pointer(cOptions[i]))
+	}
+	return C.GDALReprojectImage(
+		srcDs.cval,
+		C.CString(srcWkt),
+		destDs.cval,
+		C.CString(destWkt),
+		C.GDALResampleAlg(alg),
+		C.double(memoryLimit),
+		C.double(maxerror),
+		nil,
+		unsafe.Pointer(nil),
+		nil,
+	).Err()
 }
