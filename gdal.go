@@ -1029,7 +1029,12 @@ func (dataset Dataset) GDALGetGCPCount() int {
 	return int(count)
 }
 
-// Unimplemented: GDALGetGCPProjection
+// Get projection of GCPs
+func (dataset Dataset) GDALGetGCPProjection() string {
+	s := C.GDALGetGCPProjection(dataset.cval)
+	return C.GoString(s)
+}
+
 // Unimplemented: GDALGetGCPs
 // Unimplemented: GDALSetGCPs
 
