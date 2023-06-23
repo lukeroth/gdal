@@ -1696,17 +1696,28 @@ func (sourceRaster RasterBand) RegenerateOverview(
 	progress ProgressFunc,
 	data interface{},
 ) error {
-	arg := &goGDALProgressFuncProxyArgs{progress, data}
 	cVal := C.CString(resampling)
 	defer C.free(unsafe.Pointer(cVal))
-	return C.GDALRegenerateOverviews(
-		sourceRaster.cval,
-		C.int(1),
-		&destRasterBand.cval,
-		cVal,
-		C.goGDALProgressFuncProxyB(),
-		unsafe.Pointer(arg),
-	).Err()
+	if progress == nil {
+		return C.GDALRegenerateOverviews(
+			sourceRaster.cval,
+			C.int(1),
+			&destRasterBand.cval,
+			cVal,
+			nil,
+			nil,
+		).Err()
+	} else {
+		arg := &goGDALProgressFuncProxyArgs{progress, data}
+		return C.GDALRegenerateOverviews(
+			sourceRaster.cval,
+			C.int(1),
+			&destRasterBand.cval,
+			cVal,
+			C.goGDALProgressFuncProxyB(),
+			unsafe.Pointer(arg),
+		).Err()
+	}
 }
 
 /* ==================================================================== */
