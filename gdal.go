@@ -1757,6 +1757,9 @@ func (ct ColorTable) PaletteInterpretation() PaletteInterp {
 
 // Get number of color entries in table
 func (ct ColorTable) EntryCount() int {
+	if ct.cval == nil {
+		return 0
+	}
 	count := C.GDALGetColorEntryCount(ct.cval)
 	return int(count)
 }
