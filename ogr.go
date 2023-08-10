@@ -1212,6 +1212,12 @@ func (feature Feature) IsFieldSet(index int) bool {
 	return set != 0
 }
 
+// Test if a field is set and not null.
+func (feature Feature) IsFieldSetAndNotNull(index int) bool {
+	set := C.OGR_F_IsFieldSetAndNotNull(feature.cval, C.int(index))
+	return set != 0
+}
+
 // Clear a field and mark it as unset
 func (feature Feature) UnnsetField(index int) {
 	C.OGR_F_UnsetField(feature.cval, C.int(index))
