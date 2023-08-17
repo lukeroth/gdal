@@ -314,7 +314,7 @@ type Geometry struct {
 	cval C.OGRGeometryH
 }
 
-//Create a geometry object from its well known binary representation
+// Create a geometry object from its well known binary representation
 func CreateFromWKB(wkb []uint8, srs SpatialReference, bytes int) (Geometry, error) {
 	cString := unsafe.Pointer(&wkb[0])
 	var newGeom Geometry
@@ -323,7 +323,7 @@ func CreateFromWKB(wkb []uint8, srs SpatialReference, bytes int) (Geometry, erro
 	).Err()
 }
 
-//Create a geometry object from its well known text representation
+// Create a geometry object from its well known text representation
 func CreateFromWKT(wkt string, srs SpatialReference) (Geometry, error) {
 	cString := C.CString(wkt)
 	defer C.free(unsafe.Pointer(cString))
@@ -333,7 +333,7 @@ func CreateFromWKT(wkt string, srs SpatialReference) (Geometry, error) {
 	).Err()
 }
 
-//Create a geometry object from its GeoJSON representation
+// Create a geometry object from its GeoJSON representation
 func CreateFromJson(_json string) Geometry {
 	cString := C.CString(_json)
 	defer C.free(unsafe.Pointer(cString))
@@ -933,6 +933,19 @@ func (fd FieldDefinition) SetName(name string) {
 	C.OGR_Fld_SetName(fd.cval, cName)
 }
 
+// Fetch the alternative name (or "alias") of the field
+func (fd FieldDefinition) AlternativeName() string {
+	name := C.OGR_Fld_GetAlternativeNameRef(fd.cval)
+	return C.GoString(name)
+}
+
+// Reset the alternative name (or "alias") for this field.
+func (fd FieldDefinition) SetAlternateName(name string) {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	C.OGR_Fld_SetAlternativeName(fd.cval, cName)
+}
+
 // Fetch the type of this field
 func (fd FieldDefinition) Type() FieldType {
 	fType := C.OGR_Fld_GetType(fd.cval)
@@ -1209,6 +1222,12 @@ func (feature Feature) FieldIndex(name string) int {
 // Return if a field has ever been assigned a value
 func (feature Feature) IsFieldSet(index int) bool {
 	set := C.OGR_F_IsFieldSet(feature.cval, C.int(index))
+	return set != 0
+}
+
+// Test if a field is set and not null.
+func (feature Feature) IsFieldSetAndNotNull(index int) bool {
+	set := C.OGR_F_IsFieldSetAndNotNull(feature.cval, C.int(index))
 	return set != 0
 }
 
