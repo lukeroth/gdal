@@ -89,11 +89,6 @@ const (
 	CXT_Attribute                           = int(C.CXT_Attribute)
 	CXT_Comment                             = int(C.CXT_Comment)
 	CXT_Literal                             = int(C.CXT_Literal)
-	CE_None                                 = int(C.CE_None)
-	CE_Debug                                = int(C.CE_Debug)
-	CE_Warning                              = int(C.CE_Warning)
-	CE_Failure                              = int(C.CE_Failure)
-	CE_Fatal                                = int(C.CE_Fatal)
 	CPLE_None                               = int(C.CPLE_None)
 	CPLE_AppDefined                         = int(C.CPLE_AppDefined)
 	CPLE_OutOfMemory                        = int(C.CPLE_OutOfMemory)
@@ -1742,24 +1737,24 @@ func (sourceRaster RasterBand) RegenerateOverview(
 	cVal := C.CString(resampling)
 	defer C.free(unsafe.Pointer(cVal))
 	if progress == nil {
-		return C.GDALRegenerateOverviews(
+		return CPLErr(C.GDALRegenerateOverviews(
 			sourceRaster.cval,
 			C.int(1),
 			&destRasterBand.cval,
 			cVal,
 			nil,
 			nil,
-		).Err()
+		)).Err()
 	} else {
 		arg := &goGDALProgressFuncProxyArgs{progress, data}
-		return C.GDALRegenerateOverviews(
+		return CPLErr(C.GDALRegenerateOverviews(
 			sourceRaster.cval,
 			C.int(1),
 			&destRasterBand.cval,
 			cVal,
 			C.goGDALProgressFuncProxyB(),
 			unsafe.Pointer(arg),
-		).Err()
+		)).Err()
 	}
 }
 
@@ -2081,7 +2076,7 @@ func ReprojectImage(
 		cOptions[i] = C.CString(options[i])
 		defer C.free(unsafe.Pointer(cOptions[i]))
 	}
-	return C.GDALReprojectImage(
+	return CPLErr(C.GDALReprojectImage(
 		srcDs.cval,
 		C.CString(srcWkt),
 		destDs.cval,
@@ -2092,5 +2087,5 @@ func ReprojectImage(
 		nil,
 		unsafe.Pointer(nil),
 		nil,
-	).Err()
+	)).Err()
 }
