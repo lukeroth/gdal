@@ -1185,3 +1185,15 @@ func (ct CoordinateTransform) Transform(numPoints int, xPoints []float64, yPoint
 	val := C.OCTTransform(ct.cval, C.int(numPoints), (*C.double)(unsafe.Pointer(&xPoints[0])), (*C.double)(unsafe.Pointer(&yPoints[0])), (*C.double)(unsafe.Pointer(&zPoints[0])))
 	return int(val) != 0
 }
+
+func (ct CoordinateTransform) TransformPoint(x float64, y float64) (float64, float64, float64) {
+	xs := []float64{x}
+	ys := []float64{y}
+	zs := []float64{0}
+	val := C.OCTTransform(ct.cval, C.int(1), (*C.double)(unsafe.Pointer(&xs[0])), (*C.double)(unsafe.Pointer(&ys[0])), (*C.double)(unsafe.Pointer(&zs[0])))
+	if int(val) != 0 {
+		return xs[0], ys[0], zs[0]
+	} else {
+		return 0., 0., 0.
+	}
+}
