@@ -469,7 +469,7 @@ func (geom Geometry) ToWKT() (string, error) {
 	var p *C.char
 	err := OGRErr(C.OGR_G_ExportToWkt(geom.cval, &p)).Err()
 	wkt := C.GoString(p)
-	defer C.free(unsafe.Pointer(p))
+	defer C.CPLFree(unsafe.Pointer(p))
 	return wkt, err
 }
 
@@ -529,7 +529,7 @@ func (geom Geometry) ToGML_Ex(options []string) string {
 func (geom Geometry) ToKML() string {
 	val := C.OGR_G_ExportToKML(geom.cval, nil)
 	result := C.GoString(val)
-	C.free(unsafe.Pointer(val))
+	C.CPLFree(unsafe.Pointer(val))
 	return result
 }
 
