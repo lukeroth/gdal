@@ -90,13 +90,13 @@ func (src RasterBand) ComputeProximity(
 	}
 	opts[length] = (*C.char)(unsafe.Pointer(nil))
 
-	return C.GDALComputeProximity(
+	return CPLErr(C.GDALComputeProximity(
 		src.cval,
 		dest.cval,
 		(**C.char)(unsafe.Pointer(&opts[0])),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	).Err()
+	)).Err()
 }
 
 // Fill selected raster regions by interpolation from the edges
@@ -120,7 +120,7 @@ func (src RasterBand) FillNoData(
 	}
 	opts[length] = (*C.char)(unsafe.Pointer(nil))
 
-	return C.GDALFillNodata(
+	return CPLErr(C.GDALFillNodata(
 		src.cval,
 		mask.cval,
 		C.double(distance),
@@ -129,7 +129,7 @@ func (src RasterBand) FillNoData(
 		(**C.char)(unsafe.Pointer(&opts[0])),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	).Err()
+	)).Err()
 }
 
 // Create polygon coverage from raster data using an integer buffer
@@ -153,7 +153,7 @@ func (src RasterBand) Polygonize(
 	}
 	opts[length] = (*C.char)(unsafe.Pointer(nil))
 
-	return C.GDALPolygonize(
+	return CPLErr(C.GDALPolygonize(
 		src.cval,
 		mask.cval,
 		layer.cval,
@@ -161,7 +161,7 @@ func (src RasterBand) Polygonize(
 		(**C.char)(unsafe.Pointer(&opts[0])),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	).Err()
+	)).Err()
 }
 
 // Create polygon coverage from raster data using a floating point buffer
@@ -185,7 +185,7 @@ func (src RasterBand) FPolygonize(
 	}
 	opts[length] = (*C.char)(unsafe.Pointer(nil))
 
-	return C.GDALFPolygonize(
+	return CPLErr(C.GDALFPolygonize(
 		src.cval,
 		mask.cval,
 		layer.cval,
@@ -193,7 +193,7 @@ func (src RasterBand) FPolygonize(
 		(**C.char)(unsafe.Pointer(&opts[0])),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	).Err()
+	)).Err()
 }
 
 // Removes small raster polygons
@@ -216,7 +216,7 @@ func (src RasterBand) SieveFilter(
 	}
 	opts[length] = (*C.char)(unsafe.Pointer(nil))
 
-	return C.GDALSieveFilter(
+	return CPLErr(C.GDALSieveFilter(
 		src.cval,
 		mask.cval,
 		dest.cval,
@@ -225,7 +225,7 @@ func (src RasterBand) SieveFilter(
 		(**C.char)(unsafe.Pointer(&opts[0])),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	).Err()
+	)).Err()
 }
 
 /* --------------------------------------------- */
@@ -318,6 +318,8 @@ const (
 
 // GridLinearOptions: Linear method control options.
 type GridLinearOptions struct {
+	// SizeOfStructure: Added in GDAL 3.6 to detect potential ABI issues. Should be set to sizeof(GDALGridLinearOptions)
+	SizeOfStructure uintptr
 	// Radius: in case the point to be interpolated does not fit into a triangle of the Delaunay triangulation,
 	// use that maximum distance to search a nearest neighbour, or use nodata otherwise. If set to -1, the search
 	// distance is infinite. If set to 0, nodata value will be always used.
@@ -328,6 +330,8 @@ type GridLinearOptions struct {
 
 // GridInverseDistanceToAPowerOptions: Inverse distance to a power method control options.
 type GridInverseDistanceToAPowerOptions struct {
+	// SizeOfStructure: Added in GDAL 3.6 to detect potential ABI issues. Should be set to sizeof(GridInverseDistanceToAPowerOptions)
+	SizeOfStructure uintptr
 	// Power: Weighting power
 	Power float64
 	// Smoothing: Smoothing parameter
@@ -356,6 +360,8 @@ type GridInverseDistanceToAPowerOptions struct {
 // GridInverseDistanceToAPowerNearestNeighborOptions: Inverse distance to a power, with nearest neighbour search,
 // control options
 type GridInverseDistanceToAPowerNearestNeighborOptions struct {
+	// SizeOfStructure: Added in GDAL 3.6 to detect potential ABI issues. Should be set to sizeof(GridInverseDistanceToAPowerNearestNeighborOptions)
+	SizeOfStructure uintptr
 	// Power: Weighting power
 	Power float64
 	// Radius: The radius of search circle
@@ -375,6 +381,8 @@ type GridInverseDistanceToAPowerNearestNeighborOptions struct {
 
 // GridMovingAverageOptions: Moving average method control options
 type GridMovingAverageOptions struct {
+	// SizeOfStructure: Added in GDAL 3.6 to detect potential ABI issues. Should be set to sizeof(GridMovingAverageOptions)
+	SizeOfStructure uintptr
 	// Radius1: The first radius (X axis if rotation angle is 0) of search ellipse.
 	Radius1 float64
 	// Radius2: The second radius (Y axis if rotation angle is 0) of search ellipse.
@@ -390,6 +398,8 @@ type GridMovingAverageOptions struct {
 
 // GridNearestNeighborOptions: Nearest neighbor method control options.
 type GridNearestNeighborOptions struct {
+	// SizeOfStructure: Added in GDAL 3.6 to detect potential ABI issues. Should be set to sizeof(GridNearestNeighborOptions)
+	SizeOfStructure uintptr
 	// Radius1: The first radius (X axis if rotation angle is 0) of search ellipse.
 	Radius1 float64
 	// Radius2: The second radius (Y axis if rotation angle is 0) of search ellipse.
@@ -402,6 +412,8 @@ type GridNearestNeighborOptions struct {
 
 // GridDataMetricsOptions: Data metrics method control options
 type GridDataMetricsOptions struct {
+	// SizeOfStructure: Added in GDAL 3.6 to detect potential ABI issues. Should be set to sizeof(GridDataMetricsOptions)
+	SizeOfStructure uintptr
 	// Radius1: The first radius (X axis if rotation angle is 0) of search ellipse.
 	Radius1 float64
 	// Radius2: The second radius (Y axis if rotation angle is 0) of search ellipse.
@@ -442,6 +454,7 @@ func GridCreate(
 			return nil, errInvalidOptionsTypeWasPassed
 		}
 		poptions = unsafe.Pointer(&C.GDALGridInverseDistanceToAPowerOptions{
+			nSizeOfStructure: C.size_t(unsafe.Sizeof(soptions)),
 			dfPower:           C.double(soptions.Power),
 			dfSmoothing:       C.double(soptions.Smoothing),
 			dfAnisotropyRatio: C.double(soptions.AnisotropyRatio),
@@ -459,6 +472,7 @@ func GridCreate(
 			return nil, errInvalidOptionsTypeWasPassed
 		}
 		poptions = unsafe.Pointer(&C.GDALGridInverseDistanceToAPowerNearestNeighborOptions{
+			nSizeOfStructure: C.size_t(unsafe.Sizeof(soptions)),
 			dfPower:       C.double(soptions.Power),
 			dfRadius:      C.double(soptions.Radius),
 			dfSmoothing:   C.double(soptions.Smoothing),
@@ -472,6 +486,7 @@ func GridCreate(
 			return nil, errInvalidOptionsTypeWasPassed
 		}
 		poptions = unsafe.Pointer(&C.GDALGridMovingAverageOptions{
+			nSizeOfStructure: C.size_t(unsafe.Sizeof(soptions)),
 			dfRadius1:     C.double(soptions.Radius1),
 			dfRadius2:     C.double(soptions.Radius2),
 			dfAngle:       C.double(soptions.Angle),
@@ -484,6 +499,7 @@ func GridCreate(
 			return nil, errInvalidOptionsTypeWasPassed
 		}
 		poptions = unsafe.Pointer(&C.GDALGridNearestNeighborOptions{
+			nSizeOfStructure: C.size_t(unsafe.Sizeof(soptions)),
 			dfRadius1:     C.double(soptions.Radius1),
 			dfRadius2:     C.double(soptions.Radius2),
 			dfAngle:       C.double(soptions.Angle),
@@ -496,6 +512,7 @@ func GridCreate(
 			return nil, errInvalidOptionsTypeWasPassed
 		}
 		poptions = unsafe.Pointer(&C.GDALGridDataMetricsOptions{
+			nSizeOfStructure: C.size_t(unsafe.Sizeof(soptions)),
 			dfRadius1:     C.double(soptions.Radius1),
 			dfRadius2:     C.double(soptions.Radius2),
 			dfAngle:       C.double(soptions.Angle),
@@ -508,6 +525,7 @@ func GridCreate(
 			return nil, errInvalidOptionsTypeWasPassed
 		}
 		poptions = unsafe.Pointer(&C.GDALGridLinearOptions{
+			nSizeOfStructure: C.size_t(unsafe.Sizeof(soptions)),
 			dfRadius:      C.double(soptions.Radius),
 			dfNoDataValue: C.double(soptions.NoDataValue),
 		})
@@ -515,7 +533,7 @@ func GridCreate(
 
 	buffer := make([]float64, nX*nY)
 	arg := &goGDALProgressFuncProxyArgs{progress, data}
-	err := C.GDALGridCreate(
+	err := CPLErr(C.GDALGridCreate(
 		C.GDALGridAlgorithm(algorithm),
 		poptions,
 		C.uint(uint(len(x))),
@@ -532,7 +550,7 @@ func GridCreate(
 		unsafe.Pointer(&buffer[0]),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	).Err()
+	)).Err()
 	return buffer, err
 }
 
