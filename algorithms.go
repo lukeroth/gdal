@@ -90,13 +90,14 @@ func (src RasterBand) ComputeProximity(
 	}
 	opts[length] = (*C.char)(unsafe.Pointer(nil))
 
-	return CPLErr(C.GDALComputeProximity(
+	cErr := C.GDALComputeProximity(
 		src.cval,
 		dest.cval,
 		(**C.char)(unsafe.Pointer(&opts[0])),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	)).Err()
+	)
+	return CPLErrContainer{ErrVal: cErr}.Err()
 }
 
 // Fill selected raster regions by interpolation from the edges
@@ -120,7 +121,7 @@ func (src RasterBand) FillNoData(
 	}
 	opts[length] = (*C.char)(unsafe.Pointer(nil))
 
-	return CPLErr(C.GDALFillNodata(
+	cErr := C.GDALFillNodata(
 		src.cval,
 		mask.cval,
 		C.double(distance),
@@ -129,7 +130,8 @@ func (src RasterBand) FillNoData(
 		(**C.char)(unsafe.Pointer(&opts[0])),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	)).Err()
+	)
+	return CPLErrContainer{ErrVal: cErr}.Err()
 }
 
 // Create polygon coverage from raster data using an integer buffer
@@ -153,7 +155,7 @@ func (src RasterBand) Polygonize(
 	}
 	opts[length] = (*C.char)(unsafe.Pointer(nil))
 
-	return CPLErr(C.GDALPolygonize(
+	cErr := C.GDALPolygonize(
 		src.cval,
 		mask.cval,
 		layer.cval,
@@ -161,7 +163,8 @@ func (src RasterBand) Polygonize(
 		(**C.char)(unsafe.Pointer(&opts[0])),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	)).Err()
+	)
+	return CPLErrContainer{ErrVal: cErr}.Err()
 }
 
 // Create polygon coverage from raster data using a floating point buffer
@@ -185,7 +188,7 @@ func (src RasterBand) FPolygonize(
 	}
 	opts[length] = (*C.char)(unsafe.Pointer(nil))
 
-	return CPLErr(C.GDALFPolygonize(
+	cErr := C.GDALFPolygonize(
 		src.cval,
 		mask.cval,
 		layer.cval,
@@ -193,7 +196,8 @@ func (src RasterBand) FPolygonize(
 		(**C.char)(unsafe.Pointer(&opts[0])),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	)).Err()
+	)
+	return CPLErrContainer{ErrVal: cErr}.Err()
 }
 
 // Removes small raster polygons
@@ -216,7 +220,7 @@ func (src RasterBand) SieveFilter(
 	}
 	opts[length] = (*C.char)(unsafe.Pointer(nil))
 
-	return CPLErr(C.GDALSieveFilter(
+	cErr := C.GDALSieveFilter(
 		src.cval,
 		mask.cval,
 		dest.cval,
@@ -225,7 +229,8 @@ func (src RasterBand) SieveFilter(
 		(**C.char)(unsafe.Pointer(&opts[0])),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	)).Err()
+	)
+	return CPLErrContainer{ErrVal: cErr}.Err()
 }
 
 /* --------------------------------------------- */
@@ -301,7 +306,6 @@ func (src RasterBand) SieveFilter(
 // GridAlgorithm represents Grid Algorithm code
 type GridAlgorithm int
 
-//
 const (
 	GA_InverseDistancetoAPower                = GridAlgorithm(C.GGA_InverseDistanceToAPower)
 	GA_MovingAverage                          = GridAlgorithm(C.GGA_MovingAverage)
@@ -454,7 +458,7 @@ func GridCreate(
 			return nil, errInvalidOptionsTypeWasPassed
 		}
 		poptions = unsafe.Pointer(&C.GDALGridInverseDistanceToAPowerOptions{
-			nSizeOfStructure: C.size_t(unsafe.Sizeof(soptions)),
+			nSizeOfStructure:  C.size_t(unsafe.Sizeof(soptions)),
 			dfPower:           C.double(soptions.Power),
 			dfSmoothing:       C.double(soptions.Smoothing),
 			dfAnisotropyRatio: C.double(soptions.AnisotropyRatio),
@@ -473,12 +477,12 @@ func GridCreate(
 		}
 		poptions = unsafe.Pointer(&C.GDALGridInverseDistanceToAPowerNearestNeighborOptions{
 			nSizeOfStructure: C.size_t(unsafe.Sizeof(soptions)),
-			dfPower:       C.double(soptions.Power),
-			dfRadius:      C.double(soptions.Radius),
-			dfSmoothing:   C.double(soptions.Smoothing),
-			nMaxPoints:    C.uint(soptions.MaxPoints),
-			nMinPoints:    C.uint(soptions.MinPoints),
-			dfNoDataValue: C.double(soptions.NoDataValue),
+			dfPower:          C.double(soptions.Power),
+			dfRadius:         C.double(soptions.Radius),
+			dfSmoothing:      C.double(soptions.Smoothing),
+			nMaxPoints:       C.uint(soptions.MaxPoints),
+			nMinPoints:       C.uint(soptions.MinPoints),
+			dfNoDataValue:    C.double(soptions.NoDataValue),
 		})
 	case GA_MovingAverage:
 		soptions, ok := options.(GridMovingAverageOptions)
@@ -487,11 +491,11 @@ func GridCreate(
 		}
 		poptions = unsafe.Pointer(&C.GDALGridMovingAverageOptions{
 			nSizeOfStructure: C.size_t(unsafe.Sizeof(soptions)),
-			dfRadius1:     C.double(soptions.Radius1),
-			dfRadius2:     C.double(soptions.Radius2),
-			dfAngle:       C.double(soptions.Angle),
-			nMinPoints:    C.uint(soptions.MinPoints),
-			dfNoDataValue: C.double(soptions.NoDataValue),
+			dfRadius1:        C.double(soptions.Radius1),
+			dfRadius2:        C.double(soptions.Radius2),
+			dfAngle:          C.double(soptions.Angle),
+			nMinPoints:       C.uint(soptions.MinPoints),
+			dfNoDataValue:    C.double(soptions.NoDataValue),
 		})
 	case GA_NearestNeighbor:
 		soptions, ok := options.(GridNearestNeighborOptions)
@@ -500,10 +504,10 @@ func GridCreate(
 		}
 		poptions = unsafe.Pointer(&C.GDALGridNearestNeighborOptions{
 			nSizeOfStructure: C.size_t(unsafe.Sizeof(soptions)),
-			dfRadius1:     C.double(soptions.Radius1),
-			dfRadius2:     C.double(soptions.Radius2),
-			dfAngle:       C.double(soptions.Angle),
-			dfNoDataValue: C.double(soptions.NoDataValue),
+			dfRadius1:        C.double(soptions.Radius1),
+			dfRadius2:        C.double(soptions.Radius2),
+			dfAngle:          C.double(soptions.Angle),
+			dfNoDataValue:    C.double(soptions.NoDataValue),
 		})
 	case GA_MetricMinimum, GA_MetricMaximum, GA_MetricCount, GA_MetricRange,
 		GA_MetricAverageDistance, GA_MetricAverageDistancePts:
@@ -513,11 +517,11 @@ func GridCreate(
 		}
 		poptions = unsafe.Pointer(&C.GDALGridDataMetricsOptions{
 			nSizeOfStructure: C.size_t(unsafe.Sizeof(soptions)),
-			dfRadius1:     C.double(soptions.Radius1),
-			dfRadius2:     C.double(soptions.Radius2),
-			dfAngle:       C.double(soptions.Angle),
-			nMinPoints:    C.uint(soptions.MinPoints),
-			dfNoDataValue: C.double(soptions.NoDataValue),
+			dfRadius1:        C.double(soptions.Radius1),
+			dfRadius2:        C.double(soptions.Radius2),
+			dfAngle:          C.double(soptions.Angle),
+			nMinPoints:       C.uint(soptions.MinPoints),
+			dfNoDataValue:    C.double(soptions.NoDataValue),
 		})
 	case GA_Linear:
 		soptions, ok := options.(GridLinearOptions)
@@ -526,14 +530,14 @@ func GridCreate(
 		}
 		poptions = unsafe.Pointer(&C.GDALGridLinearOptions{
 			nSizeOfStructure: C.size_t(unsafe.Sizeof(soptions)),
-			dfRadius:      C.double(soptions.Radius),
-			dfNoDataValue: C.double(soptions.NoDataValue),
+			dfRadius:         C.double(soptions.Radius),
+			dfNoDataValue:    C.double(soptions.NoDataValue),
 		})
 	}
 
 	buffer := make([]float64, nX*nY)
 	arg := &goGDALProgressFuncProxyArgs{progress, data}
-	err := CPLErr(C.GDALGridCreate(
+	cErr := C.GDALGridCreate(
 		C.GDALGridAlgorithm(algorithm),
 		poptions,
 		C.uint(uint(len(x))),
@@ -550,8 +554,8 @@ func GridCreate(
 		unsafe.Pointer(&buffer[0]),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	)).Err()
-	return buffer, err
+	)
+	return buffer, CPLErrContainer{ErrVal: cErr}.Err()
 }
 
 //Unimplemented: ComputeMatchingPoints
