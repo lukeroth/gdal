@@ -340,6 +340,7 @@ func (src RasterBand) ContourGenerate(
 // GridAlgorithm represents Grid Algorithm code
 type GridAlgorithm int
 
+//
 const (
 	GA_InverseDistancetoAPower                = GridAlgorithm(C.GGA_InverseDistanceToAPower)
 	GA_MovingAverage                          = GridAlgorithm(C.GGA_MovingAverage)
@@ -492,7 +493,7 @@ func GridCreate(
 			return nil, errInvalidOptionsTypeWasPassed
 		}
 		poptions = unsafe.Pointer(&C.GDALGridInverseDistanceToAPowerOptions{
-			nSizeOfStructure:  C.size_t(unsafe.Sizeof(soptions)),
+			nSizeOfStructure: C.size_t(unsafe.Sizeof(soptions)),
 			dfPower:           C.double(soptions.Power),
 			dfSmoothing:       C.double(soptions.Smoothing),
 			dfAnisotropyRatio: C.double(soptions.AnisotropyRatio),
@@ -511,12 +512,12 @@ func GridCreate(
 		}
 		poptions = unsafe.Pointer(&C.GDALGridInverseDistanceToAPowerNearestNeighborOptions{
 			nSizeOfStructure: C.size_t(unsafe.Sizeof(soptions)),
-			dfPower:          C.double(soptions.Power),
-			dfRadius:         C.double(soptions.Radius),
-			dfSmoothing:      C.double(soptions.Smoothing),
-			nMaxPoints:       C.uint(soptions.MaxPoints),
-			nMinPoints:       C.uint(soptions.MinPoints),
-			dfNoDataValue:    C.double(soptions.NoDataValue),
+			dfPower:       C.double(soptions.Power),
+			dfRadius:      C.double(soptions.Radius),
+			dfSmoothing:   C.double(soptions.Smoothing),
+			nMaxPoints:    C.uint(soptions.MaxPoints),
+			nMinPoints:    C.uint(soptions.MinPoints),
+			dfNoDataValue: C.double(soptions.NoDataValue),
 		})
 	case GA_MovingAverage:
 		soptions, ok := options.(GridMovingAverageOptions)
@@ -525,11 +526,11 @@ func GridCreate(
 		}
 		poptions = unsafe.Pointer(&C.GDALGridMovingAverageOptions{
 			nSizeOfStructure: C.size_t(unsafe.Sizeof(soptions)),
-			dfRadius1:        C.double(soptions.Radius1),
-			dfRadius2:        C.double(soptions.Radius2),
-			dfAngle:          C.double(soptions.Angle),
-			nMinPoints:       C.uint(soptions.MinPoints),
-			dfNoDataValue:    C.double(soptions.NoDataValue),
+			dfRadius1:     C.double(soptions.Radius1),
+			dfRadius2:     C.double(soptions.Radius2),
+			dfAngle:       C.double(soptions.Angle),
+			nMinPoints:    C.uint(soptions.MinPoints),
+			dfNoDataValue: C.double(soptions.NoDataValue),
 		})
 	case GA_NearestNeighbor:
 		soptions, ok := options.(GridNearestNeighborOptions)
@@ -538,10 +539,10 @@ func GridCreate(
 		}
 		poptions = unsafe.Pointer(&C.GDALGridNearestNeighborOptions{
 			nSizeOfStructure: C.size_t(unsafe.Sizeof(soptions)),
-			dfRadius1:        C.double(soptions.Radius1),
-			dfRadius2:        C.double(soptions.Radius2),
-			dfAngle:          C.double(soptions.Angle),
-			dfNoDataValue:    C.double(soptions.NoDataValue),
+			dfRadius1:     C.double(soptions.Radius1),
+			dfRadius2:     C.double(soptions.Radius2),
+			dfAngle:       C.double(soptions.Angle),
+			dfNoDataValue: C.double(soptions.NoDataValue),
 		})
 	case GA_MetricMinimum, GA_MetricMaximum, GA_MetricCount, GA_MetricRange,
 		GA_MetricAverageDistance, GA_MetricAverageDistancePts:
@@ -551,11 +552,11 @@ func GridCreate(
 		}
 		poptions = unsafe.Pointer(&C.GDALGridDataMetricsOptions{
 			nSizeOfStructure: C.size_t(unsafe.Sizeof(soptions)),
-			dfRadius1:        C.double(soptions.Radius1),
-			dfRadius2:        C.double(soptions.Radius2),
-			dfAngle:          C.double(soptions.Angle),
-			nMinPoints:       C.uint(soptions.MinPoints),
-			dfNoDataValue:    C.double(soptions.NoDataValue),
+			dfRadius1:     C.double(soptions.Radius1),
+			dfRadius2:     C.double(soptions.Radius2),
+			dfAngle:       C.double(soptions.Angle),
+			nMinPoints:    C.uint(soptions.MinPoints),
+			dfNoDataValue: C.double(soptions.NoDataValue),
 		})
 	case GA_Linear:
 		soptions, ok := options.(GridLinearOptions)
@@ -564,8 +565,8 @@ func GridCreate(
 		}
 		poptions = unsafe.Pointer(&C.GDALGridLinearOptions{
 			nSizeOfStructure: C.size_t(unsafe.Sizeof(soptions)),
-			dfRadius:         C.double(soptions.Radius),
-			dfNoDataValue:    C.double(soptions.NoDataValue),
+			dfRadius:      C.double(soptions.Radius),
+			dfNoDataValue: C.double(soptions.NoDataValue),
 		})
 	}
 
