@@ -279,7 +279,46 @@ func (src RasterBand) SieveFilter(
 //Unimplemented: FeedLine
 //Unimplemented: Destroy
 //Unimplemented: ContourWriter
-//Unimplemented: ContourGenerate
+
+// ContourGenerate creates vector contours in intervals relative to base from raster DEM band.
+// If fixedLevels are defined, the contours are generated at the specified levels instead.
+// The contours are written to the provided layer using idField- and elevationFieldIndex.
+func (src RasterBand) ContourGenerate(
+	interval, base float64,
+	fixedLevels []float64,
+	useNoDataValue int,
+	noDataValue float64,
+	layer Layer,
+	idFieldIndex int,
+	elevationFieldIndex int,
+	progress ProgressFunc,
+	data interface{},
+) error {
+	arg := &goGDALProgressFuncProxyArgs{
+		progress, data,
+	}
+
+	fixedLevels_p := (*C.double)(unsafe.Pointer(nil))
+
+	if len(fixedLevels) > 0 {
+		fixedLevels_p = (*C.double)(unsafe.Pointer(&fixedLevels[0]))
+	}
+
+	return CPLErr(C.GDALContourGenerate(
+		src.cval,
+		C.double(interval),
+		C.double(base),
+		C.int(len(fixedLevels)),
+		fixedLevels_p,
+		C.int(useNoDataValue),
+		C.double(noDataValue),
+		unsafe.Pointer(layer.cval),
+		C.int(idFieldIndex),
+		C.int(elevationFieldIndex),
+		C.goGDALProgressFuncProxyB(),
+		unsafe.Pointer(arg),
+	)).Err()
+}
 
 /* --------------------------------------------- */
 /* Rasterizer functions                          */
