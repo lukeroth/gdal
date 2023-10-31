@@ -1,4 +1,4 @@
-module github.com/duwie/gdal
+module github.com/duswie/gdal
 
 go 1.15
 
