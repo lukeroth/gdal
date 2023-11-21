@@ -722,7 +722,7 @@ func (geom Geometry) Area() float64 {
 
 // Compute centroid of geometry
 func (geom Geometry) Centroid() Geometry {
-	var centroid Geometry
+	centroid := Geometry{C.OGR_G_CreateGeometry(C.wkbPoint)}
 	C.OGR_G_Centroid(geom.cval, centroid.cval)
 	return centroid
 }
