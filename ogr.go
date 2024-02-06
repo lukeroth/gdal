@@ -651,6 +651,12 @@ func (geom Geometry) ConvexHull() Geometry {
 	return Geometry{newGeom}
 }
 
+// Compute concave hull for the geometry
+func (geom Geometry) ConcaveHull(dfRatio float64, bAllowHoles bool) Geometry {
+	newGeom := C.OGR_G_ConcaveHull(geom.cval, C.double(dfRatio), C.bool(bAllowHoles))
+	return Geometry{newGeom}
+}
+
 // Compute buffer of the geometry
 func (geom Geometry) Buffer(distance float64, segments int) Geometry {
 	newGeom := C.OGR_G_Buffer(geom.cval, C.double(distance), C.int(segments))
