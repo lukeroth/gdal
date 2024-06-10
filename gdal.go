@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 	"unsafe"
 )
 
@@ -1081,12 +1082,15 @@ func (dataset Dataset) BuildOverviews(
 	nBands int,
 	bandList []int,
 	progress ProgressFunc,
-	data interface{},
+	data []string,
 ) error {
 	cResampling := C.CString(resampling)
 	defer C.free(unsafe.Pointer(cResampling))
 
-	arg := &goGDALProgressFuncProxyArgs{progress, data}
+	optsStr := strings.Join(data, ";")
+	cData := C.CString(optsStr)
+	defer C.free(unsafe.Pointer(cData))
+	arg := &goGDALProgressFuncProxyArgs{progress, cData}
 
 	return C.GDALBuildOverviews(
 		dataset.cval,
