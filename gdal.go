@@ -1224,13 +1224,29 @@ func (rasterBand RasterBand) IO(
 	).Err()
 }
 
-// Read a block of image data efficiently
-func (rasterBand RasterBand) ReadBlock(xOff, yOff int, dataPtr unsafe.Pointer) error {
+func (rasterBand RasterBand) ReadBlock(xOff, yOff int, buffer any) error {
+	_, dataPtr, err := determineBufferType(buffer)
+	if err != nil {
+		return err
+	}
 	return C.GDALReadBlock(rasterBand.cval, C.int(xOff), C.int(yOff), dataPtr).Err()
 }
 
+// Read a block of image data efficiently
+func (rasterBand RasterBand) ReadBlock2(xOff, yOff int, dataPtr unsafe.Pointer) error {
+	return C.GDALReadBlock(rasterBand.cval, C.int(xOff), C.int(yOff), dataPtr).Err()
+}
+
+func (rasterBand RasterBand) WriteBlock(xOff, yOff int, buffer any) error {
+	_, dataPtr, err := determineBufferType(buffer)
+	if err != nil {
+		return err
+	}
+	return C.GDALWriteBlock(rasterBand.cval, C.int(xOff), C.int(yOff), dataPtr).Err()
+}
+
 // Write a block of image data efficiently
-func (rasterBand RasterBand) WriteBlock(xOff, yOff int, dataPtr unsafe.Pointer) error {
+func (rasterBand RasterBand) WriteBlock2(xOff, yOff int, dataPtr unsafe.Pointer) error {
 	return C.GDALWriteBlock(rasterBand.cval, C.int(xOff), C.int(yOff), dataPtr).Err()
 }
 
