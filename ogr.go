@@ -183,26 +183,26 @@ type Geometry struct {
 	cval C.OGRGeometryH
 }
 
-//Create a geometry object from its well known binary representation
+// Create a geometry object from its well known binary representation
 func CreateFromWKB(wkb []uint8, srs SpatialReference, bytes int) (Geometry, error) {
 	cString := unsafe.Pointer(&wkb[0])
 	var newGeom Geometry
-	return newGeom, C.go_CreateFromWkb(
+	return newGeom, OGRErr(C.go_CreateFromWkb(
 		cString, srs.cval, &newGeom.cval, C.int(bytes),
-	).Err()
+	)).Err()
 }
 
-//Create a geometry object from its well known text representation
+// Create a geometry object from its well known text representation
 func CreateFromWKT(wkt string, srs SpatialReference) (Geometry, error) {
 	cString := C.CString(wkt)
 	defer C.free(unsafe.Pointer(cString))
 	var newGeom Geometry
-	return newGeom, C.OGR_G_CreateFromWkt(
+	return newGeom, OGRErr(C.OGR_G_CreateFromWkt(
 		&cString, srs.cval, &newGeom.cval,
-	).Err()
+	)).Err()
 }
 
-//Create a geometry object from its GeoJSON representation
+// Create a geometry object from its GeoJSON representation
 func CreateFromJson(_json string) Geometry {
 	cString := C.CString(_json)
 	defer C.free(unsafe.Pointer(cString))
@@ -304,14 +304,14 @@ func (geom Geometry) Envelope() Envelope {
 // Assign a geometry from well known binary data
 func (geom Geometry) FromWKB(wkb []uint8, bytes int) error {
 	cString := unsafe.Pointer(&wkb[0])
-	return C.go_ImportFromWkb(geom.cval, cString, C.int(bytes)).Err()
+	return OGRErr(C.go_ImportFromWkb(geom.cval, cString, C.int(bytes))).Err()
 }
 
 // Convert a geometry to well known binary data
 func (geom Geometry) ToWKB() ([]uint8, error) {
 	b := make([]uint8, geom.WKBSize())
 	cString := (*C.uchar)(unsafe.Pointer(&b[0]))
-	err := C.go_ExportToWkb(geom.cval, C.OGRwkbByteOrder(C.wkbNDR), cString).Err()
+	err := OGRErr(C.go_ExportToWkb(geom.cval, C.OGRwkbByteOrder(C.wkbNDR), cString)).Err()
 	return b, err
 }
 
@@ -325,13 +325,13 @@ func (geom Geometry) WKBSize() int {
 func (geom Geometry) FromWKT(wkt string) error {
 	cString := C.CString(wkt)
 	defer C.free(unsafe.Pointer(cString))
-	return C.OGR_G_ImportFromWkt(geom.cval, &cString).Err()
+	return OGRErr(C.OGR_G_ImportFromWkt(geom.cval, &cString)).Err()
 }
 
 // Fetch geometry as WKT
 func (geom Geometry) ToWKT() (string, error) {
 	var p *C.char
-	err := C.OGR_G_ExportToWkt(geom.cval, &p).Err()
+	err := OGRErr(C.OGR_G_ExportToWkt(geom.cval, &p)).Err()
 	wkt := C.GoString(p)
 	defer C.free(unsafe.Pointer(p))
 	return wkt, err
@@ -430,12 +430,12 @@ func (geom Geometry) SetSpatialReference(spatialRef SpatialReference) {
 
 // Apply coordinate transformation to geometry
 func (geom Geometry) Transform(ct CoordinateTransform) error {
-	return C.OGR_G_Transform(geom.cval, ct.cval).Err()
+	return OGRErr(C.OGR_G_Transform(geom.cval, ct.cval)).Err()
 }
 
 // Transform geometry to new spatial reference system
 func (geom Geometry) TransformTo(sr SpatialReference) error {
-	return C.OGR_G_TransformTo(geom.cval, sr.cval).Err()
+	return OGRErr(C.OGR_G_TransformTo(geom.cval, sr.cval)).Err()
 }
 
 // Simplify the geometry
@@ -707,17 +707,17 @@ func (geom Geometry) Geometry(index int) Geometry {
 
 // Add a geometry to a geometry container
 func (geom Geometry) AddGeometry(other Geometry) error {
-	return C.OGR_G_AddGeometry(geom.cval, other.cval).Err()
+	return OGRErr(C.OGR_G_AddGeometry(geom.cval, other.cval)).Err()
 }
 
 // Add a geometry to a geometry container and assign ownership to that container
 func (geom Geometry) AddGeometryDirectly(other Geometry) error {
-	return C.OGR_G_AddGeometryDirectly(geom.cval, other.cval).Err()
+	return OGRErr(C.OGR_G_AddGeometryDirectly(geom.cval, other.cval)).Err()
 }
 
 // Remove a geometry from the geometry container
 func (geom Geometry) RemoveGeometry(index int, delete bool) error {
-	return C.OGR_G_RemoveGeometry(geom.cval, C.int(index), BoolToCInt(delete)).Err()
+	return OGRErr(C.OGR_G_RemoveGeometry(geom.cval, C.int(index), BoolToCInt(delete))).Err()
 }
 
 // Build a polygon / ring from a set of lines
@@ -730,7 +730,7 @@ func (geom Geometry) BuildPolygonFromEdges(autoClose bool, tolerance float64) (G
 		C.double(tolerance),
 		&cErr,
 	)
-	return Geometry{newGeom}, cErr.Err()
+	return Geometry{newGeom}, OGRErr(cErr).Err()
 }
 
 /* -------------------------------------------------------------------- */
@@ -740,7 +740,7 @@ type GeomFieldDefinition struct {
 	cval C.OGRGeomFieldDefnH
 }
 
-//OGRGeomFieldDefn(const char *pszNameIn, OGRwkbGeometryTypeeGeomTypeIn)
+// OGRGeomFieldDefn(const char *pszNameIn, OGRwkbGeometryTypeeGeomTypeIn)
 func CreateGeomFieldDefinition(name string, geomType GeometryType) GeomFieldDefinition {
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
@@ -1014,13 +1014,13 @@ func (fd FeatureDefinition) AddFieldDefinition(fieldDefn FieldDefinition) {
 
 // Delete a field definition from this feature definition
 func (fd FeatureDefinition) DeleteFieldDefinition(index int) error {
-	return C.OGR_FD_DeleteFieldDefn(fd.cval, C.int(index)).Err()
+	return OGRErr(C.OGR_FD_DeleteFieldDefn(fd.cval, C.int(index))).Err()
 }
 
-//OGRErrOGR_FD_ReorderFieldDefns(OGRFeatureDefnHhDefn, int *panMap)
+// OGRErrOGR_FD_ReorderFieldDefns(OGRFeatureDefnHhDefn, int *panMap)
 func (fd FeatureDefinition) ReorderFieldDefinitions(panmap []int) error {
 	cmap := IntSliceToCInt(panmap)
-	return C.OGR_FD_ReorderFieldDefns(fd.cval, &cmap[0]).Err()
+	return OGRErr(C.OGR_FD_ReorderFieldDefns(fd.cval, &cmap[0])).Err()
 }
 
 // Fetch the geometry base type of this feature definition
@@ -1101,7 +1101,7 @@ func (fd FeatureDefinition) AddGeomFieldDefinition(gdf GeomFieldDefinition) {
 
 // Delete an existing geometry field definition.
 func (fd FeatureDefinition) DeleteGeomFieldDefinition(index int) error {
-	return C.OGR_FD_DeleteGeomFieldDefn(fd.cval, C.int(index)).Err()
+	return OGRErr(C.OGR_FD_DeleteGeomFieldDefn(fd.cval, C.int(index))).Err()
 }
 
 // Test if the feature definition is identical to the other one.
@@ -1137,12 +1137,12 @@ func (feature Feature) Definition() FeatureDefinition {
 
 // Set feature geometry
 func (feature Feature) SetGeometry(geom Geometry) error {
-	return C.OGR_F_SetGeometry(feature.cval, geom.cval).Err()
+	return OGRErr(C.OGR_F_SetGeometry(feature.cval, geom.cval)).Err()
 }
 
 // Set feature geometry, passing ownership to the feature
 func (feature Feature) SetGeometryDirectly(geom Geometry) error {
-	return C.OGR_F_SetGeometryDirectly(feature.cval, geom.cval).Err()
+	return OGRErr(C.OGR_F_SetGeometryDirectly(feature.cval, geom.cval)).Err()
 }
 
 // Fetch geometry of this feature
@@ -1481,16 +1481,18 @@ func (feature Feature) GeometryField(index int) Geometry {
 
 // Set feature geometry of a specified geometry field.
 // This function updates the features geometry, and operate exactly as SetGeomField(),
-//  except that this function assumes ownership of the passed geometry (even in case of failure of that function).
+//
+//	except that this function assumes ownership of the passed geometry (even in case of failure of that function).
 func (feature Feature) SetGeometryFieldDirectly(index int, geom Geometry) error {
-	return C.OGR_F_SetGeomFieldDirectly(feature.cval, C.int(index), geom.cval).Err()
+	return OGRErr(C.OGR_F_SetGeomFieldDirectly(feature.cval, C.int(index), geom.cval)).Err()
 }
 
 // Set feature geometry of a specified geometry field.
 // This function updates the features geometry, and operate exactly as SetGeometryDirectly(),
-//  except that this function does not assume ownership of the passed geometry, but instead makes a copy of it.
+//
+//	except that this function does not assume ownership of the passed geometry, but instead makes a copy of it.
 func (feature Feature) SetGeometryField(index int, geom Geometry) error {
-	return C.OGR_F_SetGeomField(feature.cval, C.int(index), geom.cval).Err()
+	return OGRErr(C.OGR_F_SetGeomField(feature.cval, C.int(index), geom.cval)).Err()
 }
 
 // Fetch feature indentifier
@@ -1501,24 +1503,24 @@ func (feature Feature) FID() int64 {
 
 // Set feature identifier
 func (feature Feature) SetFID(fid int64) error {
-	return C.OGR_F_SetFID(feature.cval, C.GIntBig(fid)).Err()
+	return OGRErr(C.OGR_F_SetFID(feature.cval, C.GIntBig(fid))).Err()
 }
 
 // Unimplemented: DumpReadable
 
 // Set one feature from another
 func (this Feature) SetFrom(other Feature, forgiving int) error {
-	return C.OGR_F_SetFrom(this.cval, other.cval, C.int(forgiving)).Err()
+	return OGRErr(C.OGR_F_SetFrom(this.cval, other.cval, C.int(forgiving))).Err()
 }
 
 // Set one feature from another, using field map
 func (this Feature) SetFromWithMap(other Feature, forgiving int, fieldMap []int) error {
-	return C.OGR_F_SetFromWithMap(
+	return OGRErr(C.OGR_F_SetFromWithMap(
 		this.cval,
 		other.cval,
 		C.int(forgiving),
 		(*C.int)(unsafe.Pointer(&fieldMap[0])),
-	).Err()
+	)).Err()
 }
 
 // Fetch style string for this feature
@@ -1635,7 +1637,7 @@ func (layer Layer) SetSpatialFilterRectEx(index int, minX, minY, maxX, maxY floa
 func (layer Layer) SetAttributeFilter(filter string) error {
 	cFilter := C.CString(filter)
 	defer C.free(unsafe.Pointer(cFilter))
-	return C.OGR_L_SetAttributeFilter(layer.cval, cFilter).Err()
+	return OGRErr(C.OGR_L_SetAttributeFilter(layer.cval, cFilter)).Err()
 }
 
 // Reset reading to start on the first featre
@@ -1654,7 +1656,7 @@ func (layer Layer) NextFeature() *Feature {
 
 // Move read cursor to the provided index
 func (layer Layer) SetNextByIndex(index int64) error {
-	return C.OGR_L_SetNextByIndex(layer.cval, C.GIntBig(index)).Err()
+	return OGRErr(C.OGR_L_SetNextByIndex(layer.cval, C.GIntBig(index))).Err()
 }
 
 // Fetch a feature by its index
@@ -1665,17 +1667,17 @@ func (layer Layer) Feature(index int64) Feature {
 
 // Rewrite the provided feature
 func (layer Layer) SetFeature(feature Feature) error {
-	return C.OGR_L_SetFeature(layer.cval, feature.cval).Err()
+	return OGRErr(C.OGR_L_SetFeature(layer.cval, feature.cval)).Err()
 }
 
 // Create and write a new feature within a layer
 func (layer Layer) Create(feature Feature) error {
-	return C.OGR_L_CreateFeature(layer.cval, feature.cval).Err()
+	return OGRErr(C.OGR_L_CreateFeature(layer.cval, feature.cval)).Err()
 }
 
 // Delete indicated feature from layer
 func (layer Layer) Delete(index int64) error {
-	return C.OGR_L_DeleteFeature(layer.cval, C.GIntBig(index)).Err()
+	return OGRErr(C.OGR_L_DeleteFeature(layer.cval, C.GIntBig(index))).Err()
 }
 
 // Fetch the schema information for this layer
@@ -1706,13 +1708,13 @@ func (layer Layer) FeatureCount(force bool) (count int, ok bool) {
 
 // Fetch the extent of this layer
 func (layer Layer) Extent(force bool) (env Envelope, err error) {
-	err = C.OGR_L_GetExtent(layer.cval, &env.cval, BoolToCInt(force)).Err()
+	err = OGRErr(C.OGR_L_GetExtent(layer.cval, &env.cval, BoolToCInt(force))).Err()
 	return
 }
 
 // Fetch the extent of this layer on the spacified geometry field
 func (layer Layer) ExtentEx(index int, force bool) (env Envelope, err error) {
-	err = C.OGR_L_GetExtentEx(layer.cval, C.int(index), &env.cval, BoolToCInt(force)).Err()
+	err = OGRErr(C.OGR_L_GetExtentEx(layer.cval, C.int(index), &env.cval, BoolToCInt(force))).Err()
 	return
 }
 
@@ -1726,52 +1728,52 @@ func (layer Layer) TestCapability(capability string) bool {
 
 // Create a new field on a layer
 func (layer Layer) CreateField(fd FieldDefinition, approxOK bool) error {
-	return C.OGR_L_CreateField(layer.cval, fd.cval, BoolToCInt(approxOK)).Err()
+	return OGRErr(C.OGR_L_CreateField(layer.cval, fd.cval, BoolToCInt(approxOK))).Err()
 }
 
 // Create a new geometry field on a layer
 func (layer Layer) CreateGeomField(fd FieldDefinition, approxOK bool) error {
-	return C.OGR_L_CreateField(layer.cval, fd.cval, BoolToCInt(approxOK)).Err()
+	return OGRErr(C.OGR_L_CreateField(layer.cval, fd.cval, BoolToCInt(approxOK))).Err()
 }
 
 // Delete a field from the layer
 func (layer Layer) DeleteField(index int) error {
-	return C.OGR_L_DeleteField(layer.cval, C.int(index)).Err()
+	return OGRErr(C.OGR_L_DeleteField(layer.cval, C.int(index))).Err()
 }
 
 // Reorder all the fields of a layer
 func (layer Layer) ReorderFields(layerMap []int) error {
-	return C.OGR_L_ReorderFields(layer.cval, (*C.int)(unsafe.Pointer(&layerMap[0]))).Err()
+	return OGRErr(C.OGR_L_ReorderFields(layer.cval, (*C.int)(unsafe.Pointer(&layerMap[0])))).Err()
 }
 
 // Reorder an existing field of a layer
 func (layer Layer) ReorderField(oldIndex, newIndex int) error {
-	return C.OGR_L_ReorderField(layer.cval, C.int(oldIndex), C.int(newIndex)).Err()
+	return OGRErr(C.OGR_L_ReorderField(layer.cval, C.int(oldIndex), C.int(newIndex))).Err()
 }
 
 // Alter the definition of an existing field of a layer
 func (layer Layer) AlterFieldDefn(index int, newDefn FieldDefinition, flags int) error {
-	return C.OGR_L_AlterFieldDefn(layer.cval, C.int(index), newDefn.cval, C.int(flags)).Err()
+	return OGRErr(C.OGR_L_AlterFieldDefn(layer.cval, C.int(index), newDefn.cval, C.int(flags))).Err()
 }
 
 // Begin a transation on data sources which support it
 func (layer Layer) StartTransaction() error {
-	return C.OGR_L_StartTransaction(layer.cval).Err()
+	return OGRErr(C.OGR_L_StartTransaction(layer.cval)).Err()
 }
 
 // Commit a transaction on data sources which support it
 func (layer Layer) CommitTransaction() error {
-	return C.OGR_L_CommitTransaction(layer.cval).Err()
+	return OGRErr(C.OGR_L_CommitTransaction(layer.cval)).Err()
 }
 
 // Roll back the current transaction on data sources which support it
 func (layer Layer) RollbackTransaction() error {
-	return C.OGR_L_RollbackTransaction(layer.cval).Err()
+	return OGRErr(C.OGR_L_RollbackTransaction(layer.cval)).Err()
 }
 
 // Flush pending changes to the layer
 func (layer Layer) Sync() error {
-	return C.OGR_L_SyncToDisk(layer.cval).Err()
+	return OGRErr(C.OGR_L_SyncToDisk(layer.cval)).Err()
 }
 
 // Fetch the name of the FID column
@@ -1796,7 +1798,7 @@ func (layer Layer) SetIgnoredFields(names []string) error {
 	}
 	cNames[length] = (*C.char)(unsafe.Pointer(nil))
 
-	return C.OGR_L_SetIgnoredFields(layer.cval, (**C.char)(unsafe.Pointer(&cNames[0]))).Err()
+	return OGRErr(C.OGR_L_SetIgnoredFields(layer.cval, (**C.char)(unsafe.Pointer(&cNames[0])))).Err()
 }
 
 // Return the intersection of two layers
@@ -1853,7 +1855,7 @@ func OpenSharedDataSource(name string, update int) (DataSource, bool) {
 
 // Drop a reference to this datasource and destroy if reference is zero
 func (ds DataSource) Release() error {
-	return C.OGRReleaseDataSource(ds.cval).Err()
+	return OGRErr(C.OGRReleaseDataSource(ds.cval)).Err()
 }
 
 // Return the number of opened data sources
@@ -1901,7 +1903,7 @@ func (ds DataSource) LayerByName(name string) Layer {
 
 // Delete the layer from the data source
 func (ds DataSource) Delete(index int) error {
-	return C.OGR_DS_DeleteLayer(ds.cval, C.int(index)).Err()
+	return OGRErr(C.OGR_DS_DeleteLayer(ds.cval, C.int(index))).Err()
 }
 
 // Fetch the driver that the data source was opened with
@@ -1990,7 +1992,7 @@ func (ds DataSource) ReleaseResultSet(layer Layer) {
 
 // Flush pending changes to the data source
 func (ds DataSource) Sync() error {
-	return C.OGR_DS_SyncToDisk(ds.cval).Err()
+	return OGRErr(C.OGR_DS_SyncToDisk(ds.cval)).Err()
 }
 
 /* -------------------------------------------------------------------- */
@@ -2061,7 +2063,7 @@ func (driver OGRDriver) Copy(source DataSource, name string, options []string) (
 func (driver OGRDriver) Delete(filename string) error {
 	cFilename := C.CString(filename)
 	defer C.free(unsafe.Pointer(cFilename))
-	return C.OGR_Dr_DeleteDataSource(driver.cval, cFilename).Err()
+	return OGRErr(C.OGR_Dr_DeleteDataSource(driver.cval, cFilename)).Err()
 }
 
 // Add a driver to the list of registered drivers

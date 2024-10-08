@@ -53,7 +53,7 @@ func TestWarp(t *testing.T) {
 
 	opts := []string{"-t_srs", "epsg:3857", "-of", "GPKG"}
 
-	dstDS, err := Warp("/tmp/tiles-3857.gpkg", nil, []Dataset{srcDS}, opts)
+	dstDS, err := Warp("/tmp/tiles-3857.gpkg", []Dataset{srcDS}, opts)
 	if err != nil {
 		t.Errorf("Warp: %v", err)
 	}

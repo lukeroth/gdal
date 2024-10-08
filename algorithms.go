@@ -90,13 +90,13 @@ func (src RasterBand) ComputeProximity(
 	}
 	opts[length] = (*C.char)(unsafe.Pointer(nil))
 
-	return C.GDALComputeProximity(
+	return CPLErr(C.GDALComputeProximity(
 		src.cval,
 		dest.cval,
 		(**C.char)(unsafe.Pointer(&opts[0])),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	).Err()
+	)).Err()
 }
 
 // Fill selected raster regions by interpolation from the edges
@@ -120,7 +120,7 @@ func (src RasterBand) FillNoData(
 	}
 	opts[length] = (*C.char)(unsafe.Pointer(nil))
 
-	return C.GDALFillNodata(
+	return CPLErr(C.GDALFillNodata(
 		src.cval,
 		mask.cval,
 		C.double(distance),
@@ -129,7 +129,7 @@ func (src RasterBand) FillNoData(
 		(**C.char)(unsafe.Pointer(&opts[0])),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	).Err()
+	)).Err()
 }
 
 // Create polygon coverage from raster data using an integer buffer
@@ -153,7 +153,7 @@ func (src RasterBand) Polygonize(
 	}
 	opts[length] = (*C.char)(unsafe.Pointer(nil))
 
-	return C.GDALPolygonize(
+	return CPLErr(C.GDALPolygonize(
 		src.cval,
 		mask.cval,
 		layer.cval,
@@ -161,7 +161,7 @@ func (src RasterBand) Polygonize(
 		(**C.char)(unsafe.Pointer(&opts[0])),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	).Err()
+	)).Err()
 }
 
 // Create polygon coverage from raster data using a floating point buffer
@@ -185,7 +185,7 @@ func (src RasterBand) FPolygonize(
 	}
 	opts[length] = (*C.char)(unsafe.Pointer(nil))
 
-	return C.GDALFPolygonize(
+	return CPLErr(C.GDALFPolygonize(
 		src.cval,
 		mask.cval,
 		layer.cval,
@@ -193,7 +193,7 @@ func (src RasterBand) FPolygonize(
 		(**C.char)(unsafe.Pointer(&opts[0])),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	).Err()
+	)).Err()
 }
 
 // Removes small raster polygons
@@ -216,7 +216,7 @@ func (src RasterBand) SieveFilter(
 	}
 	opts[length] = (*C.char)(unsafe.Pointer(nil))
 
-	return C.GDALSieveFilter(
+	return CPLErr(C.GDALSieveFilter(
 		src.cval,
 		mask.cval,
 		dest.cval,
@@ -225,7 +225,7 @@ func (src RasterBand) SieveFilter(
 		(**C.char)(unsafe.Pointer(&opts[0])),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	).Err()
+	)).Err()
 }
 
 /* --------------------------------------------- */
@@ -301,7 +301,6 @@ func (src RasterBand) SieveFilter(
 // GridAlgorithm represents Grid Algorithm code
 type GridAlgorithm int
 
-//
 const (
 	GA_InverseDistancetoAPower                = GridAlgorithm(C.GGA_InverseDistanceToAPower)
 	GA_MovingAverage                          = GridAlgorithm(C.GGA_MovingAverage)
@@ -515,7 +514,7 @@ func GridCreate(
 
 	buffer := make([]float64, nX*nY)
 	arg := &goGDALProgressFuncProxyArgs{progress, data}
-	err := C.GDALGridCreate(
+	err := CPLErr(C.GDALGridCreate(
 		C.GDALGridAlgorithm(algorithm),
 		poptions,
 		C.uint(uint(len(x))),
@@ -532,7 +531,7 @@ func GridCreate(
 		unsafe.Pointer(&buffer[0]),
 		C.goGDALProgressFuncProxyB(),
 		unsafe.Pointer(arg),
-	).Err()
+	)).Err()
 	return buffer, err
 }
 
