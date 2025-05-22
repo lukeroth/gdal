@@ -1295,71 +1295,60 @@ func (sourceDataset Dataset) CopyWholeRaster(
 	return CPLErrContainer{ErrVal: cErr}.Err()
 }
 
-func (dataset Dataset) Layer(index int) (Layer, error) {
+// Fetch a layer of this dataset by index
+func (dataset Dataset) LayerByIndex(index int) Layer {
 	layer := C.GDALDatasetGetLayer(dataset.cval, C.int(index))
-	if layer == nil {
-		return Layer{}, fmt.Errorf("Error: layer %d not found", index)
-	}
-	return Layer{layer}, nil
+	return Layer{layer}
 }
 
-func (dataset Dataset) LayerByName(name string) (Layer, error) {
-	layer := C.GDALDatasetGetLayerByName(dataset.cval, C.CString(name))
-	if layer == nil {
-		return Layer{}, fmt.Errorf("Error: layer '%s' not found", name)
-	}
-	return Layer{layer}, nil
+// Fetch a layer of this dataset by name
+func (dataset Dataset) LayerByName(name string) Layer {
+	cString := C.CString(name)
+	defer C.free(unsafe.Pointer(cString))
+	layer := C.GDALDatasetGetLayerByName(dataset.cval, cString)
+	return Layer{layer}
 }
 
-func (dataset Dataset) CreateLayer(name string, sr SpatialReference, geomType GeometryType, options []string) (Layer, error) {
+// Create a new layer on the dataset
+func (dataset Dataset) CreateLayer(
+	name string,
+	sr SpatialReference,
+	geomType GeometryType,
+	options []string,
+) Layer {
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
 
 	length := len(options)
-	cOptions := make([]*C.char, length+1)
+	opts := make([]*C.char, length+1)
 	for i := 0; i < length; i++ {
-		cOptions[i] = C.CString(options[i])
-		defer C.free(unsafe.Pointer(cOptions[i]))
+		opts[i] = C.CString(options[i])
+		defer C.free(unsafe.Pointer(opts[i]))
 	}
-	cOptions[length] = (*C.char)(unsafe.Pointer(nil))
+	opts[length] = (*C.char)(unsafe.Pointer(nil))
 
 	layer := C.GDALDatasetCreateLayer(
 		dataset.cval,
 		cName,
 		sr.cval,
 		C.OGRwkbGeometryType(geomType),
-		(**C.char)(unsafe.Pointer(&cOptions[0])),
+		(**C.char)(unsafe.Pointer(&opts[0])),
 	)
-	if layer == nil {
-		return Layer{}, fmt.Errorf("Error: layer '%s' creation failed", name)
-	}
-	return Layer{layer}, nil
+	return Layer{layer}
 }
 
-func (dataset Dataset) ExecuteSQL(sql string, filter Geometry, dialect string) (Layer, error) {
+// Execute an SQL statement against the dataset
+func (dataset Dataset) ExecuteSQL(sql string, filter Geometry, dialect string) Layer {
 	cSQL := C.CString(sql)
 	defer C.free(unsafe.Pointer(cSQL))
+	cDialect := C.CString(dialect)
+	defer C.free(unsafe.Pointer(cDialect))
 
-	var cDialect *C.char
-	if dialect != "" {
-		cDialect = C.CString(dialect)
-		defer C.free(unsafe.Pointer(cDialect))
-	} else {
-		cDialect = nil
-	}
-
-	layer := C.GDALDatasetExecuteSQL(
-		dataset.cval,
-		cSQL,
-		filter.cval,
-		cDialect,
-	)
-	if layer == nil && C.CPLGetLastErrorType() != C.CPLE_None {
-		return Layer{}, fmt.Errorf("Error: SQL execution failed: %s", C.GoString(C.CPLGetLastErrorMsg()))
-	}
-	return Layer{layer}, nil
+	layer := C.GDALDatasetExecuteSQL(dataset.cval, cSQL, filter.cval, cDialect)
+	return Layer{layer}
 }
 
+// Release the results of ExecuteSQL
 func (dataset Dataset) ReleaseResultSet(layer Layer) {
 	C.GDALDatasetReleaseResultSet(dataset.cval, layer.cval)
 }

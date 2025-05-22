@@ -1519,6 +1519,11 @@ type Layer struct {
 	cval C.OGRLayerH
 }
 
+// Check if the layer is null
+func (layer Layer) IsNull() bool {
+	return layer.cval == nil
+}
+
 // Return the layer name
 func (layer Layer) Name() string {
 	name := C.OGR_L_GetName(layer.cval)
