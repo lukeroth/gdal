@@ -1337,6 +1337,32 @@ func (dataset Dataset) CreateLayer(
 	return Layer{layer}
 }
 
+// Create a new layer on the dataset
+func (dataset Dataset) CopyLayer(
+	layer Layer,
+	name string,
+	options []string,
+) Layer {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+
+	length := len(options)
+	opts := make([]*C.char, length+1)
+	for i := 0; i < length; i++ {
+		opts[i] = C.CString(options[i])
+		defer C.free(unsafe.Pointer(opts[i]))
+	}
+	opts[length] = (*C.char)(unsafe.Pointer(nil))
+
+	copiedLayer := C.GDALDatasetCopyLayer(
+		dataset.cval,
+		layer.cval,
+		cName,
+		(**C.char)(unsafe.Pointer(&opts[0])),
+	)
+	return Layer{copiedLayer}
+}
+
 // Execute an SQL statement against the dataset
 func (dataset Dataset) ExecuteSQL(sql string, filter Geometry, dialect string) Layer {
 	cSQL := C.CString(sql)
