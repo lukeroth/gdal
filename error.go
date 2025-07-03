@@ -7,7 +7,6 @@ import "C"
 import (
 	"errors"
 	"fmt"
-	"unsafe"
 )
 
 func CPLGetLastErrorType() CPLErr {
@@ -19,7 +18,6 @@ func CPLGetLastErrorMsg() error {
 	if cErrMsg == nil {
 		return errors.New("unknown CPL error")
 	}
-	defer C.CPLFree(unsafe.Pointer(cErrMsg))
 	return errors.New(C.GoString(cErrMsg))
 }
 
