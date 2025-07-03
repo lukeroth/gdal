@@ -746,11 +746,6 @@ func (geom Geometry) IsEmpty() bool {
 	return val != 0
 }
 
-// Test if the geometry is null
-func (geom Geometry) IsNull() bool {
-	return geom.cval == nil
-}
-
 // Test if the geometry is valid
 func (geom Geometry) IsValid() bool {
 	val := C.OGR_G_IsValid(geom.cval)
@@ -1532,22 +1527,12 @@ func (feature Feature) SetStyleString(style string) {
 	C.OGR_F_SetStyleStringDirectly(feature.cval, cStyle)
 }
 
-// Returns true if this contains a null pointer
-func (feature Feature) IsNull() bool {
-	return feature.cval == nil
-}
-
 /* -------------------------------------------------------------------- */
 /*      Layer functions                                                 */
 /* -------------------------------------------------------------------- */
 
 type Layer struct {
 	cval C.OGRLayerH
-}
-
-// Check if the layer is null
-func (layer Layer) IsNull() bool {
-	return layer.cval == nil
 }
 
 // Return the layer name
