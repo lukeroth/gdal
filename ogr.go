@@ -746,11 +746,6 @@ func (geom Geometry) IsEmpty() bool {
 	return val != 0
 }
 
-// Test if the geometry is null
-func (geom Geometry) IsNull() bool {
-	return geom.cval == nil
-}
-
 // Test if the geometry is valid
 func (geom Geometry) IsValid() bool {
 	val := C.OGR_G_IsValid(geom.cval)
@@ -1036,6 +1031,32 @@ func (fd FieldDefinition) SetIgnored(ignore bool) {
 func (ft FieldType) Name() string {
 	name := C.OGR_GetFieldTypeName(C.OGRFieldType(ft))
 	return C.GoString(name)
+}
+
+/* -------------------------------------------------------------------- */
+/*      Geometry field definition functions                             */
+/* -------------------------------------------------------------------- */
+
+type GeometryFieldDefinition struct {
+	cval C.OGRGeomFieldDefnH
+}
+
+// Create a new geometry field definition
+func CreateGeometryFieldDefinition(name string, geomType GeometryType) GeometryFieldDefinition {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	geomFieldDef := C.OGR_GFld_Create(cName, C.OGRwkbGeometryType(geomType))
+	return GeometryFieldDefinition{geomFieldDef}
+}
+
+// Destroy the geometry field definition
+func (gfd GeometryFieldDefinition) Destroy() {
+	C.OGR_GFld_Destroy(gfd.cval)
+}
+
+// Set the spatial reference of the geometry field definition
+func (gfd GeometryFieldDefinition) SetSpatialReference(sr SpatialReference) {
+	C.OGR_GFld_SetSpatialRef(gfd.cval, sr.cval)
 }
 
 /* -------------------------------------------------------------------- */
@@ -1506,11 +1527,6 @@ func (feature Feature) SetStyleString(style string) {
 	C.OGR_F_SetStyleStringDirectly(feature.cval, cStyle)
 }
 
-// Returns true if this contains a null pointer
-func (feature Feature) IsNull() bool {
-	return feature.cval == nil
-}
-
 /* -------------------------------------------------------------------- */
 /*      Layer functions                                                 */
 /* -------------------------------------------------------------------- */
@@ -1662,6 +1678,12 @@ func (layer Layer) ReorderField(oldIndex, newIndex int) error {
 // Alter the definition of an existing field of a layer
 func (layer Layer) AlterFieldDefn(index int, newDefn FieldDefinition, flags int) error {
 	cErr := C.OGR_L_AlterFieldDefn(layer.cval, C.int(index), newDefn.cval, C.int(flags))
+	return OGRErrContainer{ErrVal: cErr}.Err()
+}
+
+// Create a new geometry field on a layer
+func (layer Layer) CreateGeometryField(gfd GeometryFieldDefinition, approxOK bool) error {
+	cErr := C.OGR_L_CreateGeomField(layer.cval, gfd.cval, BoolToCInt(approxOK))
 	return OGRErrContainer{ErrVal: cErr}.Err()
 }
 

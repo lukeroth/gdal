@@ -1295,6 +1295,90 @@ func (sourceDataset Dataset) CopyWholeRaster(
 	return CPLErrContainer{ErrVal: cErr}.Err()
 }
 
+// Fetch a layer of this dataset by index
+func (dataset Dataset) LayerByIndex(index int) Layer {
+	layer := C.GDALDatasetGetLayer(dataset.cval, C.int(index))
+	return Layer{layer}
+}
+
+// Fetch a layer of this dataset by name
+func (dataset Dataset) LayerByName(name string) Layer {
+	cString := C.CString(name)
+	defer C.free(unsafe.Pointer(cString))
+	layer := C.GDALDatasetGetLayerByName(dataset.cval, cString)
+	return Layer{layer}
+}
+
+// Create a new layer on the dataset
+func (dataset Dataset) CreateLayer(
+	name string,
+	sr SpatialReference,
+	geomType GeometryType,
+	options []string,
+) Layer {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+
+	length := len(options)
+	opts := make([]*C.char, length+1)
+	for i := 0; i < length; i++ {
+		opts[i] = C.CString(options[i])
+		defer C.free(unsafe.Pointer(opts[i]))
+	}
+	opts[length] = (*C.char)(unsafe.Pointer(nil))
+
+	layer := C.GDALDatasetCreateLayer(
+		dataset.cval,
+		cName,
+		sr.cval,
+		C.OGRwkbGeometryType(geomType),
+		(**C.char)(unsafe.Pointer(&opts[0])),
+	)
+	return Layer{layer}
+}
+
+// Create a new layer on the dataset
+func (dataset Dataset) CopyLayer(
+	layer Layer,
+	name string,
+	options []string,
+) Layer {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+
+	length := len(options)
+	opts := make([]*C.char, length+1)
+	for i := 0; i < length; i++ {
+		opts[i] = C.CString(options[i])
+		defer C.free(unsafe.Pointer(opts[i]))
+	}
+	opts[length] = (*C.char)(unsafe.Pointer(nil))
+
+	copiedLayer := C.GDALDatasetCopyLayer(
+		dataset.cval,
+		layer.cval,
+		cName,
+		(**C.char)(unsafe.Pointer(&opts[0])),
+	)
+	return Layer{copiedLayer}
+}
+
+// Execute an SQL statement against the dataset
+func (dataset Dataset) ExecuteSQL(sql string, filter Geometry, dialect string) Layer {
+	cSQL := C.CString(sql)
+	defer C.free(unsafe.Pointer(cSQL))
+	cDialect := C.CString(dialect)
+	defer C.free(unsafe.Pointer(cDialect))
+
+	layer := C.GDALDatasetExecuteSQL(dataset.cval, cSQL, filter.cval, cDialect)
+	return Layer{layer}
+}
+
+// Release the results of ExecuteSQL
+func (dataset Dataset) ReleaseResultSet(layer Layer) {
+	C.GDALDatasetReleaseResultSet(dataset.cval, layer.cval)
+}
+
 /* ==================================================================== */
 /*      GDALRasterBand ... one band/channel in a dataset.               */
 /* ==================================================================== */
