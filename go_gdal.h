@@ -15,6 +15,9 @@
 // transform GDALProgressFunc to go func
 GDALProgressFunc goGDALProgressFuncProxyB();
 
+// Compatibility wrapper for GDAL data type size API changes.
+int goGDALGetDataTypeSizeCompat(GDALDataType dataType);
+
 #endif // GO_GDAL_H_
 
 

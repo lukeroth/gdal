@@ -21,4 +21,12 @@ GDALProgressFunc goGDALProgressFuncProxyB() {
 	return goGDALProgressFuncProxyB_;
 }
 
+int goGDALGetDataTypeSizeCompat(GDALDataType dataType) {
+#if GDAL_VERSION_MAJOR >= 3
+	return GDALGetDataTypeSizeBits(dataType);
+#else
+	return GDALGetDataTypeSize(dataType);
+#endif
+}
+
 
